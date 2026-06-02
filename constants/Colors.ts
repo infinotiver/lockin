@@ -16,7 +16,9 @@ dark: {
   onPrimary: "#000000",
 
   border: "#1a1a1a",
-  focusBorder: "#f2f2f2f2"
+  focusBorder: "#f2f2f2f2",
+
+  error: "#bf3939"
 },
 light: {
   background: "#ffffff",
@@ -31,6 +33,8 @@ light: {
   onPrimary: "#ffffff",
 
   border: "#e0e0e0",
-  focusBorder: "#000"
+  focusBorder: "#000",
+
+  error: "#c73e3e"
 },
 };
