@@ -1,36 +1,73 @@
-const tintColorLight = '#2f95dc';
-const tintColorDark = '#fff';
+const light = {
+  background: "#F2F0EA",
+  surface1: "#F7F5EE",
+  surface2: "#ECEAE3",
+  surface3: "#E5E2D9",
 
-export default {
-dark: {
-  background: "#000000",
-
-  surface1: "#0a0a0a",
-  surface2: "#1a1a1a",
-  surface3: "#22222280",
-
-  text: "#ffffff",
+  text: "#1A1A1A",
   textMuted: "#888888",
 
-  primary: "#ffffff",
+  primary: "#1A1A1A",
+  onPrimary: "#FFFFFF",
+
+  accent: "#E8D900", // yellow — carried from original
+  onAccent: "#1A1A1A",
+
+  card: "#FFFFFF",
+  onCard: "#1A1A1A",
+  secondary: "#F7F5EE",
+  onSecondary: "#1A1A1A",
+  muted: "#ECEAE3",
+
+  destructive: "#EF4444",
+  onDestructive: "#FFFFFF",
+  success: "#16A34A",
+  warning: "#D97706",
+  earn: "#E8D900", // alias for accent
+
+  border: "#E5E2D9",
+  focusBorder: "#1A1A1A",
+  input: "#E5E2D9",
+
+  tint: "#1A1A1A",
+};
+
+const dark: ColorTheme = {
+  background: "#000000",
+  surface1: "#0A0A0A",
+  surface2: "#1A1A1A",
+  surface3: "#22222280",
+
+  text: "#FFFFFF",
+  textMuted: "#888888",
+
+  primary: "#FFFFFF",
   onPrimary: "#000000",
 
-  border: "#1a1a1a",
-  focusBorder: "#f2f2f2f2"
-},
-light: {
-  background: "#ffffff",
+  accent: "#E8D900", // yellow — same hex, sufficient contrast on dark
+  onAccent: "#000000",
 
-  surface1: "#f5f5f5",
-  surface2: "#e8e8e8",
-  surface3: "#f2f2f2",
-  text: "#000000",
-  textMuted: "#666666",
+  card: "#1A1A1A",
+  onCard: "#FFFFFF",
+  secondary: "#0A0A0A",
+  onSecondary: "#FFFFFF",
+  muted: "#222222",
 
-  primary: "#000000",
-  onPrimary: "#ffffff",
+  destructive: "#EF4444",
+  onDestructive: "#FFFFFF",
+  success: "#16A34A",
+  warning: "#D97706",
+  earn: "#E8D900",
 
-  border: "#e0e0e0",
-  focusBorder: "#000"
-},
+  border: "#1A1A1A",
+  focusBorder: "#F2F2F2",
+  input: "#1A1A1A",
+
+  tint: "#FFFFFF",
 };
+
+export type ColorTheme = { [K in keyof typeof light]: string };
+export type ColorKey = keyof ColorTheme;
+
+const colors = { light, dark, radius: 20 };
+export default colors;
