@@ -1,2 +1,7 @@
 allowBuilds:
-  msgpackr-extract: set this to true or false
+  '@clerk/shared': false
+  browser-tabs-lock: false
+  bufferutil: false
+  core-js: false
+  msgpackr-extract: false
+  utf-8-validate: false

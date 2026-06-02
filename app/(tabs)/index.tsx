@@ -1,18 +1,19 @@
-import { StyleSheet } from 'react-native';
-
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
+import { Text, View } from '@/components/Themed'
+import { useRouter } from 'expo-router'
+import { Pressable, StyleSheet } from 'react-native'
 
 export default function TabOneScreen() {
+  const router = useRouter()
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab One</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="app/(tabs)/index.tsx" />
+      <Text style={styles.title}>Auth Successful</Text>
+      <Pressable onPress={() => router.push('/(auth)/sign-up')}>
+        <Text>Go to Sign Up</Text>
+      </Pressable>
     </View>
-  );
+  )
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
