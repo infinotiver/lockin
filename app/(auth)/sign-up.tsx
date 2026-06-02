@@ -4,6 +4,7 @@ import { StyleSheet, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient";
 import { useThemeColor } from "@/components/Themed";
 import { FocusedInput } from "@/components/FocusedInput";
+import { useState } from "react";
 
 const SignUp = () => {
   const surface1 = useThemeColor({}, "surface1");
@@ -13,6 +14,10 @@ const SignUp = () => {
   const text = useThemeColor({}, "text")
   const primary = useThemeColor({}, "primary")
   const onPrimary = useThemeColor({}, "onPrimary")
+
+  const [email, setEmail ] = useState('');
+  const [password, setPassword ] = useState('');
+  const [loading, setLoading] = useState(false);
   return (
     <View style={styles.container}>
     <LinearGradient
@@ -36,10 +41,12 @@ const SignUp = () => {
             placeholder="Email" 
             keyboardType="email-address"
             autoCapitalize="none"
+            onChangeText={setEmail}
           />
           <FocusedInput 
-            placeholder="Password" 
+            placeholder="Password"
             secureTextEntry 
+            onChangeText={setPassword}
           />
           <Pressable 
             style={({ pressed }) => [
@@ -47,7 +54,7 @@ const SignUp = () => {
               { backgroundColor: primary, opacity: pressed ? 0.85 : 1 }
             ]}>
             <Text style={[styles.buttonText, { color: onPrimary }]}>
-              Create Account
+              {loading ? 'Creating account...' : 'Create Account'}
             </Text>
           </Pressable>
           <Text style={[styles.footerText, { color: textMuted }]}>
