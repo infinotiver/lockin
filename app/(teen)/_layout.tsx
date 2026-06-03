@@ -4,7 +4,7 @@ import { Tabs } from "expo-router";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
-export default function ParentLayout() {
+export default function TeenLayout() {
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
