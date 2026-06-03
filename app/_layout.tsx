@@ -1,47 +1,42 @@
-import { useFonts } from 'expo-font'
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router'
-import * as SplashScreen from 'expo-splash-screen'
-import { useEffect } from 'react'
-import 'react-native-reanimated'
-import { useColorScheme } from '@/components/useColorScheme'
-import { ClerkProvider } from '@clerk/clerk-expo'
-import { tokenCache } from '@/lib/tokenCache'
+import { useFonts } from "expo-font";
+import { Stack, useRouter, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
+import "react-native-reanimated";
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { tokenCache } from "@/lib/tokenCache";
 import {
   JetBrainsMono_400Regular,
   JetBrainsMono_600SemiBold,
   JetBrainsMono_800ExtraBold,
 } from "@expo-google-fonts/jetbrains-mono";
+import { PixelifySans_400Regular } from "@expo-google-fonts/pixelify-sans";
 
-import {
-  PixelifySans_400Regular,
-} from "@expo-google-fonts/pixelify-sans";
-
-export { ErrorBoundary } from 'expo-router'
+export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
-  initialRouteName: '(tabs)',
-}
+  initialRouteName: "(auth)",
+};
 
-SplashScreen.preventAutoHideAsync()
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     JetBrainsMono_400Regular,
     JetBrainsMono_600SemiBold,
     JetBrainsMono_800ExtraBold,
     PixelifySans_400Regular,
-  })
+  });
 
   useEffect(() => {
-    if (error) throw error
-  }, [error])
+    if (error) throw error;
+  }, [error]);
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync()
-  }, [loaded])
+    if (loaded) SplashScreen.hideAsync();
+  }, [loaded]);
 
-  if (!loaded) return null
+  if (!loaded) return null;
 
   return (
     <ClerkProvider
@@ -50,18 +45,34 @@ export default function RootLayout() {
     >
       <RootLayoutNav />
     </ClerkProvider>
-  )
+  );
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme()
+  const { isSignedIn, isLoaded } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (!isSignedIn && !inAuthGroup) {
+      router.replace("/(auth)/sign-in");
+    } else if (isSignedIn && inAuthGroup) {
+      // TODO: check user role from your DB/Clerk metadata
+      // and redirect to /(teen) or /(parent) accordingly
+      router.replace("/(teen)");
+    }
+  }, [isSignedIn, isLoaded, segments]);
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
-  )
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="(teen)" />
+      <Stack.Screen name="(parent)" />
+      <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+    </Stack>
+  );
 }
