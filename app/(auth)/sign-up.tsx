@@ -17,7 +17,7 @@ const SignUp = () => {
   const text = useThemeColor({}, "text")
   const primary = useThemeColor({}, "primary")
   const onPrimary = useThemeColor({}, "onPrimary")
-  const errorColor = useThemeColor({}, "error");
+  const errorColor = useThemeColor({}, "errorColor");
   const colors = useColors();
 
   const [email, setEmail ] = useState('');
