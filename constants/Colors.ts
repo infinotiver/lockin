@@ -21,16 +21,19 @@ const light = {
 
   destructive: "#EF4444",
   onDestructive: "#FFFFFF",
+  error: "#BF3939",
   success: "#16A34A",
   warning: "#D97706",
-  earn: "#E8D900", // alias for accent
+  earn: "#E8D900",
 
   border: "#E5E2D9",
   focusBorder: "#1A1A1A",
   input: "#E5E2D9",
-
   tint: "#1A1A1A",
 };
+
+export type ColorTheme = { [K in keyof typeof light]: string };
+export type ColorKey = keyof ColorTheme;
 
 const dark: ColorTheme = {
   background: "#000000",
@@ -55,6 +58,7 @@ const dark: ColorTheme = {
 
   destructive: "#EF4444",
   onDestructive: "#FFFFFF",
+  error: "#C73E3E",
   success: "#16A34A",
   warning: "#D97706",
   earn: "#E8D900",
@@ -62,12 +66,8 @@ const dark: ColorTheme = {
   border: "#1A1A1A",
   focusBorder: "#F2F2F2",
   input: "#1A1A1A",
-
   tint: "#FFFFFF",
 };
-
-export type ColorTheme = { [K in keyof typeof light]: string };
-export type ColorKey = keyof ColorTheme;
 
 const colors = { light, dark, radius: 20 };
 export default colors;
