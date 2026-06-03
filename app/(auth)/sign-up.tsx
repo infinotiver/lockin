@@ -1,4 +1,4 @@
-import { Text, View, TextInput, StyleSheet, Pressable } from "react-native";
+import { Text, View, StyleSheet, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { FocusedInput } from "@/components/FocusedInput";
 import { useColors } from "@/hooks/useColors";
