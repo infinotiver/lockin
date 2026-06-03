@@ -59,7 +59,7 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === "(auth)";
 
     if (!isSignedIn && !inAuthGroup) {
-      router.replace("/(auth)/sign-in");
+      router.replace("/(auth)/sign-up");
     } else if (isSignedIn && inAuthGroup) {
       // TODO: check user role from your DB/Clerk metadata
       // and redirect to /(teen) or /(parent) accordingly
@@ -72,7 +72,6 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(teen)" />
       <Stack.Screen name="(parent)" />
-      <Stack.Screen name="modal" options={{ presentation: "modal" }} />
     </Stack>
   );
 }

@@ -1,32 +1,25 @@
+import { useColors } from "@/hooks/useColors";
 import { useState } from "react";
 import { TextInput, TextInputProps, StyleSheet } from "react-native";
-import { useThemeColor } from "@/components/Themed";
-
 interface FocusedInputProps extends TextInputProps {
   // You can add custom props here if needed
 }
 
 export const FocusedInput = ({ style, ...props }: FocusedInputProps) => {
   const [isFocused, setIsFocused] = useState(false);
-
-  const surface3 = useThemeColor({}, "surface3");
-  const border = useThemeColor({}, "border");
-  const text = useThemeColor({}, "text");
-  const textMuted = useThemeColor({}, "textMuted");
-  const focusBorder = useThemeColor({}, "focusBorder");
-
+  const colors = useColors();
   return (
     <TextInput
-      placeholderTextColor={textMuted}
+      placeholderTextColor={colors.textMuted}
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
-      selectionColor={text} // Cursor color matching the text theme
+      selectionColor={colors.text} // Cursor color matching the text theme
       style={[
         styles.input,
         {
-          backgroundColor: surface3,
-          borderColor: isFocused ? focusBorder : border,
-          color: text,
+          backgroundColor: colors.surface3,
+          borderColor: isFocused ? colors.focusBorder : colors.border,
+          color: colors.text,
         },
         style,
       ]}
