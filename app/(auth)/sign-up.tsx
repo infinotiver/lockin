@@ -7,6 +7,7 @@ import { FocusedInput } from "@/components/FocusedInput";
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
+import { useColors } from "@/hooks/useColors";
 
 const SignUp = () => {
   const surface1 = useThemeColor({}, "surface1");
@@ -17,6 +18,7 @@ const SignUp = () => {
   const primary = useThemeColor({}, "primary")
   const onPrimary = useThemeColor({}, "onPrimary")
   const errorColor = useThemeColor({}, "error");
+  const colors = useColors();
 
   const [email, setEmail ] = useState('');
   const [password, setPassword ] = useState('');
@@ -79,7 +81,7 @@ const handleSignUp = async () => {
   return (
     <View style={styles.container}>
     <LinearGradient
-      colors={[surface1, surface2]}
+      colors={[colors.surface1, colors.surface2]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={[
@@ -88,7 +90,7 @@ const handleSignUp = async () => {
           width: "100%",
           padding: 16,
           borderWidth: 1,
-          borderColor: border,
+          borderColor: colors.border,
 
         }
       ]}
@@ -107,7 +109,7 @@ const handleSignUp = async () => {
             onChangeText={setPassword}
           />
           {error ? (
-            <Text style={[styles.errorText, { color: errorColor }]}>
+            <Text style={[styles.errorText, { color: colors.errorColor }]}>
               {error}
             </Text>
           ) : null}
@@ -117,18 +119,18 @@ const handleSignUp = async () => {
             style={({ pressed }) => [
               styles.button,
               {
-                backgroundColor: primary,
+                backgroundColor: colors.primary,
                 opacity: !isLoaded || loading ? 0.5 : pressed ? 0.85 : 1
               }
             ]}>
-            <Text style={[styles.buttonText, { color: onPrimary }]}>
+            <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
               {loading ? 'Creating account...' : 'Create Account'}
             </Text>
           </Pressable>
-          <Text style={[styles.footerText, { color: textMuted }]}>
+          <Text style={[styles.footerText, { color: colors.textMuted }]}>
             Already have an account?{" "}
             <Text
-              style={[styles.linkText, { color: text }]}
+              style={[styles.linkText, { color: colors.text }]}
               onPress={() => router.push("/(auth)/sign-in")}
             >
               Sign in
