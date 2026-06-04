@@ -1,5 +1,5 @@
 import { useColorScheme } from "react-native";
-import colors, { ColorTheme } from "@/constants/Colors";
+import colors, { ColorTheme } from "@/constants/colors";
 
 export function useColors(): ColorTheme & { radius: number } {
   const scheme = useColorScheme();
