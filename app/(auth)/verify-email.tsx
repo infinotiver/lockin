@@ -124,10 +124,9 @@ const VerifyEmail = () => {
           <Text style={[styles.footerText, { color: colors.textMuted }]}>
             Did not get the code?{" "}
             <Text
-              style={[styles.linkText, { color: colors.text }]}
-              // onPress={handle resend}
+              style={[styles.boldText, { color: colors.text }]}
             >
-              Resend code
+              Check your spam folder
             </Text>
           </Text>
 
@@ -175,9 +174,8 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     textAlign: 'center',
   },
-  linkText: {
+  boldText: {
     fontWeight: "600",
-    textDecorationLine: "underline",
   },
   codeRow: {
     flexDirection: 'row',
