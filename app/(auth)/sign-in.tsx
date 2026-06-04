@@ -19,14 +19,15 @@ const SignIn = () => {
   const [error, setError] = useState("");
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
+  const identifier = email.trim();
 
 const validateForm = () => {
-  if (!email.trim() || !password.trim()) {
+  if (!identifier || !password.trim()) {
     return "Email and password are required";
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(identifier)) {
     return "Invalid email format";
   }
 
@@ -53,7 +54,7 @@ const handleSignIn = async () => {
 
   try {
 
-    const result = await signIn.create({ identifier: email, password })
+    const result = await signIn.create({ identifier, password })
 
     if (result.status === 'complete') {
       await setActive({ session: result.createdSessionId })
