@@ -62,7 +62,7 @@ const handleSignUp = async () => {
     router.push({
       pathname: "/(auth)/verify-email",
       params: { email },
-      // passing 'identifier doesn't matter, only used for displaying name in the verification screen text
+      // Passing the untrimmed email is fine; it's only used for display in the verification screen
     });
 
   } catch (e: any) {
