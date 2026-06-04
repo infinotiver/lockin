@@ -74,7 +74,7 @@ const VerifyEmail = () => {
       ]}
     >
       <Text style={[styles.text, {color: colors.text}]}>Check your email</Text>
-      <Text style={[styles.textMuted, {color: colors.textMuted}]}> We have sent a code sent to </Text>
+      <Text style={[styles.textMuted, {color: colors.textMuted}]}> We have sent a code to </Text>
       <Text style={[styles.textMuted, {color: colors.textMuted}]}>{email}</Text>
       <Pressable onPress={() => inputRef.current?.focus()}>
         <View style={styles.codeRow}>
