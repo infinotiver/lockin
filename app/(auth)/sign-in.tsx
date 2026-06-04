@@ -1,5 +1,4 @@
-import { Text, View } from "react-native";
-import { StyleSheet, Pressable } from "react-native"
+import { Text, View, StyleSheet, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient";
 import { FocusedInput } from "@/components/FocusedInput";
 import { useState } from "react";

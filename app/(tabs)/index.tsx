@@ -1,7 +1,20 @@
-import { useColors } from "@/hooks/useColors";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Pressable } from 'react-native'
+import { useColors } from '@/hooks/useColors'
+import { useAuth } from '@clerk/clerk-expo';
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   const colors = useColors();
-  return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  const { signOut } = useAuth();
+  return (
+    <View style={{backgroundColor: colors.background, flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+      <Text style={{color: colors.text }}> Placeholder </Text>
+      <Pressable
+        onPress={ () => signOut() }
+      >
+        <Text style={{color: colors.text}}> Sign Out </Text>
+      </Pressable>
+    </View>
+  )
 }
+
+export default HomeScreen
