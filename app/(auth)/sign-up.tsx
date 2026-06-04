@@ -1,8 +1,6 @@
 import { Text, View } from "@/components/Themed"
-import { TextInput } from "react-native"
 import { StyleSheet, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient";
-import { useThemeColor } from "@/components/Themed";
 import { FocusedInput } from "@/components/FocusedInput";
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-expo";
@@ -10,22 +8,14 @@ import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 
 const SignUp = () => {
-  const surface1 = useThemeColor({}, "surface1");
-  const surface2 = useThemeColor({}, "surface2");
-  const border = useThemeColor({}, "border");
-  const textMuted = useThemeColor({}, "textMuted")
-  const text = useThemeColor({}, "text")
-  const primary = useThemeColor({}, "primary")
-  const onPrimary = useThemeColor({}, "onPrimary")
-  const errorColor = useThemeColor({}, "errorColor");
   const colors = useColors();
 
   const [email, setEmail ] = useState('');
   const [password, setPassword ] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { isLoaded, signUp } = useSignUp()
-  const router = useRouter() 
+  const { isLoaded, signUp } = useSignUp();
+  const router = useRouter();
 
 const validateForm = () => {
   if (!email.trim() || !password.trim()) {
@@ -66,7 +56,11 @@ const handleSignUp = async () => {
 
     await signUp.prepareEmailAddressVerification();
 
-    router.push("/(auth)/verify-email");
+    router.push({
+      pathname: "/(auth)/verify-email",
+      params: { email },
+    });
+
   } catch (e: any) {
     setError(
       e.errors?.[0]?.longMessage ||
