@@ -4,7 +4,7 @@ import { ExternalLink } from "./ExternalLink";
 import { MonoText } from "./StyledText";
 import { Text, View } from "./Themed";
 
-import colors from "@/constants/Colors";
+import colors from "@/constants/colors";
 
 export default function EditScreenInfo({ path }: { path: string }) {
   return (
