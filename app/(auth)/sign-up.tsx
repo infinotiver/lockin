@@ -9,20 +9,23 @@ import { useColors } from "@/hooks/useColors";
 const SignUp = () => {
   const colors = useColors();
 
+  const [name, setName] = useState('');
   const [email, setEmail ] = useState('');
   const [password, setPassword ] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { isLoaded, signUp } = useSignUp();
+  const identifier = email.trim();
   const router = useRouter();
 
 const validateForm = () => {
-  if (!email.trim() || !password.trim()) {
+  if (!name.trim()) return "First name is required";
+  if (!identifier || !password.trim()) {
     return "Email and password are required";
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!emailRegex.test(identifier)) {
     return "Invalid email format";
   }
 
@@ -49,8 +52,9 @@ const handleSignUp = async () => {
 
   try {
     await signUp.create({
-      emailAddress: email,
+      emailAddress: identifier,
       password,
+      firstName: name.trim(),
     });
 
     await signUp.prepareEmailAddressVerification();
@@ -58,6 +62,7 @@ const handleSignUp = async () => {
     router.push({
       pathname: "/(auth)/verify-email",
       params: { email },
+      // passing 'identifier doesn't matter, only used for displaying name in the verification screen text
     });
 
   } catch (e: any) {
@@ -89,7 +94,12 @@ const handleSignUp = async () => {
       ]}
       
     >
-          <Text style={[styles.text, {backgroundColor: colors.text}]}>Sign Up</Text>
+          <Text style={[styles.text, {color: colors.text}]}>Sign Up</Text>
+          <FocusedInput
+            placeholder="First Name"
+            autoCapitalize="words"
+            onChangeText={setName}
+          />
           <FocusedInput 
             placeholder="Email" 
             keyboardType="email-address"
