@@ -64,18 +64,15 @@ function RootLayoutNav() {
     if (!isSignedIn && !inAuthGroup) {
       router.replace("/(auth)/sign-in");
     } else if (isSignedIn && inAuthGroup) {
-      // TODO: check user role from your DB/Clerk metadata
-      // and redirect to /(teen) or /(parent) accordingly
-      router.replace("/(teen)");
+      router.replace("/(tabs)");
     }
   }, [isSignedIn, isLoaded, segments]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(teen)" />
-      <Stack.Screen name="(parent)" />
-      <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="+not-found" />
     </Stack>
   );
 }
