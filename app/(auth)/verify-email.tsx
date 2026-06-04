@@ -34,8 +34,15 @@ const VerifyEmail = () => {
     setLoading(true);
 
     try {
-      await signUp.attemptEmailAddressVerification({ code });
-      await setActive({ session: signUp.createdSessionId });
+
+      const result = await signUp.attemptEmailAddressVerification({ code })
+
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+      } else {
+        setError('Verification incomplete, please try again.')
+      }
+
     } catch (e: any) {
       setError(
         e.errors?.[0]?.longMessage ||
