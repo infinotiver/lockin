@@ -21,13 +21,13 @@ const light = {
 
   destructive: "#EF4444",
   onDestructive: "#FFFFFF",
-  error: "#BF3939",
+  errorColor: "#BF3939",
   success: "#16A34A",
   warning: "#D97706",
 
   border: "#E5E2D9",
   focusBorder: "#1A1A1A",
-  input: "#E5E2D9",
+  input: "#E5E2D9", 
   tint: "#1A1A1A",
 };
 
@@ -57,7 +57,7 @@ const dark: ColorTheme = {
 
   destructive: "#EF4444",
   onDestructive: "#FFFFFF",
-  error: "#C73E3E",
+  errorColor: "#C73E3E",
   success: "#16A34A",
   warning: "#D97706",
 
