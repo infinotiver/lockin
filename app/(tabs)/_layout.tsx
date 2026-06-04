@@ -49,7 +49,8 @@ function ClassicTabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.surface1,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.accent,
         tabBarStyle: Platform.select({
           ios: { position: "absolute" },
           default: {},
@@ -67,9 +68,11 @@ function ClassicTabLayout() {
                 bottom: 0,
               }}
             />
-          ) : Platform.OS === "web" ? (
-            <View style={{ backgroundColor: colors.background }} />
-          ) : null,
+          ) : (
+            Platform.OS === "web" && (
+              <View style={{ backgroundColor: colors.surface2 }} />
+            )
+          ),
       }}
     >
       <Tabs.Screen
