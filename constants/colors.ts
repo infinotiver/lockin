@@ -10,7 +10,7 @@ const light = {
   primary: "#1A1A1A",
   onPrimary: "#FFFFFF",
 
-  accent: "#D97706",
+  accent: "#be6a0bff",
   onAccent: "#1A1A1A",
 
   card: "#FFFFFF",
