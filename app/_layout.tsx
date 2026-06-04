@@ -21,6 +21,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  console.log('Clerk key:', process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY)
   const [loaded, error] = useFonts({
     JetBrainsMono_400Regular,
     JetBrainsMono_600SemiBold,
@@ -52,6 +53,7 @@ function RootLayoutNav() {
   const { isSignedIn, isLoaded } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
 
   useEffect(() => {
     if (!isLoaded) return;

@@ -28,7 +28,7 @@ const light = {
 
   border: "#E5E2D9",
   focusBorder: "#1A1A1A",
-  input: "#E5E2D9",
+  input: "#E5E2D9", 
   tint: "#1A1A1A",
 };
 
