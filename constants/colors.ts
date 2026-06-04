@@ -10,7 +10,7 @@ const light = {
   primary: "#1A1A1A",
   onPrimary: "#FFFFFF",
 
-  accent: "#E8D900", // yellow — carried from original
+  accent: "#D97706",
   onAccent: "#1A1A1A",
 
   card: "#FFFFFF",
@@ -24,7 +24,6 @@ const light = {
   error: "#BF3939",
   success: "#16A34A",
   warning: "#D97706",
-  earn: "#E8D900",
 
   border: "#E5E2D9",
   focusBorder: "#1A1A1A",
@@ -47,7 +46,7 @@ const dark: ColorTheme = {
   primary: "#FFFFFF",
   onPrimary: "#000000",
 
-  accent: "#E8D900", // yellow — same hex, sufficient contrast on dark
+  accent: "#F59E0B",
   onAccent: "#000000",
 
   card: "#1A1A1A",
@@ -61,7 +60,6 @@ const dark: ColorTheme = {
   error: "#C73E3E",
   success: "#16A34A",
   warning: "#D97706",
-  earn: "#E8D900",
 
   border: "#1A1A1A",
   focusBorder: "#F2F2F2",
