@@ -21,8 +21,6 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-export default function RootLayout() {
-  const [loaded, error] = useFonts({
   const [loaded, error] = useFonts({
     JetBrainsMono_400Regular,
     JetBrainsMono_600SemiBold,

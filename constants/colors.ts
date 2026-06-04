@@ -21,7 +21,7 @@ const light = {
 
   destructive: "#EF4444",
   onDestructive: "#FFFFFF",
-  error: "#BF3939",
+  errorColor: "#BF3939",
   success: "#16A34A",
   warning: "#D97706",
 
@@ -57,7 +57,7 @@ const dark: ColorTheme = {
 
   destructive: "#EF4444",
   onDestructive: "#FFFFFF",
-  error: "#C73E3E",
+  errorColor: "#C73E3E",
   success: "#16A34A",
   warning: "#D97706",
 

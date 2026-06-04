@@ -1,4 +1,4 @@
-import { Text, View } from "@/components/Themed"
+import { Text, View } from "react-native";
 import { StyleSheet, Pressable } from "react-native"
 import { LinearGradient } from "expo-linear-gradient";
 import { FocusedInput } from "@/components/FocusedInput";
@@ -74,7 +74,7 @@ const handleSignIn = async () => {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: colors.background}]}>
     <LinearGradient
       colors={[colors.surface1, colors.surface2]}
       start={{ x: 0, y: 0 }}
@@ -91,7 +91,7 @@ const handleSignIn = async () => {
       ]}
       
     >
-          <Text style={[styles.text, {}]}>Sign In</Text>
+          <Text style={[styles.text, { color: colors.text }]}>Sign In</Text>
           <FocusedInput 
             placeholder="Email" 
             keyboardType="email-address"
