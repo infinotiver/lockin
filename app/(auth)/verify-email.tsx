@@ -116,7 +116,7 @@ const VerifyEmail = () => {
       ) : null}
           <Pressable
             onPress={ handleVerify }
-            disabled={ !isLoaded || loading }
+            disabled={ !isLoaded || loading || code.length < 6 }
             style={({ pressed }) => [
               styles.button,
               {
