@@ -1,204 +1,98 @@
-import { Text, View, StyleSheet, Pressable } from "react-native"
-import { LinearGradient } from "expo-linear-gradient";
-import { FocusedInput } from "@/components/FocusedInput";
+// app/(auth)/sign-up.tsx
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useColors } from "@/hooks/useColors";
+import { FocusedInput } from "@/components/FocusedInput";
+import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
+import { AuthTitle } from "@/components/auth/AuthTitle";
+import { AuthErrorText } from "@/components/auth/AuthErrorText";
+import { AuthFooterText } from "@/components/auth/AuthFooterText";
+import { Button } from "@/components/ui/Button";
 
 const SignUp = () => {
-  const colors = useColors();
-
-  const [name, setName] = useState('');
-  const [email, setEmail ] = useState('');
-  const [password, setPassword ] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { isLoaded, signUp } = useSignUp();
-  const identifier = email.trim();
   const router = useRouter();
 
-const validateForm = () => {
-  if (!name.trim()) return "First name is required";
-  if (!identifier || !password.trim()) {
-    return "Email and password are required";
-  }
+  const validateForm = () => {
+    if (!name.trim()) return "First name is required";
+    if (!email.trim() || !password.trim())
+      return "Email and password are required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
+      return "Invalid email format";
+    if (password.length < 8) return "Password must be at least 8 characters";
+    return null;
+  };
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(identifier)) {
-    return "Invalid email format";
-  }
+  const handleSignUp = async () => {
+    setError("");
+    if (!isLoaded) return;
 
-  if (password.length < 8) {
-    return "Password must be at least 8 characters";
-  }
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
 
-  return null;
-};
-
-const handleSignUp = async () => {
-  setError("");
-
-  if (!isLoaded) return;
-
-  const validationError = validateForm();
-
-  if (validationError) {
-    setError(validationError);
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    await signUp.create({
-      emailAddress: identifier,
-      password,
-      firstName: name.trim(),
-    });
-
-    await signUp.prepareEmailAddressVerification();
-
-    router.push({
-      pathname: "/(auth)/verify-email",
-      params: { email },
-      // Passing the untrimmed email is fine; it's only used for display in the verification screen
-    });
-
-  } catch (e: any) {
-    setError(
-      e.errors?.[0]?.longMessage ||
-      e.errors?.[0]?.message ||
-      "Something went wrong."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      await signUp.create({
+        emailAddress: email.trim(),
+        password,
+        firstName: name.trim(),
+      });
+      await signUp.prepareEmailAddressVerification();
+      router.push({ pathname: "/(auth)/verify-email", params: { email } });
+    } catch (e: any) {
+      setError(
+        e.errors?.[0]?.longMessage ||
+          e.errors?.[0]?.message ||
+          "Something went wrong.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={[styles.container, {backgroundColor: colors.background}]}>
-    <LinearGradient
-      colors={[colors.surface1, colors.surface2]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[
-        styles.card,
-        {
-          width: "100%",
-          padding: 16,
-          borderWidth: 1,
-          borderColor: colors.border,
+    <AuthScreenWrapper>
+      <AuthTitle>Sign Up</AuthTitle>
+      <FocusedInput
+        placeholder="First Name"
+        autoCapitalize="words"
+        onChangeText={setName}
+      />
+      <FocusedInput
+        placeholder="Email"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        onChangeText={setEmail}
+      />
+      <FocusedInput
+        placeholder="Password"
+        secureTextEntry
+        onChangeText={setPassword}
+      />
+      <AuthErrorText error={error} />
+      <Button
+        onPress={handleSignUp}
+        label="Create Account"
+        loadingLabel="Creating account..."
+        loading={loading}
+        disabled={!isLoaded}
+        fullWidth
+      />
+      <AuthFooterText
+        prompt="Already have an account?"
+        linkLabel="Sign in"
+        onPress={() => router.push("/(auth)/sign-in")}
+      />
+    </AuthScreenWrapper>
+  );
+};
 
-        }
-      ]}
-      
-    >
-          <Text style={[styles.text, {color: colors.text}]}>Sign Up</Text>
-          <FocusedInput
-            placeholder="First Name"
-            autoCapitalize="words"
-            onChangeText={setName}
-          />
-          <FocusedInput 
-            placeholder="Email" 
-            keyboardType="email-address"
-            autoCapitalize="none"
-            onChangeText={setEmail}
-          />
-          <FocusedInput 
-            placeholder="Password"
-            secureTextEntry 
-            onChangeText={setPassword}
-          />
-          {error ? (
-            <Text style={[styles.errorText, { color: colors.errorColor }]}>
-              {error}
-            </Text>
-          ) : null}
-          <Pressable
-            onPress={handleSignUp}
-            disabled={!isLoaded || loading}
-            style={({ pressed }) => [
-              styles.button,
-              {
-                backgroundColor: colors.primary,
-                opacity: !isLoaded || loading ? 0.5 : pressed ? 0.85 : 1
-              }
-            ]}>
-            <Text style={[styles.buttonText, { color: colors.onPrimary }]}>
-              {loading ? 'Creating account...' : 'Create Account'}
-            </Text>
-          </Pressable>
-          <Text style={[styles.footerText, { color: colors.textMuted }]}>
-            Already have an account?{" "}
-            <Text
-              style={[styles.linkText, { color: colors.text }]}
-              onPress={() => router.push("/(auth)/sign-in")}
-            >
-              Sign in
-            </Text>
-          </Text>
-    </LinearGradient>
-    </View>
-  )
-
-}
-const styles = StyleSheet.create({
-  text: {
-    fontFamily: "JetBrainsMono_600SemiBold",
-    fontSize: 20,
-    padding: 8
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24
-  },
-  card: {
-    width: '100%',
-    padding: 10,
-    borderRadius: 32,
-    gap: 14
-  },
-  input: {
-    // padding: 24,
-    borderWidth: 1,
-    // borderRadius: 12,
-    // color: '#fff',
-  },
-  button: {
-    height: 50,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: "600",
-    letterSpacing: -0.2,
-  },
-  footer: {
-    backgroundColor: "transparent",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  footerText: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  linkText: {
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
-  errorText: {
-    fontSize: 14,
-    lineHeight: 18,
-    fontFamily: "JetBrainsMono_600SemiBold"
-  },
-
-})
-
-export default SignUp
+export default SignUp;
