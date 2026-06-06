@@ -46,7 +46,10 @@ const SignUp = () => {
         firstName: name.trim(),
       });
       await signUp.prepareEmailAddressVerification();
-      router.push({ pathname: "/(auth)/verify-email", params: { email } });
+      router.push({
+        pathname: "/(auth)/verify-email",
+        params: { email: email.trim() },
+      });
     } catch (e: any) {
       setError(
         e.errors?.[0]?.longMessage ||
