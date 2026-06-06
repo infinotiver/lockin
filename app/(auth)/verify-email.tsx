@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 
 const VerifyEmail = () => {
@@ -17,7 +17,7 @@ const VerifyEmail = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {

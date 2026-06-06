@@ -1,18 +1,13 @@
-import { Text, View, StyleSheet, Pressable } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { FocusedInput } from "@/components/FocusedInput";
 import { useState } from "react";
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
-import { useColors } from "@/hooks/useColors";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
 import { AuthErrorText } from "@/components/auth/AuthErrorText";
 import { AuthFooterText } from "@/components/auth/AuthFooterText";
 import { Button } from "@/components/ui/Button";
 const SignIn = () => {
-  const colors = useColors();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

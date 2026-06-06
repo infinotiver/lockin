@@ -57,7 +57,7 @@ export const Button = ({
       backgroundColor: colors.accent,
       borderWidth: 0,
       borderColor: "transparent",
-      textColor: colors.onPrimary,
+      textColor: colors.onAccent,
     },
     secondary: {
       backgroundColor: "transparent",
@@ -75,7 +75,7 @@ export const Button = ({
       backgroundColor: colors.errorColor,
       borderWidth: 0,
       borderColor: "transparent",
-      textColor: "#fff",
+      textColor: colors.onDestructive,
     },
   };
 
