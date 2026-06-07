@@ -2,7 +2,7 @@
 import { View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "./AuthCard";
-import { SPACING } from "@/constants/tokens";
+import { SPACING } from "@/constants/theme";
 
 export const AuthScreenWrapper = ({
   children,

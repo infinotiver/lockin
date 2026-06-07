@@ -2,7 +2,13 @@
 import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
-import { FONT_SIZES, RADIUS, SPACING } from "@/constants/tokens";
+import {
+  FONTS,
+  TYPE_SCALE,
+  RADIUS,
+  SPACING,
+  TYPOGRAPHY,
+} from "@/constants/theme";
 import { useLocalSearchParams } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
@@ -74,9 +80,11 @@ const VerifyEmail = () => {
     <AuthScreenWrapper>
       <AuthTitle>Check your email</AuthTitle>
 
-      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+      <Text style={[TYPOGRAPHY.footerText, styles.subtitle, { color: colors.textMuted }]}>
         We sent a code to{" "}
-        <Text style={{ color: colors.text, fontWeight: "600" }}>{email}</Text>
+        <Text style={{ color: colors.text, fontFamily: FONTS.strong }}>
+          {email}
+        </Text>
       </Text>
 
       <Pressable onPress={() => inputRef.current?.focus()}>
@@ -132,7 +140,7 @@ const VerifyEmail = () => {
 
       <Text style={[styles.footer, { color: colors.textMuted }]}>
         Didn't get the code?{" "}
-        <Text style={{ color: colors.text, fontWeight: "600" }}>
+        <Text style={{ color: colors.text, fontFamily: FONTS.strong }}>
           Check your spam folder
         </Text>
       </Text>
@@ -142,7 +150,7 @@ const VerifyEmail = () => {
 
 const styles = StyleSheet.create({
   subtitle: {
-    fontSize: FONT_SIZES.md,
+    fontSize: TYPE_SCALE.md,
     textAlign: "center",
     lineHeight: 18,
   },
@@ -159,9 +167,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   boxText: {
-    fontSize: FONT_SIZES["4xl"],
-    fontWeight: "600",
-    fontFamily: "JetBrainsMono_600SemiBold",
+    fontSize: TYPE_SCALE["4xl"],
+    fontFamily: FONTS.strong,
   },
   caret: {
     width: 2,
@@ -175,7 +182,7 @@ const styles = StyleSheet.create({
     height: 1,
   },
   footer: {
-    fontSize: FONT_SIZES.md,
+    fontSize: TYPE_SCALE.md,
     lineHeight: 18,
     textAlign: "center",
   },
