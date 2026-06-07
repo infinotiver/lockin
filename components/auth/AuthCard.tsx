@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/useColors";
-import { SPACING, RADIUS } from "@/constants/tokens";
+import { SPACING, RADIUS } from "@/constants/theme";
 
 export const AuthCard = ({ children }: { children: React.ReactNode }) => {
   const colors = useColors();
