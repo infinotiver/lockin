@@ -9,8 +9,6 @@ export type ThemeColors = {
   onPrimary: string;
   accent: string;
   onAccent: string;
-  card: string;
-  onCard: string;
   secondary: string;
   onSecondary: string;
   muted: string;
@@ -38,8 +36,6 @@ const light: ThemeColors = {
   onPrimary: "#FFFFFF",
   accent: "#be6a0bff",
   onAccent: "#1A1A1A",
-  card: "#FFFFFF",
-  onCard: "#1A1A1A",
   secondary: "#F7F5EE",
   onSecondary: "#1A1A1A",
   muted: "#ECEAE3",
@@ -65,8 +61,6 @@ const dark: ThemeColors = {
   onPrimary: "#000000",
   accent: "#F59E0B",
   onAccent: "#000000",
-  card: "#1A1A1A",
-  onCard: "#FFFFFF",
   secondary: "#0A0A0A",
   onSecondary: "#FFFFFF",
   muted: "#222222",

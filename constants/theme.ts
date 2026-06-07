@@ -137,6 +137,7 @@ export const LAYOUT = StyleSheet.create({
     gap: SPACING.md,
   },
   card: {
+    gap: SPACING.lg,
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     borderWidth: 1,
