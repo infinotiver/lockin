@@ -2,6 +2,7 @@
 import { View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "./AuthCard";
+import { SPACING } from "@/constants/tokens";
 
 export const AuthScreenWrapper = ({
   children,
@@ -15,7 +16,7 @@ export const AuthScreenWrapper = ({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        padding: 24,
+        padding: SPACING.xl,
         backgroundColor: colors.background,
       }}
     >

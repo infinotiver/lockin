@@ -2,6 +2,7 @@
 import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
+import { FONT_SIZES, RADIUS, SPACING } from "@/constants/tokens";
 import { useLocalSearchParams } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
@@ -141,24 +142,24 @@ const VerifyEmail = () => {
 
 const styles = StyleSheet.create({
   subtitle: {
-    fontSize: 13,
+    fontSize: FONT_SIZES.md,
     textAlign: "center",
     lineHeight: 18,
   },
   codeRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: SPACING.sm,
   },
   box: {
     flex: 1,
     height: 52,
     borderWidth: 2,
-    borderRadius: 12,
+    borderRadius: RADIUS.md,
     justifyContent: "center",
     alignItems: "center",
   },
   boxText: {
-    fontSize: 20,
+    fontSize: FONT_SIZES["4xl"],
     fontWeight: "600",
     fontFamily: "JetBrainsMono_600SemiBold",
   },
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
     height: 1,
   },
   footer: {
-    fontSize: 13,
+    fontSize: FONT_SIZES.md,
     lineHeight: 18,
     textAlign: "center",
   },

@@ -1,6 +1,7 @@
 // components/auth/AuthFooterText.tsx
 import { Text } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { FONT_SIZES } from "@/constants/tokens";
 
 type Props = {
   prompt: string;
@@ -13,7 +14,7 @@ export const AuthFooterText = ({ prompt, linkLabel, onPress }: Props) => {
   return (
     <Text
       style={{
-        fontSize: 13,
+        fontSize: FONT_SIZES.md,
         lineHeight: 18,
         color: colors.textMuted,
         textAlign: "center",
