@@ -1,6 +1,7 @@
 // components/ui/Button.tsx
 import { Pressable, Text, ActivityIndicator, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { FONT_SIZES, RADIUS, SPACING } from "@/constants/tokens";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -31,9 +32,9 @@ type ButtonProps = {
 };
 
 const SIZE: Record<ButtonSize, SizeConfig> = {
-  sm: { height: 36, fontSize: 13, paddingHorizontal: 14 },
-  md: { height: 44, fontSize: 15, paddingHorizontal: 18 },
-  lg: { height: 52, fontSize: 16, paddingHorizontal: 22 },
+  sm: { height: 36, fontSize: FONT_SIZES.md, paddingHorizontal: 14 },
+  md: { height: 44, fontSize: FONT_SIZES.xl, paddingHorizontal: 18 },
+  lg: { height: 52, fontSize: FONT_SIZES["2xl"], paddingHorizontal: 22 },
 };
 
 export const Button = ({
@@ -89,14 +90,14 @@ export const Button = ({
       style={({ pressed }) => ({
         height,
         paddingHorizontal,
-        borderRadius: 12,
+        borderRadius: RADIUS.md,
         borderWidth,
         borderColor,
         backgroundColor,
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        gap: 8,
+        gap: SPACING.sm,
         alignSelf: fullWidth ? "stretch" : "auto",
         opacity: isDisabled ? 0.45 : pressed ? 0.82 : 1,
       })}

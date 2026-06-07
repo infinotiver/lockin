@@ -1,5 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/useColors";
+import { SPACING, RADIUS } from "@/constants/tokens";
 
 export const AuthCard = ({ children }: { children: React.ReactNode }) => {
   const colors = useColors();
@@ -11,8 +12,8 @@ export const AuthCard = ({ children }: { children: React.ReactNode }) => {
       style={{
         width: "100%",
         maxWidth: 440,
-        padding: 16,
-        borderRadius: 24,
+        padding: SPACING.lg,
+        borderRadius: RADIUS.xxl,
         borderWidth: 1,
         borderColor: colors.border,
         gap: 14,

@@ -1,4 +1,5 @@
 import { useColors } from "@/hooks/useColors";
+import { RADIUS, SPACING, FONT_SIZES } from "@/constants/tokens";
 import { useState } from "react";
 import { TextInput, TextInputProps, StyleSheet } from "react-native";
 interface FocusedInputProps extends TextInputProps {
@@ -33,9 +34,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     borderWidth: 1,
-    borderRadius: 12, // Clean, subtle rounding
-    paddingHorizontal: 16,
-    fontSize: 15,
+    borderRadius: RADIUS.md, // Clean, subtle rounding
+    paddingHorizontal: SPACING.lg,
+    fontSize: FONT_SIZES.xl,
     fontFamily: "JetBrainsMono_400Regular", // Optional: system monospace fits the zen style well
   },
 });
