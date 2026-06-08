@@ -1,25 +1,15 @@
 // components/ui/Button.tsx
 import { Pressable, Text, ActivityIndicator, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
 
-type SizeConfig = {
-  height: number;
-  fontSize: number;
-  paddingHorizontal: number;
-};
-type VariantConfig = {
-  backgroundColor: string;
-  borderWidth: number;
-  borderColor: string;
-  textColor: string;
-};
-
 type ButtonProps = {
   onPress: () => void;
-  label: string;
+  children?: React.ReactNode;
+  label?: string;
   loadingLabel?: string;
   loading?: boolean;
   disabled?: boolean;
@@ -30,14 +20,18 @@ type ButtonProps = {
   rightIcon?: React.ReactNode;
 };
 
-const SIZE: Record<ButtonSize, SizeConfig> = {
-  sm: { height: 36, fontSize: 13, paddingHorizontal: 14 },
-  md: { height: 44, fontSize: 15, paddingHorizontal: 18 },
-  lg: { height: 52, fontSize: 16, paddingHorizontal: 22 },
+const SIZE: Record<
+  ButtonSize,
+  { height: number; fontSize: number; px: number }
+> = {
+  sm: { height: 36, fontSize: commonTheme.fontSize.md, px: commonTheme.space.md },
+  md: { height: 44, fontSize: commonTheme.fontSize.lg, px: commonTheme.space.lg },
+  lg: { height: 52, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
 };
 
 export const Button = ({
   onPress,
+  children,
   label,
   loadingLabel,
   loading = false,
@@ -50,37 +44,40 @@ export const Button = ({
 }: ButtonProps) => {
   const colors = useColors();
   const isDisabled = disabled || loading;
-  const { height, fontSize, paddingHorizontal } = SIZE[size];
+  const { height, fontSize, px } = SIZE[size];
 
-  const VARIANT: Record<ButtonVariant, VariantConfig> = {
+  const VARIANT: Record<
+    ButtonVariant,
+    { bg: string; border: number; borderColor: string; text: string }
+  > = {
     primary: {
-      backgroundColor: colors.accent,
-      borderWidth: 0,
+      bg: colors.accent,
+      border: 0,
       borderColor: "transparent",
-      textColor: colors.onAccent,
+      text: colors.onAccent,
     },
     secondary: {
-      backgroundColor: "transparent",
-      borderWidth: 1.5,
+      bg: colors.surface3,
+      border: 1,
       borderColor: colors.border,
-      textColor: colors.text,
+      text: colors.text,
     },
     ghost: {
-      backgroundColor: "transparent",
-      borderWidth: 0,
+      bg: "transparent",
+      border: 0,
       borderColor: "transparent",
-      textColor: colors.text,
+      text: colors.textMuted,
     },
     destructive: {
-      backgroundColor: colors.errorColor,
-      borderWidth: 0,
+      bg: colors.errorColor,
+      border: 0,
       borderColor: "transparent",
-      textColor: colors.onDestructive,
+      text: "#fff",
     },
   };
 
-  const { backgroundColor, borderWidth, borderColor, textColor } =
-    VARIANT[variant] ?? VARIANT.primary;
+  const { bg, border, borderColor, text } = VARIANT[variant] ?? VARIANT.primary;
+  const content = loading && loadingLabel ? loadingLabel : (children ?? label);
 
   return (
     <Pressable
@@ -88,34 +85,33 @@ export const Button = ({
       disabled={isDisabled}
       style={({ pressed }) => ({
         height,
-        paddingHorizontal,
-        borderRadius: 12,
-        borderWidth,
+        paddingHorizontal: px,
+        borderRadius: commonTheme.rounded.md,
+        borderWidth: border,
         borderColor,
-        backgroundColor,
+        backgroundColor: bg,
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        gap: 8,
+        gap: commonTheme.space.sm,
         alignSelf: fullWidth ? "stretch" : "auto",
         opacity: isDisabled ? 0.45 : pressed ? 0.82 : 1,
       })}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={textColor} />
+        <ActivityIndicator size="small" color={text} />
       ) : leftIcon ? (
         <View>{leftIcon}</View>
       ) : null}
-      <Text
-        style={{
-          fontSize,
-          fontWeight: "600",
-          letterSpacing: -0.2,
-          color: textColor,
-        }}
-      >
-        {loading && loadingLabel ? loadingLabel : label}
-      </Text>
+
+      {typeof content === "string" ? (
+        <Text style={[commonTheme.text.button, { fontSize, color: text }]}>
+          {content}
+        </Text>
+      ) : (
+        content
+      )}
+
       {!loading && rightIcon && <View>{rightIcon}</View>}
     </Pressable>
   );

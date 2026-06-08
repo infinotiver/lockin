@@ -1,6 +1,7 @@
 // components/auth/AuthFooterText.tsx
 import { Text } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 
 type Props = {
   prompt: string;
@@ -12,17 +13,15 @@ export const AuthFooterText = ({ prompt, linkLabel, onPress }: Props) => {
   const colors = useColors();
   return (
     <Text
-      style={{
-        fontSize: 13,
-        lineHeight: 18,
-        color: colors.textMuted,
-        textAlign: "center",
-      }}
+      style={[
+        commonTheme.text.body,
+        { lineHeight: 18, color: colors.textMuted, textAlign: "center" },
+      ]}
     >
       {prompt}{" "}
       <Text
         style={{
-          fontWeight: "600",
+          fontFamily: commonTheme.font.bold,
           textDecorationLine: "underline",
           color: colors.text,
         }}

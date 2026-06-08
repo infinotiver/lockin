@@ -1,18 +1,14 @@
 // components/auth/AuthErrorText.tsx
 import { Text } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 
 export const AuthErrorText = ({ error }: { error: string }) => {
   const colors = useColors();
   if (!error) return null;
   return (
     <Text
-      style={{
-        fontSize: 14,
-        lineHeight: 18,
-        fontFamily: "JetBrainsMono_600SemiBold",
-        color: colors.errorColor,
-      }}
+      style={[commonTheme.text.error, { lineHeight: 18, color: colors.errorColor }]}
     >
       {error}
     </Text>

@@ -1,20 +1,21 @@
-import { View, Text, Pressable } from 'react-native'
-import { useColors } from '@/hooks/useColors'
-import { useAuth } from '@clerk/clerk-expo';
+import { Text, ScrollView } from "react-native";
+import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 
 const HomeScreen = () => {
   const colors = useColors();
-  const { signOut } = useAuth();
-  return (
-    <View style={{backgroundColor: colors.background, flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-      <Text style={{color: colors.text }}> Placeholder </Text>
-      <Pressable
-        onPress={ () => signOut() }
-      >
-        <Text style={{color: colors.text}}> Sign Out </Text>
-      </Pressable>
-    </View>
-  )
-}
 
-export default HomeScreen
+  return (
+    <ScrollView
+      style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
+      contentContainerStyle={commonTheme.layout.card}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
+        Welcome back, USER
+      </Text>
+    </ScrollView>
+  );
+};
+
+export default HomeScreen;
