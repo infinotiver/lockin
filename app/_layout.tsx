@@ -53,7 +53,6 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
-
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -71,6 +70,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />
+      <Stack.Screen name="share-code" options={{ presentation: "modal" }} />
     </Stack>
   );
 }
