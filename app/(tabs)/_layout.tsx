@@ -39,7 +39,7 @@ function ClassicTabLayout() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.card,
+          backgroundColor: isIOS ? "transparent" : colors.surface2,
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
@@ -60,11 +60,11 @@ function ClassicTabLayout() {
               style={[
                 StyleSheet.absoluteFill,
                 {
-                  backgroundColor: colors.card,
+                  backgroundColor: colors.surface2,
                   borderTopWidth: StyleSheet.hairlineWidth,
                   borderTopColor: colors.border,
                 },
-              ]}
+
             />
           ) : null,
       }}
