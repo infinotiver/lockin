@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/tokenCache";
+import { useColors } from "@/hooks/useColors";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -80,8 +81,16 @@ function RootLayoutNav() {
     }
   }, [isSignedIn, isLoaded, segments]);
 
+  const colors = useColors()
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: colors.background,
+        },
+      }}
+    >
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />
