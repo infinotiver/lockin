@@ -8,7 +8,7 @@ const teenSetup = () => {
     <View>
       <Text></Text>
       <Pressable
-        onPress={()=>{router.navigate('/(onboarding)/index.tsx')}}
+        onPress={() => { router.navigate('/(onboarding)') }}
       >
       <Text>index</Text>
       </Pressable>
