@@ -1,56 +1,19 @@
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { Text, ScrollView } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import {
-  LAYOUT,
-  RADIUS,
-  SPACING,
-  TYPOGRAPHY,
-  TYPE_SCALE,
-  FONTS,
-} from "@/constants/theme";
-import { Button } from "@/components/ui/Button";
+import commonTheme from "@/constants/theme";
+
 const HomeScreen = () => {
   const colors = useColors();
 
   return (
     <ScrollView
-      style={[LAYOUT.flex, { backgroundColor: colors.background }]}
-      contentContainerStyle={LAYOUT.card}
+      style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
+      contentContainerStyle={commonTheme.layout.card}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[TYPOGRAPHY.sectionTitle, { color: colors.text }]}>
+      <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
         Welcome back, USER
       </Text>
-
-      <View
-        style={[
-          LAYOUT.card,
-          { borderColor: colors.border, backgroundColor: colors.surface3 },
-        ]}
-      >
-        <Text style={{ color: colors.textMuted }}>Your stash</Text>
-
-        <Text
-          style={[
-            TYPOGRAPHY.sectionTitle,
-            {
-              fontSize: TYPE_SCALE["9xl"],
-              color: colors.text,
-              fontFamily: FONTS.extraBold,
-            },
-          ]}
-        >
-          ₹1234.56
-        </Text>
-
-        <View style={LAYOUT.card}>
-          <Text style={{ color: colors.text }}>
-            Earn up to <Text style={{ color: colors.accent }}>₹20 more</Text>{" "}
-            from 1 active stake
-          </Text>
-        </View>
-        <View style={[LAYOUT.flex, LAYOUT.row, { gap: SPACING.md }]}></View>
-      </View>
     </ScrollView>
   );
 };

@@ -1,5 +1,5 @@
 import { useColors } from "@/hooks/useColors";
-import { RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import commonTheme from "@/constants/theme";
 import { useState } from "react";
 import { TextInput, TextInputProps, StyleSheet } from "react-native";
 interface FocusedInputProps extends TextInputProps {
@@ -17,7 +17,7 @@ export const FocusedInput = ({ style, ...props }: FocusedInputProps) => {
       selectionColor={colors.text} // Cursor color matching the text theme
       style={[
         styles.input,
-        TYPOGRAPHY.input,
+        commonTheme.text.input,
         {
           backgroundColor: colors.surface3,
           borderColor: isFocused ? colors.focusBorder : colors.border,
@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     borderWidth: 1,
-    borderRadius: RADIUS.md, // Clean, subtle rounding
-    paddingHorizontal: SPACING.lg,
+    borderRadius: commonTheme.rounded.md,
+    paddingHorizontal: commonTheme.space.lg,
   },
 });

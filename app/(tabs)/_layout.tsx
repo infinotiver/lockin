@@ -64,7 +64,7 @@ function ClassicTabLayout() {
                   borderTopWidth: StyleSheet.hairlineWidth,
                   borderTopColor: colors.border,
                 },
-
+              ]}
             />
           ) : null,
       }}

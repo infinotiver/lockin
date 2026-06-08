@@ -1,6 +1,6 @@
 import { LinearGradient } from "expo-linear-gradient";
 import { useColors } from "@/hooks/useColors";
-import { SPACING, RADIUS } from "@/constants/theme";
+import commonTheme from "@/constants/theme";
 
 export const AuthCard = ({ children }: { children: React.ReactNode }) => {
   const colors = useColors();
@@ -12,8 +12,8 @@ export const AuthCard = ({ children }: { children: React.ReactNode }) => {
       style={{
         width: "100%",
         maxWidth: 440,
-        padding: SPACING.lg,
-        borderRadius: RADIUS.xxl,
+        padding: commonTheme.space.lg,
+        borderRadius: commonTheme.rounded["2xl"],
         borderWidth: 1,
         borderColor: colors.border,
         gap: 14,

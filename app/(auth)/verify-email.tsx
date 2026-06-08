@@ -2,13 +2,7 @@
 import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
-import {
-  FONTS,
-  TYPE_SCALE,
-  RADIUS,
-  SPACING,
-  TYPOGRAPHY,
-} from "@/constants/theme";
+import commonTheme from "@/constants/theme";
 import { useLocalSearchParams } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
@@ -80,9 +74,17 @@ const VerifyEmail = () => {
     <AuthScreenWrapper>
       <AuthTitle>Check your email</AuthTitle>
 
-      <Text style={[TYPOGRAPHY.footerText, styles.subtitle, { color: colors.textMuted }]}>
+      <Text
+        style={[
+          commonTheme.text.body,
+          styles.subtitle,
+          { color: colors.textMuted },
+        ]}
+      >
         We sent a code to{" "}
-        <Text style={{ color: colors.text, fontFamily: FONTS.strong }}>
+        <Text
+          style={{ color: colors.text, fontFamily: commonTheme.font.strong }}
+        >
           {email}
         </Text>
       </Text>
@@ -140,7 +142,9 @@ const VerifyEmail = () => {
 
       <Text style={[styles.footer, { color: colors.textMuted }]}>
         Didn't get the code?{" "}
-        <Text style={{ color: colors.text, fontFamily: FONTS.strong }}>
+        <Text
+          style={{ color: colors.text, fontFamily: commonTheme.font.strong }}
+        >
           Check your spam folder
         </Text>
       </Text>
@@ -150,25 +154,25 @@ const VerifyEmail = () => {
 
 const styles = StyleSheet.create({
   subtitle: {
-    fontSize: TYPE_SCALE.md,
+    fontSize: commonTheme.fontSize.md,
     textAlign: "center",
     lineHeight: 18,
   },
   codeRow: {
     flexDirection: "row",
-    gap: SPACING.sm,
+    gap: commonTheme.space.sm,
   },
   box: {
     flex: 1,
     height: 52,
     borderWidth: 2,
-    borderRadius: RADIUS.md,
+    borderRadius: commonTheme.rounded.md,
     justifyContent: "center",
     alignItems: "center",
   },
   boxText: {
-    fontSize: TYPE_SCALE["4xl"],
-    fontFamily: FONTS.strong,
+    fontSize: commonTheme.fontSize["4xl"],
+    fontFamily: commonTheme.font.strong,
   },
   caret: {
     width: 2,
@@ -182,7 +186,7 @@ const styles = StyleSheet.create({
     height: 1,
   },
   footer: {
-    fontSize: TYPE_SCALE.md,
+    fontSize: commonTheme.fontSize.md,
     lineHeight: 18,
     textAlign: "center",
   },

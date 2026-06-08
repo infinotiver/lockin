@@ -1,7 +1,7 @@
 // components/ui/Button.tsx
 import { Pressable, Text, ActivityIndicator, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { RADIUS, SPACING, TYPE_SCALE, TYPOGRAPHY } from "@/constants/theme";
+import commonTheme from "@/constants/theme";
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
@@ -24,9 +24,9 @@ const SIZE: Record<
   ButtonSize,
   { height: number; fontSize: number; px: number }
 > = {
-  sm: { height: 36, fontSize: TYPE_SCALE.md, px: SPACING.md },
-  md: { height: 44, fontSize: TYPE_SCALE.lg, px: SPACING.lg },
-  lg: { height: 52, fontSize: TYPE_SCALE["2xl"], px: SPACING.xl },
+  sm: { height: 36, fontSize: commonTheme.fontSize.md, px: commonTheme.space.md },
+  md: { height: 44, fontSize: commonTheme.fontSize.lg, px: commonTheme.space.lg },
+  lg: { height: 52, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
 };
 
 export const Button = ({
@@ -86,14 +86,14 @@ export const Button = ({
       style={({ pressed }) => ({
         height,
         paddingHorizontal: px,
-        borderRadius: RADIUS.md,
+        borderRadius: commonTheme.rounded.md,
         borderWidth: border,
         borderColor,
         backgroundColor: bg,
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        gap: SPACING.sm,
+        gap: commonTheme.space.sm,
         alignSelf: fullWidth ? "stretch" : "auto",
         opacity: isDisabled ? 0.45 : pressed ? 0.82 : 1,
       })}
@@ -105,7 +105,7 @@ export const Button = ({
       ) : null}
 
       {typeof content === "string" ? (
-        <Text style={[TYPOGRAPHY.buttonText, { fontSize, color: text }]}>
+        <Text style={[commonTheme.text.button, { fontSize, color: text }]}>
           {content}
         </Text>
       ) : (
