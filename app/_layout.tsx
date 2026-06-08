@@ -77,10 +77,9 @@ function RootLayoutNav() {
     if (!isSignedIn && !inAuthGroup) {
       router.replace("/(auth)/sign-in");
     } else if (isSignedIn && inAuthGroup) {
-      // router.replace("/(tabs)");
+      router.replace("/(tabs)");
       // this will be handled differently, since there will be onboarding now
-      // Option A: add ' && onboarded' and ' && !onboarded statement' statement, so once they choose teen or individual, they can move on
-      // Option B: I'll think more... ;-; (forgot what I came up with)
+      // TODO: This is confusing but I realized, we always need to redirect users to onboarding after signup since there is no way they have completed onboarding, and onboarded users will always have a role, so I can check if they dont have a role and redirect them to onboarding
     }
   }, [isSignedIn, isLoaded, segments]);
 
