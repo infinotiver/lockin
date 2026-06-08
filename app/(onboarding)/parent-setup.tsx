@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native'
 
-const parentSetup = () => {
+const ParentSetup = () => {
   return (
     <View>
       <Text></Text>
@@ -8,4 +8,4 @@ const parentSetup = () => {
   )
 }
 
-export default parentSetup
+export default ParentSetup
