@@ -1,4 +1,4 @@
-// components/share/share-code.tsx
+// components/share/ShareCodeModal.tsx
 import { View, Text, Pressable, Share, Platform } from "react-native";
 import { useState } from "react";
 import { useColors } from "@/hooks/useColors";
