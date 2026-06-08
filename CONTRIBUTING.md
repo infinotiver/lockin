@@ -31,3 +31,5 @@ style={{
 // wrong
 style={{ padding: 12, borderRadius: 14, fontSize: 16 }}
 ```
+
+Using lucide for icons in the project
