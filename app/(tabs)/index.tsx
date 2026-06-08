@@ -49,18 +49,7 @@ const HomeScreen = () => {
             from 1 active stake
           </Text>
         </View>
-        <View style={[LAYOUT.flex, LAYOUT.row, { gap: SPACING.md }]}>
-          <Button onPress={() => console.log("yet to implement")} size="sm">
-            Stakes
-          </Button>
-          <Button
-            onPress={() => console.log("yet to implement")}
-            size="sm"
-            variant="secondary"
-          >
-            Reports
-          </Button>
-        </View>
+        <View style={[LAYOUT.flex, LAYOUT.row, { gap: SPACING.md }]}></View>
       </View>
     </ScrollView>
   );
