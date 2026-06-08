@@ -35,11 +35,20 @@ const fontSize = {
   "9xl": 44,
 } as const;
 
-const font = {
-  body: "JetBrainsMono_400Regular",
-  strong: "JetBrainsMono_600SemiBold",
-  extraBold: "JetBrainsMono_800ExtraBold",
-  display: "PixelifySans_400Regular",
+export const font = {
+  body: "Inter_400Regular",
+  medium: "Inter_500Medium",
+  semibold: "Inter_600SemiBold",
+  bold: "Inter_700Bold",
+
+  mono: "JetBrainsMono_400Regular",
+  monoSemibold: "JetBrainsMono_600SemiBold",
+  monoBold: "JetBrainsMono_700Bold",
+
+  pixel: "PixelifySans_400Regular",
+  pixelMedium: "PixelifySans_500Medium",
+  pixelSemibold: "PixelifySans_600SemiBold",
+  pixelBold: "PixelifySans_700Bold",
 } as const;
 
 const fontWeight = {
@@ -53,15 +62,15 @@ const fontWeight = {
 const text = StyleSheet.create({
   pageTitle: {
     fontSize: fontSize["7xl"],
-    fontFamily: font.display,
+    fontFamily: font.body,
   },
   sectionTitle: {
     fontSize: fontSize["3xl"],
-    fontFamily: font.strong,
+    fontFamily: font.bold,
   },
   cardTitle: {
     fontSize: fontSize["2xl"],
-    fontFamily: font.strong,
+    fontFamily: font.bold,
   },
   body: {
     fontSize: fontSize.md,
@@ -69,7 +78,7 @@ const text = StyleSheet.create({
   },
   bodyStrong: {
     fontSize: fontSize.md,
-    fontFamily: font.strong,
+    fontFamily: font.bold,
   },
   caption: {
     fontSize: fontSize.sm,
@@ -77,17 +86,17 @@ const text = StyleSheet.create({
   },
   label: {
     fontSize: fontSize.xs,
-    fontFamily: font.strong,
+    fontFamily: font.bold,
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   button: {
     fontSize: fontSize.xl,
-    fontFamily: font.strong,
+    fontFamily: font.bold,
   },
   link: {
     fontSize: fontSize.md,
-    fontFamily: font.strong,
+    fontFamily: font.bold,
     textDecorationLine: "underline",
   },
   input: {
@@ -96,16 +105,16 @@ const text = StyleSheet.create({
   },
   amount: {
     fontSize: fontSize["5xl"],
-    fontFamily: font.strong,
+    fontFamily: font.bold,
   },
   amountLarge: {
     fontSize: fontSize["9xl"],
-    fontFamily: font.extraBold,
+    fontFamily: font.monoBold,
     lineHeight: 52,
   },
   error: {
     fontSize: fontSize.md,
-    fontFamily: font.strong,
+    fontFamily: font.bold,
   },
 });
 

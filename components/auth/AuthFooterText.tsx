@@ -21,7 +21,7 @@ export const AuthFooterText = ({ prompt, linkLabel, onPress }: Props) => {
       {prompt}{" "}
       <Text
         style={{
-          fontFamily: commonTheme.font.strong,
+          fontFamily: commonTheme.font.bold,
           textDecorationLine: "underline",
           color: colors.text,
         }}

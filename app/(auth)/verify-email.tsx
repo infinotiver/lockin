@@ -83,7 +83,7 @@ const VerifyEmail = () => {
       >
         We sent a code to{" "}
         <Text
-          style={{ color: colors.text, fontFamily: commonTheme.font.strong }}
+          style={{ color: colors.text, fontFamily: commonTheme.font.bold }}
         >
           {email}
         </Text>
@@ -143,7 +143,7 @@ const VerifyEmail = () => {
       <Text style={[styles.footer, { color: colors.textMuted }]}>
         Didn't get the code?{" "}
         <Text
-          style={{ color: colors.text, fontFamily: commonTheme.font.strong }}
+          style={{ color: colors.text, fontFamily: commonTheme.font.bold }}
         >
           Check your spam folder
         </Text>
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   boxText: {
     fontSize: commonTheme.fontSize["4xl"],
-    fontFamily: commonTheme.font.strong,
+    fontFamily: commonTheme.font.bold,
   },
   caret: {
     width: 2,

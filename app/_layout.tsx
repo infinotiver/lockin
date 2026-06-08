@@ -6,12 +6,24 @@ import "react-native-reanimated";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/tokenCache";
 import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
+
+import {
   JetBrainsMono_400Regular,
   JetBrainsMono_600SemiBold,
-  JetBrainsMono_800ExtraBold,
+  JetBrainsMono_700Bold,
 } from "@expo-google-fonts/jetbrains-mono";
-import { PixelifySans_400Regular } from "@expo-google-fonts/pixelify-sans";
 
+import {
+  PixelifySans_400Regular,
+  PixelifySans_500Medium,
+  PixelifySans_600SemiBold,
+  PixelifySans_700Bold,
+} from "@expo-google-fonts/pixelify-sans";
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
@@ -21,16 +33,19 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
+  const [loaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
     JetBrainsMono_400Regular,
     JetBrainsMono_600SemiBold,
-    JetBrainsMono_800ExtraBold,
+    JetBrainsMono_700Bold,
     PixelifySans_400Regular,
+    PixelifySans_500Medium,
+    PixelifySans_600SemiBold,
+    PixelifySans_700Bold,
   });
-
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
 
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync();
