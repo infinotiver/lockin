@@ -19,11 +19,18 @@ const SignUp = () => {
   const router = useRouter();
 
   const validateForm = () => {
-    if (!name.trim()) return "First name is required";
+    const trimmedName = name.trim();
+    if (!trimmedName) return "First name is required";
+    if (trimmedName.length < 3)
+      return "Name must be at least 3 characters";
+    if (!/^[\p{L}\s]+$/u.test(trimmedName))
+      return "Name can only contain letters and spaces";
+
     if (!email.trim() || !password.trim())
       return "Email and password are required";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()))
       return "Invalid email format";
+
     if (password.length < 8) return "Password must be at least 8 characters";
     return null;
   };
@@ -78,16 +85,20 @@ const SignUp = () => {
       <FocusedInput
         placeholder="Password"
         secureTextEntry
+        autoCapitalize="none"
         onChangeText={setPassword}
       />
       <AuthErrorText error={error} />
       <Button
         onPress={handleSignUp}
+        variant="primary"
+        size="lg"
         label="Create Account"
         loadingLabel="Creating account..."
         loading={loading}
         disabled={!isLoaded}
         fullWidth
+        monospace
       />
       <AuthFooterText
         prompt="Already have an account?"

@@ -14,10 +14,11 @@ export const FocusedInput = ({ style, ...props }: FocusedInputProps) => {
       placeholderTextColor={colors.textMuted}
       onFocus={() => setIsFocused(true)}
       onBlur={() => setIsFocused(false)}
+      autoCorrect={false}
       selectionColor={colors.text} // Cursor color matching the text theme
       style={[
         styles.input,
-        commonTheme.text.input,
+        commonTheme.text.authInput,
         {
           backgroundColor: colors.surface3,
           borderColor: isFocused ? colors.focusBorder : colors.border,
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     borderWidth: 1,
-    borderRadius: commonTheme.rounded.md,
+    borderRadius: commonTheme.rounded.xl,
     paddingHorizontal: commonTheme.space.lg,
   },
 });

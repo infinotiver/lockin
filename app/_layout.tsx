@@ -77,7 +77,10 @@ function RootLayoutNav() {
     if (!isSignedIn && !inAuthGroup) {
       router.replace("/(auth)/sign-in");
     } else if (isSignedIn && inAuthGroup) {
-      router.replace("/(tabs)");
+      // router.replace("/(tabs)");
+      // this will be handled differently, since there will be onboarding now
+      // Option A: add ' && onboarded' and ' && !onboarded statement' statement, so once they choose teen or individual, they can move on
+      // Option B: I'll think more... ;-; (forgot what I came up with)
     }
   }, [isSignedIn, isLoaded, segments]);
 

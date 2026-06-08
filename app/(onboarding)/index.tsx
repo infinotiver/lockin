@@ -17,7 +17,6 @@ const onboarding = () => {
     router.navigate('/(auth)/sign-in')
   }
 
-  setLoading(true)
   return (
     <View>
       <Text>Placeholder</Text>
