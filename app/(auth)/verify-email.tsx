@@ -2,6 +2,7 @@
 import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 import { useLocalSearchParams } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
@@ -73,9 +74,19 @@ const VerifyEmail = () => {
     <AuthScreenWrapper>
       <AuthTitle>Check your email</AuthTitle>
 
-      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+      <Text
+        style={[
+          commonTheme.text.body,
+          styles.subtitle,
+          { color: colors.textMuted },
+        ]}
+      >
         We sent a code to{" "}
-        <Text style={{ color: colors.text, fontWeight: "600" }}>{email}</Text>
+        <Text
+          style={{ color: colors.text, fontFamily: commonTheme.font.bold }}
+        >
+          {email}
+        </Text>
       </Text>
 
       <Pressable onPress={() => inputRef.current?.focus()}>
@@ -131,7 +142,9 @@ const VerifyEmail = () => {
 
       <Text style={[styles.footer, { color: colors.textMuted }]}>
         Didn't get the code?{" "}
-        <Text style={{ color: colors.text, fontWeight: "600" }}>
+        <Text
+          style={{ color: colors.text, fontFamily: commonTheme.font.bold }}
+        >
           Check your spam folder
         </Text>
       </Text>
@@ -141,26 +154,25 @@ const VerifyEmail = () => {
 
 const styles = StyleSheet.create({
   subtitle: {
-    fontSize: 13,
+    fontSize: commonTheme.fontSize.md,
     textAlign: "center",
     lineHeight: 18,
   },
   codeRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: commonTheme.space.sm,
   },
   box: {
     flex: 1,
     height: 52,
     borderWidth: 2,
-    borderRadius: 12,
+    borderRadius: commonTheme.rounded.md,
     justifyContent: "center",
     alignItems: "center",
   },
   boxText: {
-    fontSize: 20,
-    fontWeight: "600",
-    fontFamily: "JetBrainsMono_600SemiBold",
+    fontSize: commonTheme.fontSize["4xl"],
+    fontFamily: commonTheme.font.bold,
   },
   caret: {
     width: 2,
@@ -174,7 +186,7 @@ const styles = StyleSheet.create({
     height: 1,
   },
   footer: {
-    fontSize: 13,
+    fontSize: commonTheme.fontSize.md,
     lineHeight: 18,
     textAlign: "center",
   },
