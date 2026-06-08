@@ -18,6 +18,7 @@ type ButtonProps = {
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  monospace?: boolean
 };
 
 const SIZE: Record<
@@ -26,7 +27,7 @@ const SIZE: Record<
 > = {
   sm: { height: 36, fontSize: commonTheme.fontSize.md, px: commonTheme.space.md },
   md: { height: 44, fontSize: commonTheme.fontSize.lg, px: commonTheme.space.lg },
-  lg: { height: 52, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
+  lg: { height: 50, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
 };
 
 export const Button = ({
@@ -41,6 +42,7 @@ export const Button = ({
   fullWidth = false,
   leftIcon,
   rightIcon,
+  monospace,
 }: ButtonProps) => {
   const colors = useColors();
   const isDisabled = disabled || loading;
@@ -86,7 +88,7 @@ export const Button = ({
       style={({ pressed }) => ({
         height,
         paddingHorizontal: px,
-        borderRadius: commonTheme.rounded.md,
+        borderRadius: commonTheme.rounded["full"],
         borderWidth: border,
         borderColor,
         backgroundColor: bg,
@@ -105,7 +107,20 @@ export const Button = ({
       ) : null}
 
       {typeof content === "string" ? (
-        <Text style={[commonTheme.text.button, { fontSize, color: text }]}>
+        <Text
+          style={[
+            commonTheme.text.button,
+            {
+              fontSize,
+              color: text,
+  
+              ...(monospace && {
+                fontFamily: commonTheme.font.monoBold,
+                color: text
+              }),
+            },
+          ]}
+        >
           {content}
         </Text>
       ) : (

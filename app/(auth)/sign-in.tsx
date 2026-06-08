@@ -76,18 +76,22 @@ const SignIn = () => {
         onChangeText={setEmail}
       />
       <FocusedInput
-        placeholder="Password"
         secureTextEntry
+        placeholder="Password"
+        autoCapitalize="none"
         onChangeText={setPassword}
       />
       <AuthErrorText error={error} />
       <Button
         onPress={handleSignIn}
+        variant="primary"
+        size="lg"
         label="Sign in"
         loadingLabel="Signing in..."
         loading={loading}
         disabled={!isLoaded}
         fullWidth
+        monospace
       />
       <AuthFooterText
         prompt="Don't have an account?"

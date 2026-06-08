@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/tokenCache";
+import { useColors } from "@/hooks/useColors";
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -77,11 +78,21 @@ function RootLayoutNav() {
       router.replace("/(auth)/sign-in");
     } else if (isSignedIn && inAuthGroup) {
       router.replace("/(tabs)");
+      // this will be handled differently, since there will be onboarding now
+      // TODO: This is confusing but I realized, we always need to redirect users to onboarding after signup since there is no way they have completed onboarding, and onboarded users will always have a role, so I can check if they dont have a role and redirect them to onboarding
     }
   }, [isSignedIn, isLoaded, segments]);
 
+  const colors = useColors()
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: colors.background,
+        },
+      }}
+    >
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />

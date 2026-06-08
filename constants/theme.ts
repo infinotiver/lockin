@@ -65,7 +65,7 @@ const text = StyleSheet.create({
     fontFamily: font.body,
   },
   sectionTitle: {
-    fontSize: fontSize["3xl"],
+    fontSize: fontSize["5xl"],
     fontFamily: font.bold,
   },
   cardTitle: {
@@ -102,6 +102,10 @@ const text = StyleSheet.create({
   input: {
     fontSize: fontSize.xl,
     fontFamily: font.body,
+  },
+  authInput: {
+    fontSize: fontSize.xl,
+    fontFamily: font.mono,
   },
   amount: {
     fontSize: fontSize["5xl"],
