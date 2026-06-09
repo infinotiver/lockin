@@ -11,11 +11,19 @@ export async function POST(request: Request) {
   
   if (!clerkId) return unauthorized();
 
-  const { role } = await request.json();
+export async function POST(request: Request) {
+  let role: unknown;
+  try {
+    const body = await request.json();
+    role = body?.role;
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
-  if (!["individual", "teen"].includes(role)) {
+  if (role !== "individual" && role !== "teen") {
     return Response.json({ error: "Invalid role" }, { status: 400 });
   }
+}
 
   await clerk.users.updateUserMetadata(clerkId, {
     publicMetadata: { role },
