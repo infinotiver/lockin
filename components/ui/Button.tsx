@@ -27,7 +27,7 @@ const SIZE: Record<
 > = {
   sm: { height: 36, fontSize: commonTheme.fontSize.md, px: commonTheme.space.md },
   md: { height: 44, fontSize: commonTheme.fontSize.lg, px: commonTheme.space.lg },
-  lg: { height: 50, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
+  lg: { height: 52, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
 };
 
 export const Button = ({
