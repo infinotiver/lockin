@@ -299,8 +299,22 @@ const Individual = () => {
               />
             ))}
           </View>
-          <Pressable onPress={handleSkip}>
-            <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>Skip</Text>
+          <Pressable
+            onPress={loading ? undefined : handleSkip}
+            disabled={loading}
+          >
+            <Text
+              style={[
+                commonTheme.text.body,
+                {
+                  color: loading
+                    ? colors.border
+                    : colors.textMuted,
+                },
+              ]}
+            >
+              Skip
+            </Text>
           </Pressable>
         </View>
       </OnboardingCard>
