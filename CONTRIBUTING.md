@@ -33,3 +33,9 @@ style={{ padding: 12, borderRadius: 14, fontSize: 16 }}
 ```
 
 Using lucide for icons in the project
+
+# JWT Key usage
+Key is encoded in base64 use it like this
+```ts
+    const jwtKey = Buffer.from(process.env.CLERK_JWT_KEY_BASE64!, 'base64').toString('utf-8')
+```
