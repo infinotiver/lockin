@@ -2,7 +2,7 @@
 import { View, Text, Animated, Pressable, Dimensions } from 'react-native'
 import { Button } from '@/components/ui/Button'
 import { FocusedInput } from '@/components/FocusedInput'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'expo-router'
 import { useUser } from '@clerk/clerk-expo'
 import commonTheme from '@/constants/theme'
@@ -165,12 +165,12 @@ const Individual = () => {
   const slideAnim = useRef(new Animated.Value(0)).current
   const defaultFamilyName = `${user?.firstName ?? 'Your'}'s Family`
 
-  // set default family name once user loads
-  const [initialized, setInitialized] = useState(false)
-  if (user?.firstName && !initialized) {
-    setFamilyName(defaultFamilyName)
-    setInitialized(true)
-  }
+  // set default family name once user loads, but only if the user hasn't typed anything
+  useEffect(() => {
+    if (user?.firstName && !familyName) {
+      setFamilyName(`${user.firstName}'s Family`)
+    }
+  }, [user?.firstName])
 
   const animateToStep = (next: number) => {
     Animated.timing(slideAnim, {
