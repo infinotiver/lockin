@@ -21,6 +21,7 @@ export type ThemeColors = {
   focusBorder: string;
   input: string;
   tint: string;
+  selected: string;
 };
 
 export type ThemeMode = "light" | "dark";
@@ -48,6 +49,7 @@ const light: ThemeColors = {
   focusBorder: "#1A1A1A",
   input: "#E5E2D9",
   tint: "#1A1A1A",
+  selected: "#3cded333",
 };
 
 const dark: ThemeColors = {
@@ -73,6 +75,7 @@ const dark: ThemeColors = {
   focusBorder: "#F2F2F2",
   input: "#1A1A1A",
   tint: "#FFFFFF",
+  selected: "#4e62ff",
 };
 
 export const COLOR_THEMES: Record<ThemeMode, ThemeColors> = {

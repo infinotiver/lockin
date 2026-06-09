@@ -1,12 +1,16 @@
 import { View, Text, Pressable } from "react-native";
+import { useColors } from "@/hooks/useColors";
 import { useRouter } from "expo-router";
 export default function MFA() {
   const router = useRouter();
+  const colors = useColors();
   return (
     <View
     style={{
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: colors.background,
+      flex: 1
     }}>
       <Text>MFA — coming soon</Text>
       {
@@ -16,10 +20,11 @@ export default function MFA() {
       }
       <Pressable
         onPress={() => {
-          router.navigate('/(auth)/sign-in')
+          router.navigate('/(tabs)')
         }}
+        style={{ backgroundColor: colors.surface3, padding: 20}}
       >
-      <Text>Sign in page</Text>
+      <Text style={{color: colors.text, fontSize: 20}}>home page</Text>
       </Pressable>
     </View>
   );
