@@ -10,6 +10,7 @@ import { useColors } from '@/hooks/useColors'
 import { ViewWrapper } from '@/components/onboarding/ViewWrapper'
 import { OnboardingCard } from '@/components/onboarding/OnboardingCard'
 import { OnboardingTitle } from '@/components/onboarding/OnboardingTitle'
+import { useAuth } from '@clerk/clerk-expo'
 
 const TOTAL_STEPS = 3
 const { width } = Dimensions.get('window')
@@ -21,12 +22,14 @@ const StepOne = ({
   setFamilyName,
   defaultFamilyName,
   onNext,
+  loading,
   colors,
 }: {
   familyName: string
   setFamilyName: (v: string) => void
   defaultFamilyName: string
   onNext: () => void
+  loading: boolean
   colors: Colors
 }) => (
   <View style={{ flex: 1, gap: commonTheme.space.md, justifyContent: 'center' }}>
@@ -44,7 +47,15 @@ const StepOne = ({
       selectTextOnFocus
       selectionColor={colors.selected}
     />
-    <Button onPress={onNext} variant='primary' label='Create Family' fullWidth />
+    <Button
+      onPress={onNext}
+      variant='primary'
+      label='Create Family'
+      loadingLabel='Creating...'
+      loading={loading}
+      disabled={loading}
+      fullWidth
+    />
   </View>
 )
 
@@ -112,9 +123,11 @@ const StepTwo = ({
 
 const StepThree = ({
   onNext,
+  familyCode,
   colors,
 }: {
   onNext: () => void
+  familyCode: string
   colors: Colors
 }) => (
   <View style={{ flex: 1, gap: commonTheme.space.md, justifyContent: 'center' }}>
@@ -140,7 +153,7 @@ const StepThree = ({
         fontFamily: commonTheme.font.monoBold,
         letterSpacing: 4,
       }]}>
-        ABC123
+        {familyCode || '------'}
       </Text>
       <Pressable onPress={() => {}}>
         <Text style={[commonTheme.text.body, { color: colors.accent }]}>Copy</Text>
@@ -162,8 +175,43 @@ const Individual = () => {
   const [questDescription, setQuestDescription] = useState('')
   const [questReward, setQuestReward] = useState('')
 
+  const [familyCode, setFamilyCode] = useState('')
+  const [familyId, setFamilyId] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { getToken } = useAuth()
   const slideAnim = useRef(new Animated.Value(0)).current
   const defaultFamilyName = `${user?.firstName ?? 'Your'}'s Family`
+
+  const handleCreateFamily = async () => {
+
+  setLoading(true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/families`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: familyName }),
+      })
+  
+      if (!res.ok) {
+        const body = await res.json()
+        console.error('Create family error:', res.status, body)
+        return
+      }
+  
+      const { family } = await res.json()
+      setFamilyCode(family.code)
+      setFamilyId(family.id)
+      animateToStep(1) // move to quest step
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // set default family name once user loads, but only if the user hasn't typed anything
   useEffect(() => {
@@ -203,7 +251,8 @@ const Individual = () => {
       familyName={familyName}
       setFamilyName={setFamilyName}
       defaultFamilyName={defaultFamilyName}
-      onNext={handleNext}
+      onNext={handleCreateFamily}
+      loading={loading}
       colors={colors}
     />,
     <StepTwo
@@ -218,6 +267,7 @@ const Individual = () => {
     />,
     <StepThree
       onNext={handleNext}
+      familyCode={familyCode}  // <- pass real code
       colors={colors}
     />,
   ]

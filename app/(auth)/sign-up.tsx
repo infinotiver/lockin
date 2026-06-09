@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
+import { useColors } from "@/hooks/useColors";
 import { FocusedInput } from "@/components/FocusedInput";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
@@ -17,6 +18,7 @@ const SignUp = () => {
   const [error, setError] = useState("");
   const { isLoaded, signUp } = useSignUp();
   const router = useRouter();
+  const colors = useColors();
 
   const validateForm = () => {
     const trimmedName = name.trim();
@@ -75,18 +77,21 @@ const SignUp = () => {
         placeholder="First Name"
         autoCapitalize="words"
         onChangeText={setName}
+        selectionColor={colors.selected}
       />
       <FocusedInput
         placeholder="Email"
         keyboardType="email-address"
         autoCapitalize="none"
         onChangeText={setEmail}
+        selectionColor={colors.selected}
       />
       <FocusedInput
         placeholder="Password"
         secureTextEntry
         autoCapitalize="none"
         onChangeText={setPassword}
+        selectionColor={colors.selected}
       />
       <AuthErrorText error={error} />
       <Button
