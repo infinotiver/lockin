@@ -34,11 +34,20 @@ const HomeScreen = () => {
       </Pressable>
       <Pressable
         onPress={() => {
-
+          router.navigate('/(onboarding)/individual')
         }}
         style={{ backgroundColor: colors.surface3, padding: 20}}
       >
-      <Text style={{color: colors.text, fontSize: 20}}>individual (onboarding) page</Text>
+        <Text style={{color: colors.text, fontSize: 20}}>individual (onboarding) page</Text>
+      </Pressable>
+
+      <Pressable
+        onPress={() => {
+          router.navigate('/(onboarding)/teen')
+        }}
+        style={{ backgroundColor: colors.surface3, padding: 20}}
+      >
+        <Text style={{color: colors.text, fontSize: 20}}>teen (onboarding) page</Text>
       </Pressable>
 
 
