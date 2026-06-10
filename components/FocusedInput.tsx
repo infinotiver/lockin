@@ -20,7 +20,7 @@ export const FocusedInput = ({ style, ...props }: FocusedInputProps) => {
         styles.input,
         commonTheme.text.authInput,
         {
-          backgroundColor: colors.surface3,
+          backgroundColor: colors.surface1,
           borderColor: isFocused ? colors.focusBorder : colors.border,
           color: colors.text,
         },
