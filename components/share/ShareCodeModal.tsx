@@ -48,7 +48,7 @@ const ShareCodeModal = ({ code = "ZZ-00000", sender = "parent" }: Props) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // TODO move handleshare to a reusable component
+  // TODO: move handleshare to a reusable component
   const handleShare = async () => {
     try {
       if (Platform.OS !== "web") {
