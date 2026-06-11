@@ -287,6 +287,7 @@ const Individual = () => {
   const handleShare = async () => {
     if (Platform.OS === 'web') {
       // fallback for web
+      // TODO: rework on this its failing on web, better use the new hook by @infinotiver
       await Clipboard.setStringAsync(`yourapp://join?code=${familyCode}`)
       alert('Link copied to clipboard!')
       return
