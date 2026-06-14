@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "lockin",
+    "name": "LockIn",
     "slug": "lockin",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -40,6 +40,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f02f8232-d487-43df-8610-bf34274fad26"
+      }
+    },
+    "owner": "infinotiver"
   }
 }

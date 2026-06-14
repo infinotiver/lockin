@@ -14,34 +14,61 @@ const HomeScreen = () => {
       showsVerticalScrollIndicator={false}
     >
       <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
-        Welcome back, USER
+        Dev Mode (Remove all following direct links before production)
       </Text>
       <Pressable
         onPress={() => {
-          router.navigate('/(auth)/sign-in')
+          router.navigate("/(auth)/sign-in");
         }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
+        style={{
+          backgroundColor: colors.surface3,
+          padding: 20,
+          borderRadius: commonTheme.rounded.lg,
+        }}
       >
-      <Text style={{color: colors.text, fontSize: 20}}>Sign in page</Text>
+        <Text style={{ color: colors.text, fontSize: 20 }}>Sign in page</Text>
       </Pressable>
       <Pressable
         onPress={() => {
-          router.navigate('/(onboarding)/StartOnboarding')
+          router.navigate("/(onboarding)/StartOnboarding");
         }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
+        style={{
+          backgroundColor: colors.surface3,
+          padding: 20,
+          borderRadius: commonTheme.rounded.lg,
+        }}
       >
-      <Text style={{color: colors.text, fontSize: 20}}>StartOnboarding page</Text>
+        <Text style={{ color: colors.text, fontSize: 20 }}>
+          StartOnboarding page
+        </Text>
       </Pressable>
       <Pressable
-        onPress={() => {
-
+        onPress={() => {}}
+        style={{
+          backgroundColor: colors.surface3,
+          padding: 20,
+          borderRadius: commonTheme.rounded.lg,
         }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
       >
-      <Text style={{color: colors.text, fontSize: 20}}>individual (onboarding) page</Text>
+        <Text style={{ color: colors.text, fontSize: 20 }}>
+          individual (onboarding) page
+        </Text>
       </Pressable>
 
-
+      <Pressable
+        onPress={() => {
+          router.navigate("/(onboarding)/screen-time-permission");
+        }}
+        style={{
+          backgroundColor: colors.surface3,
+          padding: 20,
+          borderRadius: commonTheme.rounded.lg,
+        }}
+      >
+        <Text style={{ color: colors.text, fontSize: 20 }}>
+          Screen time auth page (android only)
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 };
