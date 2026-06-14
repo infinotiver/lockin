@@ -8,6 +8,7 @@
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@expo-google-fonts/pixelify-sans": "^0.4.2",
+    "@expo/metro-runtime": "~56.0.14",
     "@expo/vector-icons": "^15.0.2",
     "@supabase/supabase-js": "^2.107.0",
     "expo": "~56.0.11",
