@@ -11,47 +11,54 @@ export default function ScreenTimePermission() {
   const { permissionGranted, requestPermission } = useScreenTime();
 
   const handleContinue = () => {
-    // Permission granted — proceed to next onboarding step
     // router.replace("/(onboarding)/set-goal");
   };
 
   return (
     <AuthScreenWrapper>
-      <AuthTitle>Allow screen time tracking</AuthTitle>
+      <AuthTitle>
+        {permissionGranted ? "You're all set!" : "Allow screen time tracking"}
+      </AuthTitle>
 
       <Text style={[styles.body, { color: colors.text }]}>
-        LockIn needs access to your devices's screen time data to track daily
-        usage and automate allowance releases. This is a one-time setup done by
-        you (or your guardian). Android only
+        {permissionGranted
+          ? "LockIn is now tracking your screen time and will automatically manage your allowance based on your usage."
+          : "LockIn needs access to your device's screen time data to track daily usage and automate allowance releases. This is a one-time setup."}
       </Text>
 
-      <View style={styles.steps}>
-        {[
-          "Tap 'Grant access' below",
-          "Find LockIn in the list",
-          'Enable "Permit usage access"',
-          "Return to the app",
-        ].map((step, i) => (
-          <View key={i} style={styles.step}>
-            <View
-              style={[styles.stepDot, { backgroundColor: colors.primary }]}
-            />
-            <Text style={[styles.stepText, { color: colors.text }]}>
-              {step}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {permissionGranted === true ? (
-        <Button variant="primary" size="lg" onPress={handleContinue}>
-          Continue
-        </Button>
+      {permissionGranted ? (
+        <View style={styles.successRow}>
+          <Text style={[styles.successText, { color: colors.text }]}>
+            Screen time access granted and active
+          </Text>
+        </View>
       ) : (
-        <Button variant="primary" size="lg" onPress={requestPermission}>
-          Grant access
-        </Button>
+        <View style={styles.steps}>
+          {[
+            "Tap 'Grant access' below",
+            "Find LockIn in the list",
+            'Enable "Permit usage access"',
+            "Return to the app",
+          ].map((step, i) => (
+            <View key={i} style={styles.step}>
+              <View
+                style={[styles.stepDot, { backgroundColor: colors.primary }]}
+              />
+              <Text style={[styles.stepText, { color: colors.text }]}>
+                {step}
+              </Text>
+            </View>
+          ))}
+        </View>
       )}
+
+      <Button
+        variant="primary"
+        size="lg"
+        onPress={permissionGranted ? handleContinue : requestPermission}
+      >
+        {permissionGranted ? "Continue" : "Grant access"}
+      </Button>
 
       {permissionGranted === false && (
         <Text style={[styles.hint, { color: colors.destructive }]}>
@@ -69,4 +76,11 @@ const styles = StyleSheet.create({
   stepDot: { width: 6, height: 6, borderRadius: 3 },
   stepText: { fontSize: 14, flex: 1 },
   hint: { fontSize: 13, marginTop: 12, textAlign: "center" },
+  successRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 32,
+  },
+  successText: { fontSize: 15, fontWeight: "600", flex: 1 },
 });
