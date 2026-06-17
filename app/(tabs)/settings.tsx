@@ -13,6 +13,7 @@ import { router } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { styles } from "@/constants/settings.styles";
 import commonTheme from "@/constants/theme";
+import { Platform } from "react-native";
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -125,12 +126,19 @@ export default function SettingsScreen() {
           Permissions
         </Text>
         <View style={[styles.cardGroup, { backgroundColor: colors.surface2 }]}>
-          <SettingsRow
-            icon="check-square"
-            label="Screen time access"
-            colors={colors}
-            onPress={() => router.push("/(onboarding)/screen-time-permission")}
-          />
+          {Platform.OS === "android" && (
+            <>
+              <SettingsRow
+                icon="check-square"
+                label="Screen time access"
+                colors={colors}
+                onPress={() =>
+                  router.push("/(onboarding)/screen-time-permission")
+                }
+              />
+              <SectionDivider colors={colors} />
+            </>
+          )}
           <SectionDivider colors={colors} />
           {/* <SettingsRow
             icon="info"
