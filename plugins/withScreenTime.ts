@@ -27,27 +27,40 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
     if (application) {
       if (!application.provider) application.provider = [];
 
-      const hasProvider = application.provider.some(
+      // Find existing provider instead of just checking if it exists
+      let provider = application.provider.find(
         (p: any) =>
           p.$["android:name"] === "androidx.startup.InitializationProvider",
       );
 
-      if (!hasProvider) {
-        application.provider.push({
+      // If provider doesn't exist, create it
+      if (!provider) {
+        provider = {
           $: {
             "android:name": "androidx.startup.InitializationProvider",
             "android:authorities": "${applicationId}.androidx-startup",
             "android:exported": "false",
             "tools:node": "merge",
           },
-          "meta-data": [
-            {
-              $: {
-                "android:name": "androidx.work.WorkManagerInitializer",
-                "android:value": "androidx.startup",
-              },
-            },
-          ],
+          "meta-data": [],
+        };
+        application.provider.push(provider);
+      }
+
+      // Ensure meta-data exists regardless of whether provider was just created or already existed
+      if (!provider["meta-data"]) provider["meta-data"] = [];
+
+      const hasMetaData = provider["meta-data"].some(
+        (m: any) =>
+          m.$["android:name"] === "androidx.work.WorkManagerInitializer",
+      );
+
+      if (!hasMetaData) {
+        provider["meta-data"].push({
+          $: {
+            "android:name": "androidx.work.WorkManagerInitializer",
+            "android:value": "androidx.startup",
+          },
         });
       }
     }
