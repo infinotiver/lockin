@@ -15,6 +15,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
 
 import { Copy, Check } from "lucide-react-native";
+import ShareCodeModal from "@/components/share/ShareCodeModal";
 
 const TOTAL_STEPS = 3;
 const { width } = Dimensions.get("window");
@@ -152,65 +153,7 @@ const StepThree = ({
   onCopy: () => void;
   onShare: () => void;
   colors: Colors;
-}) => (
-  <View
-    style={{ flex: 1, gap: commonTheme.space.md, justifyContent: "center" }}
-  >
-    <View style={{ gap: commonTheme.space.xs }}>
-      <OnboardingTitle>Invite your teens</OnboardingTitle>
-      <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-        Share this code or link with your teens to join.
-      </Text>
-    </View>
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        backgroundColor: colors.surface1,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: commonTheme.rounded.xl,
-        paddingHorizontal: commonTheme.space.lg,
-        height: 50,
-      }}
-    >
-      <Text
-        style={[
-          commonTheme.text.sectionTitle,
-          {
-            color: colors.text,
-            fontFamily: commonTheme.font.monoBold,
-            letterSpacing: 4,
-          },
-        ]}
-      >
-        {familyCode || "------"}
-      </Text>
-      <Pressable
-        onPress={onCopy}
-        style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
-      >
-        {copied ? (
-          <Check size={16} color={colors.text} />
-        ) : (
-          <Copy size={16} color={colors.text} />
-        )}
-
-        <Text style={[commonTheme.text.body, { color: colors.text }]}>
-          {copied ? "Copied" : "Copy"}
-        </Text>
-      </Pressable>
-    </View>
-    <Button
-      onPress={() => console.log("hh")} // share(`yourapp://join?code=${familyCode}`)}
-      variant="secondary"
-      label="Share invite link"
-      fullWidth
-    />
-    <Button onPress={onNext} variant="primary" label="Done" fullWidth />
-  </View>
-);
+}) => <ShareCodeModal code={familyCode} />;
 
 const Individual = () => {
   const router = useRouter();
