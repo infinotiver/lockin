@@ -55,7 +55,7 @@ const SignIn = () => {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
       } else {
-        setError("Verification incomplete, please try again.");
+        setError(`Verification incomplete, please try again. ${result.status}`);
       }
     } catch (e: any) {
       setError(
