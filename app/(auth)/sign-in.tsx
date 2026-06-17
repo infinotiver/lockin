@@ -1,18 +1,20 @@
-import { FocusedInput } from "@/components/FocusedInput";
 import { useState } from "react";
 import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
-import { AuthErrorText } from "@/components/auth/AuthErrorText";
 import { AuthFooterText } from "@/components/auth/AuthFooterText";
+import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { Button } from "@/components/ui/Button";
 import { useColors } from "@/hooks/useColors";
+import { FocusedInput } from "@/components/FocusedInput";
+
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
   const identifier = email.trim();
@@ -71,6 +73,7 @@ const SignIn = () => {
   return (
     <AuthScreenWrapper>
       <AuthTitle>Sign In</AuthTitle>
+
       <FocusedInput
         placeholder="Email"
         keyboardType="email-address"
@@ -78,6 +81,7 @@ const SignIn = () => {
         onChangeText={setEmail}
         selectionColor={colors.selected}
       />
+
       <FocusedInput
         secureTextEntry
         placeholder="Password"
@@ -85,7 +89,9 @@ const SignIn = () => {
         onChangeText={setPassword}
         selectionColor={colors.selected}
       />
-      <AuthErrorText error={error} />
+
+      <ErrorHandler error={error} type="modal" onClear={() => setError("")} />
+
       <Button
         onPress={handleSignIn}
         variant="primary"
@@ -97,6 +103,7 @@ const SignIn = () => {
         fullWidth
         monospace
       />
+
       <AuthFooterText
         prompt="Don't have an account?"
         linkLabel="Sign up"

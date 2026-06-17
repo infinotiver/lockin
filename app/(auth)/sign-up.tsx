@@ -6,9 +6,9 @@ import { useColors } from "@/hooks/useColors";
 import { FocusedInput } from "@/components/FocusedInput";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
-import { AuthErrorText } from "@/components/auth/AuthErrorText";
 import { AuthFooterText } from "@/components/auth/AuthFooterText";
 import { Button } from "@/components/ui/Button";
+import { ErrorHandler } from "@/components/ui/ErrorHandler";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -23,8 +23,7 @@ const SignUp = () => {
   const validateForm = () => {
     const trimmedName = name.trim();
     if (!trimmedName) return "First name is required";
-    if (trimmedName.length < 3)
-      return "Name must be at least 3 characters";
+    if (trimmedName.length < 3) return "Name must be at least 3 characters";
     if (!/^[\p{L}\s]+$/u.test(trimmedName))
       return "Name can only contain letters and spaces";
 
@@ -93,7 +92,7 @@ const SignUp = () => {
         onChangeText={setPassword}
         selectionColor={colors.selected}
       />
-      <AuthErrorText error={error} />
+      <ErrorHandler error={error} type="text" onClear={() => setError("")} />
       <Button
         onPress={handleSignUp}
         variant="primary"
