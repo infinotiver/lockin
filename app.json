@@ -2,7 +2,7 @@
   "expo": {
     "name": "LockIn",
     "slug": "lockin",
-    "version": "1.0.0",
+    "version": "0.0.1-alpha",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lockin",
@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "permissions": ["android.permission.PACKAGE_USAGE_STATS"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -26,6 +27,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/withScreenTime",
       "expo-router",
       [
         "expo-splash-screen",
