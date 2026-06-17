@@ -8,6 +8,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 
 export interface BaseModalProps {
   visible: boolean;
@@ -72,26 +73,26 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: commonTheme.space.md,
   },
   modalContent: {
     width: "100%",
     maxWidth: 800,
-    borderRadius: 12,
-    padding: 20,
+    borderRadius: commonTheme.rounded.lg,
+    padding: commonTheme.space.lg,
     elevation: 5,
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: commonTheme.space.sm,
   },
   message: {
-    fontSize: 14,
+    fontSize: commonTheme.fontSize.md,
     marginBottom: 16,
   },
   closeButton: {
     alignItems: "flex-end",
-    marginTop: 10,
+    marginTop: commonTheme.space.md,
   },
 });
