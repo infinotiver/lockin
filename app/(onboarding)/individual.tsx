@@ -1,4 +1,5 @@
 // app/(onboarding)/individual.tsx
+import { Platform } from 'react-native'
 import { View, Text, Animated, Pressable, Dimensions } from 'react-native'
 import { Button } from '@/components/ui/Button'
 import { FocusedInput } from '@/components/FocusedInput'
@@ -10,6 +11,11 @@ import { useColors } from '@/hooks/useColors'
 import { ViewWrapper } from '@/components/onboarding/ViewWrapper'
 import { OnboardingCard } from '@/components/onboarding/OnboardingCard'
 import { OnboardingTitle } from '@/components/onboarding/OnboardingTitle'
+import { useAuth } from '@clerk/clerk-expo'
+import * as Sharing from 'expo-sharing'
+import * as Clipboard from 'expo-clipboard'
+
+import { Copy, Check } from 'lucide-react-native'
 
 const TOTAL_STEPS = 3
 const { width } = Dimensions.get('window')
@@ -21,12 +27,14 @@ const StepOne = ({
   setFamilyName,
   defaultFamilyName,
   onNext,
+  loading,
   colors,
 }: {
   familyName: string
   setFamilyName: (v: string) => void
   defaultFamilyName: string
   onNext: () => void
+  loading: boolean
   colors: Colors
 }) => (
   <View style={{ flex: 1, gap: commonTheme.space.md, justifyContent: 'center' }}>
@@ -44,7 +52,15 @@ const StepOne = ({
       selectTextOnFocus
       selectionColor={colors.selected}
     />
-    <Button onPress={onNext} variant='primary' label='Create Family' fullWidth />
+    <Button
+      onPress={onNext}
+      variant='primary'
+      label='Create Family'
+      loadingLabel='Creating...'
+      loading={loading}
+      disabled={loading}
+      fullWidth
+    />
   </View>
 )
 
@@ -89,7 +105,7 @@ const StepTwo = ({
 <View style={{
   flexDirection: 'row',
   alignItems: 'center',
-  backgroundColor: colors.surface3,
+  backgroundColor: colors.surface1,
   borderWidth: 1,
   borderColor: colors.border,
   borderRadius: commonTheme.rounded.xl,
@@ -112,9 +128,17 @@ const StepTwo = ({
 
 const StepThree = ({
   onNext,
+  familyCode,
+  copied,
+  onCopy,
+  onShare,
   colors,
 }: {
   onNext: () => void
+  familyCode: string
+  copied: boolean
+  onCopy: () => void
+  onShare: () => void
   colors: Colors
 }) => (
   <View style={{ flex: 1, gap: commonTheme.space.md, justifyContent: 'center' }}>
@@ -128,7 +152,7 @@ const StepThree = ({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: colors.surface3,
+      backgroundColor: colors.surface1,
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: commonTheme.rounded.xl,
@@ -140,13 +164,26 @@ const StepThree = ({
         fontFamily: commonTheme.font.monoBold,
         letterSpacing: 4,
       }]}>
-        ABC123
+        {familyCode || '------'}
       </Text>
-      <Pressable onPress={() => {}}>
-        <Text style={[commonTheme.text.body, { color: colors.accent }]}>Copy</Text>
+      <Pressable onPress={onCopy} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+        {copied
+          ? <Check size={16} color={colors.text} />
+          : <Copy size={16} color={colors.text} />
+        }
+
+        <Text style={[commonTheme.text.body, { color: colors.text }]}>
+          {copied ? 'Copied' : 'Copy'}
+        </Text>
+
       </Pressable>
     </View>
-    <Button onPress={() => {}} variant='secondary' label='Share invite link' fullWidth />
+    <Button
+      onPress={() => Sharing.shareAsync(`yourapp://join?code=${familyCode}`)}
+      variant='secondary'
+      label='Share invite link'
+      fullWidth
+    />
     <Button onPress={onNext} variant='primary' label='Done' fullWidth />
   </View>
 )
@@ -162,8 +199,61 @@ const Individual = () => {
   const [questDescription, setQuestDescription] = useState('')
   const [questReward, setQuestReward] = useState('')
 
+  const [familyCode, setFamilyCode] = useState('')
+  const [familyId, setFamilyId] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { getToken } = useAuth()
   const slideAnim = useRef(new Animated.Value(0)).current
   const defaultFamilyName = `${user?.firstName ?? 'Your'}'s Family`
+
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(familyCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  
+  const handleShare = async () => {
+    if (Platform.OS === 'web') {
+      // fallback for web
+      await Clipboard.setStringAsync(`yourapp://join?code=${familyCode}`)
+      alert('Link copied to clipboard!')
+      return
+    }
+    Sharing.shareAsync(`yourapp://join?code=${familyCode}`)
+  }
+
+  const handleCreateFamily = async () => {
+
+    setLoading(true)
+    try {
+      const token = await getToken()
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/families`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: familyName }),
+      })
+  
+      if (!res.ok) {
+        const body = await res.json()
+        console.error('Create family error:', res.status, body)
+        return
+      }
+  
+      const { family } = await res.json()
+      setFamilyCode(family.code)
+      setFamilyId(family.id)
+      animateToStep(1) // move to quest step
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // set default family name once user loads, but only if the user hasn't typed anything
   useEffect(() => {
@@ -203,7 +293,8 @@ const Individual = () => {
       familyName={familyName}
       setFamilyName={setFamilyName}
       defaultFamilyName={defaultFamilyName}
-      onNext={handleNext}
+      onNext={handleCreateFamily}
+      loading={loading}
       colors={colors}
     />,
     <StepTwo
@@ -218,8 +309,12 @@ const Individual = () => {
     />,
     <StepThree
       onNext={handleNext}
+      familyCode={familyCode}
+      copied={copied}
+      onCopy={handleCopy}
+      onShare={handleShare}
       colors={colors}
-    />,
+    />
   ]
 
   return (
@@ -249,8 +344,22 @@ const Individual = () => {
               />
             ))}
           </View>
-          <Pressable onPress={handleSkip}>
-            <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>Skip</Text>
+          <Pressable
+            onPress={loading ? undefined : handleSkip}
+            disabled={loading}
+          >
+            <Text
+              style={[
+                commonTheme.text.body,
+                {
+                  color: loading
+                    ? colors.border
+                    : colors.textMuted,
+                },
+              ]}
+            >
+              Skip
+            </Text>
           </Pressable>
         </View>
       </OnboardingCard>

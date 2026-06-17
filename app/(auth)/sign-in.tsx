@@ -7,6 +7,7 @@ import { AuthTitle } from "@/components/auth/AuthTitle";
 import { AuthErrorText } from "@/components/auth/AuthErrorText";
 import { AuthFooterText } from "@/components/auth/AuthFooterText";
 import { Button } from "@/components/ui/Button";
+import { useColors } from "@/hooks/useColors";
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,6 +16,7 @@ const SignIn = () => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
   const identifier = email.trim();
+  const colors = useColors();
 
   const validateForm = () => {
     if (!identifier || !password.trim()) {
@@ -74,12 +76,14 @@ const SignIn = () => {
         keyboardType="email-address"
         autoCapitalize="none"
         onChangeText={setEmail}
+        selectionColor={colors.selected}
       />
       <FocusedInput
         secureTextEntry
         placeholder="Password"
         autoCapitalize="none"
         onChangeText={setPassword}
+        selectionColor={colors.selected}
       />
       <AuthErrorText error={error} />
       <Button
