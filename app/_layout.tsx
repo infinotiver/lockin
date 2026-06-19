@@ -84,7 +84,7 @@ function RootLayoutNav() {
     }
   }, [isSignedIn, isLoaded, segments]);
 
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Stack
       screenOptions={{
@@ -104,4 +104,3 @@ function RootLayoutNav() {
     </Stack>
   );
 }
-

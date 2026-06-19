@@ -1,4 +1,6 @@
 <resources>
   <string name="app_name">LockIn</string>
-  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
-</resources>
+  <string name="expo_splash_screen_resize_mode" translatable="false">
+    contain
+  </string>
+</resources>;

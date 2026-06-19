@@ -28,6 +28,7 @@
     "expo-symbols": "~56.0.6",
     "expo-web-browser": "~56.0.5",
     "lucide-react-native": "^1.17.0",
+    "prettier": "^3.8.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",

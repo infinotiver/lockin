@@ -18,7 +18,7 @@ export const OnboardingCard = ({ children }: { children: React.ReactNode }) => {
         borderRadius: commonTheme.rounded["2xl"],
         borderWidth: 1,
         borderColor: colors.border,
-        overflow: 'hidden',
+        overflow: "hidden",
         gap: 14,
       }}
     >
