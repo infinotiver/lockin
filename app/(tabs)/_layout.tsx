@@ -43,6 +43,7 @@ function ClassicTabLayout() {
           borderTopWidth: 0,
           elevation: 0,
           shadowOpacity: 0,
+          paddingTop: 8,
         },
         tabBarItemStyle: {
           alignItems: "center",

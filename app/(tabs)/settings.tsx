@@ -41,7 +41,6 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
-      edges={["top"]}
     >
       <View
         style={[
@@ -58,13 +57,13 @@ export default function SettingsScreen() {
         >
           <Text
             style={[
-              commonTheme.text.sectionTitle,
+              commonTheme.text.pageTitle,
 
               {
                 color: colors.text,
                 paddingHorizontal: commonTheme.space.sm,
                 paddingBottom: commonTheme.space.lg,
-                fontFamily: commonTheme.font.monoBold,
+                fontFamily: commonTheme.font.bold,
               },
             ]}
           >
