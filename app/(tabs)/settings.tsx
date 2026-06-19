@@ -103,7 +103,11 @@ export default function SettingsScreen() {
               style={styles.chevron}
             /> */}
           </TouchableOpacity>
-
+          <View style={styles.statsContainer}>
+            <StatCard value="2" label="Stakes" colors={colors} />
+            <StatCard value="5" label="Completed" colors={colors} />
+            <StatCard value="1" label="Streak" colors={colors} />
+          </View>
           {/* Section: Family Link */}
           <Text style={[styles.sectionHeader, { color: colors.text }]}>
             Family link
@@ -240,5 +244,26 @@ function SettingsRow({
 function SectionDivider({ colors }: { colors: any }) {
   return (
     <View style={[styles.separator, { backgroundColor: colors.border }]} />
+  );
+}
+
+function StatCard({
+  value,
+  label,
+  colors,
+}: {
+  value: string | number;
+  label: string;
+  colors: any;
+}) {
+  return (
+    <View style={[styles.statCard, { backgroundColor: colors.surface2 }]}>
+      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
+      <Text
+        style={[styles.statLabel, { color: colors.textMuted || colors.text }]}
+      >
+        {label}
+      </Text>
+    </View>
   );
 }

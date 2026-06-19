@@ -100,4 +100,28 @@ export const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     marginLeft: 50, // Indents the separator to align with text, bypassing the icon
   },
+
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: commonTheme.space.sm,
+    marginBottom: commonTheme.space.xl,
+  },
+  statCard: {
+    flex: 1, // Ensures all 3 cards take up exactly 1/3 of the space
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: commonTheme.space.lg,
+    borderRadius: commonTheme.rounded.xl,
+  },
+  statValue: {
+    fontSize: 24,
+    fontFamily: commonTheme.font.bold,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontFamily: commonTheme.font.medium,
+    opacity: 0.6,
+  },
 });
