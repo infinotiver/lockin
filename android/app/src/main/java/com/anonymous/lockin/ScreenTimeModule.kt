@@ -8,6 +8,7 @@ import android.os.Process
 import android.provider.Settings
 import com.facebook.react.bridge.*
 import java.util.Calendar
+import android.app.usage.UsageEvents
 
 class ScreenTimeModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
