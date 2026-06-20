@@ -1,4 +1,4 @@
-import { Children, ReactNode } from "react";
+import { Children, ReactNode, isValidElement, cloneElement } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
@@ -13,14 +13,10 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
   const childArray = Children.toArray(children);
 
   const injected = childArray.map((child, index) => {
-    if (child && typeof child === "object" && "props" in child) {
-      return {
-        ...(child as any),
-        props: {
-          ...(child as any).props,
-          _showDivider: index < childArray.length - 1,
-        },
-      };
+    if (isValidElement(child)) {
+      return cloneElement(child, {
+        _showDivider: index < childArray.length - 1,
+      } as any);
     }
     return child;
   });
@@ -28,16 +24,8 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text
-          style={[
-            {
-              color: colors.textMuted,
-              paddingLeft: commonTheme.space.xs,
-              paddingTop: commonTheme.space.sm,
-            },
-          ]}
-        >
-          {label}
+        <Text style={[styles.label, { color: colors.textMuted }]}>
+          {label.toUpperCase()}
         </Text>
       )}
       <View
@@ -45,7 +33,7 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
           styles.group,
           {
             backgroundColor: colors.surface2,
-            borderColor: colors.border ?? colors.surface2,
+            borderColor: colors.border,
           },
         ]}
       >
@@ -63,7 +51,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: commonTheme.font.medium,
     letterSpacing: 0.6,
-    paddingHorizontal: commonTheme.space.md,
+    paddingHorizontal: commonTheme.space.sm,
   },
   group: {
     borderRadius: commonTheme.rounded.lg,
