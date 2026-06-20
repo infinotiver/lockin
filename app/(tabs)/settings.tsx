@@ -4,17 +4,17 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  Switch,
+  Platform,
 } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { useState } from "react";
-import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { styles } from "@/constants/settings.styles";
 import commonTheme from "@/constants/theme";
-import { Platform } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { OptionsRow } from "@/components/ui/OptionsRow";
+import { OptionsGroup } from "@/components/ui/OptionsGroup";
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -41,210 +41,99 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
     >
-      <View
-        style={[
-          styles.container,
-          {
-            backgroundColor: colors.background,
-            paddingBottom: commonTheme.space.xl,
-          },
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: commonTheme.space["2xl"] },
         ]}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+        <Text
+          style={[
+            commonTheme.text.pageTitle,
+            {
+              color: colors.text,
+              paddingHorizontal: commonTheme.space.sm,
+              paddingBottom: commonTheme.space.lg,
+              fontFamily: commonTheme.font.bold,
+            },
+          ]}
         >
-          <Text
-            style={[
-              commonTheme.text.pageTitle,
+          Settings
+        </Text>
 
-              {
-                color: colors.text,
-                paddingHorizontal: commonTheme.space.sm,
-                paddingBottom: commonTheme.space.lg,
-                fontFamily: commonTheme.font.bold,
-              },
-            ]}
-          >
-            Settings
-          </Text>
-          {/* Profile Card Header */}
-          <TouchableOpacity
-            style={[styles.profileCard, { backgroundColor: colors.surface2 }]}
-          >
-            {user?.imageUrl ? (
-              <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
-            ) : (
-              <View
-                style={[
-                  styles.avatarFallback,
-                  { backgroundColor: colors.primary },
-                ]}
-              >
-                <Text style={styles.avatarText}>{initials}</Text>
-              </View>
-            )}
-            <View style={styles.profileInfo}>
-              <Text style={[styles.name, { color: colors.text }]}>
-                {user?.fullName ?? "User"}
-              </Text>
-              <Text
-                style={[styles.email, { color: colors.text }]}
-                numberOfLines={1}
-              >
-                {user?.primaryEmailAddress?.emailAddress ?? "No email"}
-              </Text>
+        {/* Profile Card */}
+        <TouchableOpacity
+          style={[styles.profileCard, { backgroundColor: colors.surface2 }]}
+        >
+          {user?.imageUrl ? (
+            <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+          ) : (
+            <View
+              style={[
+                styles.avatarFallback,
+                { backgroundColor: colors.primary },
+              ]}
+            >
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
-            {/* <Feather
-              name="chevron-right"
-              size={20}
-              color={colors.text}
-              style={styles.chevron}
-            /> */}
-          </TouchableOpacity>
-          <View style={styles.statsContainer}>
-            {/* [TODO] wire with real stats*/}
-            <StatCard value="2" label="Stakes" colors={colors} />
-            <StatCard value="5" label="Completed" colors={colors} />
-            <StatCard value="1" label="Streak" colors={colors} />
+          )}
+          <View style={styles.profileInfo}>
+            <Text style={[styles.name, { color: colors.text }]}>
+              {user?.fullName ?? "User"}
+            </Text>
+            <Text
+              style={[styles.email, { color: colors.text }]}
+              numberOfLines={1}
+            >
+              {user?.primaryEmailAddress?.emailAddress ?? "No email"}
+            </Text>
           </View>
-          {/* Section: Family Link */}
-          <Text style={[styles.sectionHeader, { color: colors.text }]}>
-            Family link
-          </Text>
-          <View
-            style={[styles.cardGroup, { backgroundColor: colors.surface2 }]}
-          >
-            <SettingsRow
-              icon="heart"
-              label="Family centre"
-              colors={colors}
-              onPress={() => {}}
-            />
-            <SectionDivider colors={colors} />
-            <SettingsRow
-              icon="user-plus"
-              label="Invite member"
-              colors={colors}
-              onPress={() => {}}
-            />
-            <SectionDivider colors={colors} />
-          </View>
+        </TouchableOpacity>
 
-          {/* Section: Permissions & About */}
-          <Text style={[styles.sectionHeader, { color: colors.text }]}>
-            Permissions
-          </Text>
-          <View
-            style={[styles.cardGroup, { backgroundColor: colors.surface2 }]}
-          >
-            {Platform.OS === "android" && (
-              <>
-                <SettingsRow
-                  icon="check-square"
-                  label="Screen time access"
-                  colors={colors}
-                  onPress={() =>
-                    router.push("/(onboarding)/screen-time-permission")
-                  }
-                />
-                <SectionDivider colors={colors} />
-              </>
-            )}
-            <SectionDivider colors={colors} />
-            {/* <SettingsRow
-            icon="info"
-            label="About us"
-            colors={colors}
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <StatCard value="2" label="Stakes" colors={colors} />
+          <StatCard value="5" label="Completed" colors={colors} />
+          <StatCard value="1" label="Streak" colors={colors} />
+        </View>
+
+        {/* Family */}
+        <OptionsGroup label="Family link">
+          <OptionsRow icon="heart" label="Family centre" onPress={() => {}} />
+          <OptionsRow
+            icon="user-plus"
+            label="Invite member"
             onPress={() => {}}
-          /> */}
-            <SectionDivider colors={colors} />
-          </View>
+          />
+        </OptionsGroup>
 
-          {/* Section: Danger Zone */}
-          <View
-            style={[
-              styles.cardGroup,
-              {
-                backgroundColor: colors.surface2,
-                marginTop: commonTheme.space.lg,
-              },
-            ]}
-          >
-            <SettingsRow
-              icon="log-out"
-              label="Sign out"
-              colors={colors}
-              onPress={handleSignOut}
-              isDestructive
+        {/* Permissions — only render group if on Android */}
+        {Platform.OS === "android" && (
+          <OptionsGroup label="Permissions">
+            <OptionsRow
+              icon="check-square"
+              label="Screen time access"
+              onPress={() =>
+                router.push("/(onboarding)/screen-time-permission")
+              }
             />
-          </View>
-        </ScrollView>
-      </View>
+          </OptionsGroup>
+        )}
+
+        {/* Danger zone */}
+        <OptionsGroup label="Danger zone">
+          <OptionsRow
+            icon="log-out"
+            label="Sign out"
+            onPress={handleSignOut}
+            isDestructive
+          />
+        </OptionsGroup>
+      </ScrollView>
     </SafeAreaView>
-  );
-}
-function SettingsRow({
-  icon,
-  label,
-  onPress,
-  colors,
-  rightElement,
-  isDestructive = false,
-}: {
-  icon: keyof typeof Feather.glyphMap;
-  label: string;
-  onPress?: () => void;
-  colors: any;
-  rightElement?: React.ReactNode;
-  isDestructive?: boolean;
-}) {
-  const content = (
-    <>
-      <Feather
-        name={icon}
-        size={20}
-        color={isDestructive ? "#FF3B30" : colors.textMuted}
-        style={styles.rowIcon}
-      />
-      <Text
-        style={[
-          styles.rowLabel,
-          { color: isDestructive ? "#FF3B30" : colors.text },
-        ]}
-      >
-        {label}
-      </Text>
-      <View style={styles.rowRight}>
-        {rightElement
-          ? rightElement
-          : onPress && (
-              <Feather
-                name="chevron-right"
-                size={18}
-                color={colors.text}
-                style={styles.chevron}
-              />
-            )}
-      </View>
-    </>
-  );
-
-  if (onPress) {
-    return (
-      <TouchableOpacity style={styles.row} onPress={onPress}>
-        {content}
-      </TouchableOpacity>
-    );
-  }
-
-  return <View style={styles.row}>{content}</View>;
-}
-
-function SectionDivider({ colors }: { colors: any }) {
-  return (
-    <View style={[styles.separator, { backgroundColor: colors.border }]} />
   );
 }
 

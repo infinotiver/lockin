@@ -75,13 +75,6 @@ export const styles = StyleSheet.create({
     elevation: 1,
   },
 
-  // Rows
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: commonTheme.space.md,
-    paddingHorizontal: commonTheme.space.md,
-  },
   rowIcon: {
     marginRight: commonTheme.space.md,
   },
