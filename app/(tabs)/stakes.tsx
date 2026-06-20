@@ -1,22 +1,25 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-import type { Stake } from "@/types/stakes";
+import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
+import type { Stake, StakeStatus } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
+
+const STAKE_TABS: TabItem<StakeStatus>[] = [
+  { key: "active", label: "Active" },
+  { key: "pending", label: "Pending" },
+  { key: "done", label: "Done" },
+];
+
 const STAKES: Stake[] = []; // [TODO] fetch from backend
 
 export default function StakesScreen() {
   const colors = useColors();
+  const [activeTab, setActiveTab] = useState<StakeStatus>("active");
 
   const activeStakes = STAKES.filter((s) => s.status === "active");
   const pendingStakes = STAKES.filter((s) => s.status === "pending");
@@ -26,44 +29,81 @@ export default function StakesScreen() {
     (s) => s.daysLeft !== undefined && s.daysLeft <= 3,
   ).length;
 
-  let tabBarHeight = 60;
+  const tabBarHeight = 60;
+
+  // Build tabs with counts
+  const tabs: TabItem<StakeStatus>[] = [
+    { key: "active", label: "Active", count: activeStakes.length || undefined },
+    {
+      key: "pending",
+      label: "Pending",
+      count: pendingStakes.length || undefined,
+    },
+    { key: "done", label: "Done", count: doneStakes.length || undefined },
+  ];
+
+  const visibleStakes =
+    activeTab === "active"
+      ? activeStakes
+      : activeTab === "pending"
+        ? pendingStakes
+        : doneStakes;
+
+  const emptyMessages: Record<StakeStatus, string> = {
+    active: "No active stakes right now.",
+    pending: "No stakes waiting for approval.",
+    done: "Finish a goal to see it here.",
+    // failed: "No failed stakes.",
+  };
 
   return (
     <SafeAreaView
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
-      {/* Header */}
+      {/* ── Header ── */}
       <View style={styles.header}>
-        <View
-          style={[
-            commonTheme.layout.row,
-            { alignItems: "center", gap: commonTheme.space.md },
-          ]}
-        >
+        <View style={commonTheme.layout.row}>
           <Text
             style={[
               commonTheme.text.pageTitle,
               {
                 color: colors.text,
-                paddingHorizontal: commonTheme.space.sm,
                 fontFamily: commonTheme.font.bold,
               },
             ]}
           >
             Stakes
           </Text>
+
           {almostDoneCount > 0 && (
             <View style={[styles.badge, { backgroundColor: colors.surface2 }]}>
-              <Feather name="clock" size={12} color={colors.text} />
+              <Feather name="clock" size={11} color={colors.text} />
               <Text style={[commonTheme.text.label, { color: colors.text }]}>
                 {almostDoneCount} ending soon
               </Text>
             </View>
           )}
         </View>
+
+        <Pressable
+          style={[styles.fab, { backgroundColor: colors.surface2 }]}
+          onPress={() => {}}
+        >
+          <Feather name="plus" size={22} color={colors.text} />
+        </Pressable>
       </View>
 
+      {/* ── Tabs ── */}
+      <View style={styles.tabsWrapper}>
+        <SplitTabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </View>
+
+      {/* ── Content ── */}
       <ScrollView
         contentContainerStyle={[
           styles.list,
@@ -73,48 +113,24 @@ export default function StakesScreen() {
       >
         {STAKES.length === 0 ? (
           <GlobalEmptyState />
+        ) : visibleStakes.length === 0 ? (
+          <View style={styles.inlineEmpty}>
+            <Text style={[styles.inlineEmptyText, { color: colors.text }]}>
+              {emptyMessages[activeTab]}
+            </Text>
+          </View>
         ) : (
-          <>
-            <StakeSection
-              title="Active"
-              data={activeStakes}
-              colors={colors}
-              emptyMessage="No active stakes right now."
-            />
-            <StakeSection
-              title="Pending Approval"
-              data={pendingStakes}
-              colors={colors}
-              emptyMessage="No pending stakes."
-            />
-            <StakeSection
-              title="Completed"
-              data={doneStakes}
-              colors={colors}
-              emptyMessage="Finish a goal to see it here."
-            />
-          </>
+          <StakeSection
+            title=""
+            data={visibleStakes}
+            colors={colors}
+            emptyMessage={emptyMessages[activeTab]}
+          />
         )}
       </ScrollView>
-
-      {/* FAB */}
-      <Pressable
-        style={[
-          styles.fab,
-          {
-            backgroundColor: colors.surface2,
-            bottom: tabBarHeight + commonTheme.space.lg,
-          },
-        ]}
-        onPress={() => {}}
-      >
-        <Feather name="plus" size={24} color={colors.text} />
-      </Pressable>
     </SafeAreaView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   header: {
@@ -123,7 +139,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: commonTheme.space.lg,
     paddingTop: commonTheme.space.sm,
-    paddingBottom: commonTheme.space.lg,
+    paddingBottom: commonTheme.space.md,
+    gap: commonTheme.space.md,
   },
   badge: {
     flexDirection: "row",
@@ -132,24 +149,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: commonTheme.space.md,
     paddingVertical: commonTheme.space.xs,
     borderRadius: commonTheme.rounded.full,
+    marginLeft: commonTheme.space.sm,
+  },
+  tabsWrapper: {
+    paddingHorizontal: commonTheme.space.lg,
+    paddingBottom: commonTheme.space.md,
   },
   list: {
     paddingHorizontal: commonTheme.space.lg,
-    gap: commonTheme.space.xl, // Space between sections
+    gap: commonTheme.space.xl,
   },
-
   fab: {
-    position: "absolute",
-    right: commonTheme.space.lg,
-    width: 56,
-    height: 56,
+    width: 40,
+    height: 40,
     borderRadius: commonTheme.rounded.full,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+  },
+  inlineEmpty: {
+    paddingTop: commonTheme.space["2xl"],
+    alignItems: "center",
+  },
+  inlineEmptyText: {
+    fontSize: 14,
+    opacity: 0.4,
+    fontFamily: commonTheme.font.body,
   },
 });
