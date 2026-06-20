@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: "100%",
-    maxWidth: 800,
+    maxWidth: 400,
     borderRadius: commonTheme.rounded.lg,
     padding: commonTheme.space.lg,
     elevation: 5,

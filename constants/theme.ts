@@ -85,10 +85,10 @@ const text = StyleSheet.create({
     fontFamily: font.body,
   },
   label: {
-    fontSize: fontSize.xs,
-    fontFamily: font.bold,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
+    fontSize: fontSize.sm,
+    fontFamily: font.monoSemibold,
+    // letterSpacing: 0.5,
+    // textTransform: "uppercase",
   },
   button: {
     fontSize: fontSize.xl,
@@ -126,6 +126,7 @@ const layout = StyleSheet.create({
   flex: { flex: 1 },
   row: { flexDirection: "row" },
   center: { justifyContent: "center", alignItems: "center" },
+  alignCenter: { alignItems: "center" },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
