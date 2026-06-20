@@ -104,6 +104,7 @@ export default function SettingsScreen() {
             /> */}
           </TouchableOpacity>
           <View style={styles.statsContainer}>
+            {/* [TODO] wire with real stats*/}
             <StatCard value="2" label="Stakes" colors={colors} />
             <StatCard value="5" label="Completed" colors={colors} />
             <StatCard value="1" label="Streak" colors={colors} />
