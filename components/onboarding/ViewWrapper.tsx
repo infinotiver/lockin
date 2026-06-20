@@ -1,8 +1,12 @@
 import { View } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { commonTheme } from "@/constants/theme";
+import { commonTheme } from "@/constants/theme"
 
-export const ViewWrapper = ({ children }: { children: React.ReactNode }) => {
+export const ViewWrapper = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const colors = useColors();
   return (
     <View
@@ -13,7 +17,7 @@ export const ViewWrapper = ({ children }: { children: React.ReactNode }) => {
         padding: commonTheme.space.xl,
         gap: commonTheme.space["2xl"],
         backgroundColor: colors.background,
-        width: "100%",
+        width: '100%',
       }}
     >
       {children}

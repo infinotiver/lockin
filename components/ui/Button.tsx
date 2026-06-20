@@ -18,28 +18,16 @@ type ButtonProps = {
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  monospace?: boolean;
+  monospace?: boolean
 };
 
 const SIZE: Record<
   ButtonSize,
   { height: number; fontSize: number; px: number }
 > = {
-  sm: {
-    height: 36,
-    fontSize: commonTheme.fontSize.md,
-    px: commonTheme.space.md,
-  },
-  md: {
-    height: 44,
-    fontSize: commonTheme.fontSize.lg,
-    px: commonTheme.space.lg,
-  },
-  lg: {
-    height: 52,
-    fontSize: commonTheme.fontSize["2xl"],
-    px: commonTheme.space.xl,
-  },
+  sm: { height: 36, fontSize: commonTheme.fontSize.md, px: commonTheme.space.md },
+  md: { height: 44, fontSize: commonTheme.fontSize.lg, px: commonTheme.space.lg },
+  lg: { height: 52, fontSize: commonTheme.fontSize["2xl"], px: commonTheme.space.xl },
 };
 
 export const Button = ({
@@ -125,10 +113,10 @@ export const Button = ({
             {
               fontSize,
               color: text,
-
+  
               ...(monospace && {
                 fontFamily: commonTheme.font.monoBold,
-                color: text,
+                color: text
               }),
             },
           ]}
