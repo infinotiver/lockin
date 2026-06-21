@@ -8,20 +8,20 @@ import {
 } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { useState } from "react";
-import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { styles } from "@/constants/settings.styles";
 import commonTheme from "@/constants/theme";
 import { OptionsRow } from "@/components/ui/OptionsRow";
 import { OptionsGroup } from "@/components/ui/OptionsGroup";
+import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
 
 export default function SettingsScreen() {
   const colors = useColors();
   const { user } = useUser();
   const { signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
-
+  const [showPermModal, setShowPermModal] = useState(false);
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
@@ -115,9 +115,7 @@ export default function SettingsScreen() {
             <OptionsRow
               icon="check-square"
               label="Screen time access"
-              onPress={() =>
-                router.push("/(onboarding)/screen-time-permission")
-              }
+              onPress={() => setShowPermModal(true)}
             />
           </OptionsGroup>
         )}
@@ -131,6 +129,10 @@ export default function SettingsScreen() {
             isDestructive
           />
         </OptionsGroup>
+        <ScreenTimePermissionModal
+          visible={showPermModal}
+          onClose={() => setShowPermModal(false)}
+        />
       </ScrollView>
     </SafeAreaView>
   );
