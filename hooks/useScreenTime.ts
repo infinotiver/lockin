@@ -51,7 +51,7 @@ export function useScreenTime() {
 
   const sync = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }));
-    const result = await syncScreenTime(); // TODO implement sync
+    const result = await syncScreenTime(); // TODO: implement sync
 
     if (result.status === "synced") {
       setState((s) => ({

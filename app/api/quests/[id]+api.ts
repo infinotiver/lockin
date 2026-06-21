@@ -27,7 +27,7 @@ async function verifyQuestAccess(clerkId: string, questId: string) {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const { id } = params;
   const clerkId = await verifyAuth(request);
@@ -41,17 +41,18 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const { id } = params;
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
   const user = await clerk.users.getUser(clerkId);
-  if (user.publicMetadata?.role !== "individual") return forbidden();
+  // if (user.publicMetadata?.role !== "individual") return forbidden(); allow teens to PATCH too
 
   const access = await verifyQuestAccess(clerkId, params.id);
   if (!access) return forbidden();
+  const userRole = access.membership.role;
 
   let body: any;
   try {
@@ -59,8 +60,27 @@ export async function PATCH(
   } catch {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
+  if (userRole === "teen") {
+    const attemptedKeys = Object.keys(body);
+    const tryingToCheat =
+      attemptedKeys.length > 1 || attemptedKeys[0] !== "status";
 
-  const allowedFields = ["title", "description", "reward", "type", "icon_url", "status", "expires_at"];
+    if (tryingToCheat || body.status !== "completed") {
+      return Response.json(
+        { error: "Teens can only mark quests as completed" },
+        { status: 403 },
+      );
+    }
+  }
+  const allowedFields = [
+    "title",
+    "description",
+    "reward",
+    "type",
+    "icon_url",
+    "status",
+    "expires_at",
+  ];
   const updates: any = {};
   for (const field of allowedFields) {
     if (body[field] !== undefined) updates[field] = body[field];
@@ -82,7 +102,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   const { id } = params;
   const clerkId = await verifyAuth(request);
@@ -94,10 +114,7 @@ export async function DELETE(
   const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
 
-  const { error } = await supabase
-    .from("quests")
-    .delete()
-    .eq("id", params.id);
+  const { error } = await supabase.from("quests").delete().eq("id", params.id);
 
   if (error) {
     return Response.json({ error: "Failed to delete quest" }, { status: 500 });
