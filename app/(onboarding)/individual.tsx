@@ -19,7 +19,6 @@ const TOTAL_STEPS = 3;
 const { width } = Dimensions.get("window");
 
 type Colors = ReturnType<typeof useColors>;
-
 const QUEST_TYPES = [
   { label: "Chore", value: "chore" },
   { label: "Study", value: "study" },
