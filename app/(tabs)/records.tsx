@@ -17,49 +17,66 @@ export default function RecordsScreen() {
   const { report, formattedTotal, loading, error, permissionGranted, sync } =
     useScreenTime();
 
+  // ─── FALLBACK 1: iOS / Web ──────────────────────────────────────────────────
   if (Platform.OS !== "android") {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={[
+          commonTheme.layout.flex,
+          { backgroundColor: colors.background },
+        ]}
       >
-        <Text
-          style={[
-            styles.pageTitle,
-            { color: colors.text, fontFamily: commonTheme.font.bold },
-          ]}
-        >
-          Records
-        </Text>
-        <View style={styles.center}>
-          <Text style={[styles.muted, { color: colors.textMuted }]}>
-            Screen time tracking is Android only.
+        <View style={commonTheme.layout.screenContent}>
+          <Text style={[commonTheme.text.pageTitle, { color: colors.text }]}>
+            Records
           </Text>
+          <View
+            style={[
+              commonTheme.layout.center,
+              { marginTop: commonTheme.space["2xl"] },
+            ]}
+          >
+            <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
+              Screen time tracking is an Android-only feature.
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
+  // ─── FALLBACK 2: No Permission ──────────────────────────────────────────────
   if (permissionGranted === false) {
     return (
       <SafeAreaView
-        style={[styles.container, { backgroundColor: colors.background }]}
+        style={[
+          commonTheme.layout.flex,
+          { backgroundColor: colors.background },
+        ]}
         edges={["top"]}
       >
-        <Text
-          style={[
-            styles.pageTitle,
-            { color: colors.text, fontFamily: commonTheme.font.bold },
-          ]}
-        >
-          Records
-        </Text>
-        <View style={styles.center}>
-          <Text style={[styles.muted, { color: colors.textMuted }]}>
-            Usage access not granted.
+        <View style={commonTheme.layout.screenContent}>
+          <Text style={[commonTheme.text.pageTitle, { color: colors.text }]}>
+            Records
           </Text>
-          <Text style={[styles.muted, { color: colors.textMuted }]}>
-            Go to Settings → Permissions to enable it.
-          </Text>
+          <View
+            style={[
+              commonTheme.layout.center,
+              {
+                marginTop: commonTheme.space["2xl"],
+                gap: commonTheme.space.sm,
+              },
+            ]}
+          >
+            <Text style={[commonTheme.text.bodyStrong, { color: colors.text }]}>
+              Usage access not granted
+            </Text>
+            <Text
+              style={[commonTheme.text.caption, { color: colors.textMuted }]}
+            >
+              Go to Settings → Permissions to enable tracking.
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -67,22 +84,20 @@ export default function RecordsScreen() {
 
   const appEntries = report?.byApp
     ? Object.entries(report.byApp)
-        // .filter(([pkg]) => !isSystemApp(pkg))
         .sort(([, a], [, b]) => b - a)
         .slice(0, 20)
     : [];
 
   const totalMs = appEntries.reduce((sum, [, ms]) => sum + ms, 0);
 
-  const displayTotal = msToHoursAndMinutes(totalMs);
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={styles.scrollContainer}
         refreshControl={
           <RefreshControl
             refreshing={loading}
@@ -91,88 +106,103 @@ export default function RecordsScreen() {
           />
         }
       >
-        <Text
-          style={[
-            styles.pageTitle,
-            { color: colors.text, fontFamily: commonTheme.font.bold },
-          ]}
-        >
+        <Text style={[commonTheme.text.pageTitle, { color: colors.text }]}>
           Records
         </Text>
 
         {error && (
-          <Text style={[styles.error, { color: colors.destructive }]}>
+          <Text
+            style={[
+              commonTheme.text.error,
+              { color: colors.errorColor || "#FF3B30" },
+            ]}
+          >
             {error}
           </Text>
         )}
 
-        {/* Today's total */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-            TODAY'S SCREEN TIME
+        {/* ─── HERO: TODAY'S TOTAL ────────────────────────────────────────── */}
+        <View style={{ gap: commonTheme.space.xs }}>
+          <Text style={[commonTheme.text.label, { color: colors.textMuted }]}>
+            Today's Screen Time
           </Text>
-          <Text
-            style={[
-              styles.totalTime,
-              { color: colors.text, fontFamily: commonTheme.font.bold },
-            ]}
-          >
+          <Text style={[commonTheme.text.amountLarge, { color: colors.text }]}>
             {loading ? "—" : formattedTotal}
           </Text>
           {report?.date && (
-            <Text style={[styles.date, { color: colors.textMuted }]}>
+            <Text
+              style={[commonTheme.text.caption, { color: colors.textMuted }]}
+            >
               {report.date}
             </Text>
           )}
         </View>
 
-        {/* Per-app breakdown */}
+        {/* ─── PER-APP BREAKDOWN ──────────────────────────────────────────── */}
         {appEntries.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-              BY APP
+          <View style={{ gap: commonTheme.space.sm }}>
+            <Text style={[commonTheme.text.label, { color: colors.textMuted }]}>
+              By App
             </Text>
-            <View style={[styles.card, { backgroundColor: colors.surface2 }]}>
+
+            <View
+              style={[
+                {
+                  backgroundColor: colors.surface2,
+                  borderRadius: commonTheme.rounded.xl,
+                  paddingHorizontal: commonTheme.space.lg,
+                },
+              ]}
+            >
               {appEntries.map(([pkg, ms], index) => {
                 const percent = totalMs > 0 ? ms / totalMs : 0;
                 const appName = pkg.split(".").pop() ?? pkg;
                 const isLast = index === appEntries.length - 1;
 
                 return (
-                  <View key={pkg}>
-                    <View style={styles.appRow}>
+                  <View
+                    key={pkg}
+                    style={{ paddingVertical: commonTheme.space.md }}
+                  >
+                    {/* Header Row */}
+                    <View
+                      style={[
+                        commonTheme.layout.rowBetween,
+                        { marginBottom: commonTheme.space.xs },
+                      ]}
+                    >
                       <Text
-                        style={[styles.appName, { color: colors.text }]}
+                        style={[
+                          commonTheme.text.bodyStrong,
+                          { color: colors.text, flex: 1 },
+                        ]}
                         numberOfLines={1}
                       >
                         {appName}
                       </Text>
                       <Text
                         style={[
-                          styles.appTime,
-                          {
-                            color: colors.text,
-                            fontFamily: commonTheme.font.medium,
-                          },
+                          commonTheme.text.body,
+                          { color: colors.textMuted },
                         ]}
                       >
                         {msToHoursAndMinutes(ms)}
                       </Text>
                     </View>
 
-                    {/* inline mini bar */}
+                    {/* Progress Track (Reused native theme bars) */}
                     <View
                       style={[
-                        styles.barTrack,
-                        { backgroundColor: colors.surface2 },
+                        commonTheme.layout.progressBar,
+                        { backgroundColor: colors.background },
                       ]}
                     >
                       <View
                         style={[
-                          styles.barFill,
+                          commonTheme.layout.progressFill,
                           {
                             backgroundColor: colors.primary,
-                            width: `${Math.round(percent * 100)}%` as any,
+                            width: `${Math.round(percent * 100)}%`,
                           },
                         ]}
                       />
@@ -182,7 +212,10 @@ export default function RecordsScreen() {
                       <View
                         style={[
                           styles.divider,
-                          { backgroundColor: colors.surface2 },
+                          {
+                            backgroundColor: colors.border || colors.background,
+                            marginTop: commonTheme.space.md,
+                          },
                         ]}
                       />
                     )}
@@ -194,9 +227,14 @@ export default function RecordsScreen() {
         )}
 
         {!loading && appEntries.length === 0 && !error && (
-          <View style={styles.center}>
-            <Text style={[styles.muted, { color: colors.textMuted }]}>
-              No usage data yet for today.
+          <View
+            style={[
+              commonTheme.layout.center,
+              { marginTop: commonTheme.space["2xl"] },
+            ]}
+          >
+            <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
+              No app usage recorded yet today.
             </Text>
           </View>
         )}
@@ -205,75 +243,14 @@ export default function RecordsScreen() {
   );
 }
 
+// Look at how small this is now:
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scroll: {
+  scrollContainer: {
     paddingHorizontal: commonTheme.space.lg,
-    paddingBottom: 80,
+    paddingBottom: 100,
     gap: commonTheme.space.xl,
-  },
-  pageTitle: {
-    fontSize: 28,
-    paddingBottom: commonTheme.space.sm,
-  },
-  section: {
-    gap: commonTheme.space.sm,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    letterSpacing: 0.7,
-    fontFamily: commonTheme.font.medium,
-  },
-  totalTime: {
-    fontSize: 48,
-    letterSpacing: -1,
-  },
-  date: {
-    fontSize: 13,
-  },
-  card: {
-    borderRadius: commonTheme.rounded.lg,
-    overflow: "hidden",
-    paddingHorizontal: commonTheme.space.lg,
-  },
-  appRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: commonTheme.space.md,
-  },
-  appName: {
-    fontSize: 14,
-    flex: 1,
-    marginRight: commonTheme.space.md,
-    textTransform: "capitalize",
-  },
-  appTime: {
-    fontSize: 14,
-  },
-  barTrack: {
-    height: 3,
-    borderRadius: 2,
-    overflow: "hidden",
-    marginBottom: commonTheme.space.sm,
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: 2,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-  },
-  error: {
-    fontSize: 13,
-  },
-  center: {
-    paddingTop: commonTheme.space["2xl"],
-    gap: commonTheme.space.sm,
-    alignItems: "center",
-  },
-  muted: {
-    fontSize: 14,
-    textAlign: "center",
   },
 });

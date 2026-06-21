@@ -57,7 +57,6 @@ export default function SettingsScreen() {
               color: colors.text,
               paddingHorizontal: commonTheme.space.sm,
               paddingBottom: commonTheme.space.lg,
-              fontFamily: commonTheme.font.bold,
             },
           ]}
         >
