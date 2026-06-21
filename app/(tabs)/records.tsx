@@ -21,7 +21,6 @@ export default function RecordsScreen() {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: colors.background }]}
-        edges={["top"]}
       >
         <Text
           style={[
