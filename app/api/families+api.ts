@@ -6,9 +6,16 @@ import { supabase } from "@/lib/supabase";
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
 // generates a random 6 character uppercase code e.g. "A3K9PQ"
-function generateCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-  // Math.random because fk security
+function generateCode() {
+  const buffer = new Uint8Array(6);
+  crypto.getRandomValues(buffer);
+
+  // Convert random bytes to base36, grab characters, and force uppercase
+  return Array.from(buffer)
+    .map((byte) => byte.toString(36))
+    .join("")
+    .substring(0, 6)
+    .toUpperCase();
 }
 
 export async function POST(request: Request) {

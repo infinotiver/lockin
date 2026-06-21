@@ -13,10 +13,8 @@ import { OnboardingCard } from "@/components/onboarding/OnboardingCard";
 import { OnboardingTitle } from "@/components/onboarding/OnboardingTitle";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
-
-import { Copy, Check } from "lucide-react-native";
 import ShareCodeModal from "@/components/share/ShareCodeModal";
-
+import { Picker } from "@react-native-picker/picker";
 const TOTAL_STEPS = 3;
 const { width } = Dimensions.get("window");
 
