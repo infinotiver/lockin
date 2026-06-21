@@ -42,7 +42,7 @@ function ClassicTabLayout() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.surface2,
+          backgroundColor: isIOS ? "transparent" : colors.surface3,
           borderTopWidth: 0,
           elevation: 0,
         },
