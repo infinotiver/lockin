@@ -23,13 +23,12 @@ const { width } = Dimensions.get("window");
 type Colors = ReturnType<typeof useColors>;
 
 const QUEST_TYPES = [
-  { label: 'Chore', value: 'chore' },
-  { label: 'Study', value: 'study' },
-  { label: 'Screen-time', value: 'screen-time' },
-  { label: 'Work', value: 'work' },
-  { label: 'Shop', value: 'shop' },
-]
-
+  { label: "Chore", value: "chore" },
+  { label: "Study", value: "study" },
+  { label: "Screen-time", value: "screen-time" },
+  { label: "Work", value: "work" },
+  { label: "Shop", value: "shop" },
+];
 
 const StepOne = ({
   familyName,
@@ -90,19 +89,19 @@ const StepTwo = ({
   onNext,
   colors,
 }: {
-  questTitle: string
-  setQuestTitle: (v: string) => void
-  questDescription: string
-  setQuestDescription: (v: string) => void
-  questReward: string
-  setQuestReward: (v: string) => void
-  questType: string
-  setQuestType: (v: string) => void
-  questExpiresAt: string
-  setQuestExpiresAt: (v: string) => void
-  onNext: () => void
-  colors: Colors
-  loading: boolean
+  questTitle: string;
+  setQuestTitle: (v: string) => void;
+  questDescription: string;
+  setQuestDescription: (v: string) => void;
+  questReward: string;
+  setQuestReward: (v: string) => void;
+  questType: string;
+  setQuestType: (v: string) => void;
+  questExpiresAt: string;
+  setQuestExpiresAt: (v: string) => void;
+  onNext: () => void;
+  colors: Colors;
+  loading: boolean;
 }) => (
   <View
     style={{ flex: 1, gap: commonTheme.space.md, justifyContent: "center" }}
@@ -115,7 +114,7 @@ const StepTwo = ({
     </View>
 
     {/* Title + Type row */}
-    <View style={{ flexDirection: 'row', gap: commonTheme.space.md }}>
+    <View style={{ flexDirection: "row", gap: commonTheme.space.md }}>
       <FocusedInput
         placeholder="Quest title"
         value={questTitle}
@@ -123,25 +122,32 @@ const StepTwo = ({
         autoCapitalize="sentences"
         style={{ flex: 1 }}
       />
-      <View style={{
-        flex: 0.8,
-        height: 50,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: commonTheme.rounded.xl,
-        backgroundColor: colors.surface1,
-        justifyContent: 'center',
-        overflow: 'hidden',
-        padding: commonTheme.space.md,
-      }}>
+      <View
+        style={{
+          flex: 0.8,
+          height: 50,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: commonTheme.rounded.xl,
+          backgroundColor: colors.surface1,
+          justifyContent: "center",
+          overflow: "hidden",
+          padding: commonTheme.space.md,
+        }}
+      >
         <Picker
           selectedValue={questType}
           onValueChange={setQuestType}
           style={{ color: colors.text }}
           dropdownIconColor={colors.textMuted}
         >
-          {QUEST_TYPES.map(t => (
-            <Picker.Item key={t.value} label={t.label} value={t.value} color={colors.text} />
+          {QUEST_TYPES.map((t) => (
+            <Picker.Item
+              key={t.value}
+              label={t.label}
+              value={t.value}
+              color={colors.text}
+            />
           ))}
         </Picker>
       </View>
@@ -156,7 +162,7 @@ const StepTwo = ({
     />
 
     {/* Expire By + Reward row */}
-    <View style={{ flexDirection: 'row', gap: commonTheme.space.md }}>
+    <View style={{ flexDirection: "row", gap: commonTheme.space.md }}>
       <FocusedInput
         placeholder="Expire in (days)"
         value={questExpiresAt}
@@ -164,33 +170,42 @@ const StepTwo = ({
         keyboardType="numeric"
         style={{ flex: 1 }}
       />
-      <View style={{
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.surface1,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: commonTheme.rounded.xl,
-        paddingHorizontal: commonTheme.space.lg,
-        height: 50,
-        gap: commonTheme.space.sm,
-      }}>
-        <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>₹</Text>
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: colors.surface1,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: commonTheme.rounded.xl,
+          paddingHorizontal: commonTheme.space.lg,
+          height: 50,
+          gap: commonTheme.space.sm,
+        }}
+      >
+        <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
+          ₹
+        </Text>
         <FocusedInput
           placeholder="Reward"
           value={questReward}
           onChangeText={setQuestReward}
           keyboardType="numeric"
-          style={{ flex: 1, borderWidth: 0, paddingHorizontal: 0, backgroundColor: 'transparent' }}
+          style={{
+            flex: 1,
+            borderWidth: 0,
+            paddingHorizontal: 0,
+            backgroundColor: "transparent",
+          }}
         />
       </View>
     </View>
     <Button
       onPress={onNext}
-      variant='primary'
-      label='Add Quest'
-      loadingLabel='Adding...'
+      variant="primary"
+      label="Add Quest"
+      loadingLabel="Adding..."
       loading={loading}
       disabled={loading}
       fullWidth
@@ -219,13 +234,13 @@ const Individual = () => {
   const colors = useColors();
   const { user } = useUser();
 
-  const [step, setStep] = useState(0)
-  const [familyName, setFamilyName] = useState('')
-  const [questTitle, setQuestTitle] = useState('')
-  const [questDescription, setQuestDescription] = useState('')
-  const [questReward, setQuestReward] = useState('')
-  const [questType, setQuestType] = useState('chore')
-  const [questExpiresAt, setQuestExpiresAt] = useState('')
+  const [step, setStep] = useState(0);
+  const [familyName, setFamilyName] = useState("");
+  const [questTitle, setQuestTitle] = useState("");
+  const [questDescription, setQuestDescription] = useState("");
+  const [questReward, setQuestReward] = useState("");
+  const [questType, setQuestType] = useState("chore");
+  const [questExpiresAt, setQuestExpiresAt] = useState("");
 
   const [familyCode, setFamilyCode] = useState("");
   const [familyId, setFamilyId] = useState("");
@@ -254,50 +269,55 @@ const Individual = () => {
 
   const handleAddQuest = async () => {
     // if no family yet (user skipped step 1), just skip ahead
-    console.log('Calling:', `${process.env.EXPO_PUBLIC_API_URL}/api/families/${familyId}/quests`)
+    console.log(
+      "Calling:",
+      `${process.env.EXPO_PUBLIC_API_URL}/api/${familyId}/quests`,
+    );
     if (!familyId) {
-      handleNext()
-      return
+      handleNext();
+      return;
     }
-  
-    setLoading(true)
+
+    setLoading(true);
     try {
-      const token = await getToken()
-  
+      const token = await getToken();
+
       // convert days to an ISO timestamp
       const expiresAt = questExpiresAt
-        ? new Date(Date.now() + Number(questExpiresAt) * 24 * 60 * 60 * 1000).toISOString()
-        : null
-  
+        ? new Date(
+            Date.now() + Number(questExpiresAt) * 24 * 60 * 60 * 1000,
+          ).toISOString()
+        : null;
+
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          familyId,       // ← in body now
+          familyId, // ← in body now
           title: questTitle,
           description: questDescription,
           reward: questReward,
           type: questType,
           expires_at: expiresAt,
         }),
-      })
-  
+      });
+
       if (!res.ok) {
-        const body = await res.json()
-        console.error('Create quest error:', res.status, body)
-        return
+        const body = await res.json();
+        console.error("Create quest error:", res.status, body);
+        return;
       }
-  
-      animateToStep(2) // move to invite step
+
+      animateToStep(2); // move to invite step
     } catch (e) {
-      console.error(e)
+      console.error(e);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreateFamily = async () => {
     setLoading(true);

@@ -60,7 +60,10 @@ export async function POST(request: Request, { id }: Record<string, string>) {
     return Response.json({ error: "Title is required" }, { status: 400 });
   }
   if (!reward || isNaN(Number(reward)) || Number(reward) <= 0) {
-    return Response.json({ error: "Valid reward amount is required" }, { status: 400 });
+    return Response.json(
+      { error: "Valid reward amount is required" },
+      { status: 400 },
+    );
   }
   const validTypes = ["chore", "study", "screen-time", "work", "shop"];
   if (!validTypes.includes(type)) {
@@ -76,6 +79,7 @@ export async function POST(request: Request, { id }: Record<string, string>) {
       reward: Number(reward),
       type,
       icon_url: icon_url ?? null,
+      status: "available",
       expires_at: expires_at ?? null,
     })
     .select()

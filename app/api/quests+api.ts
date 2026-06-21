@@ -31,10 +31,7 @@ export async function GET(request: Request) {
   const familyId = url.searchParams.get("familyId");
 
   if (!familyId) {
-    return Response.json(
-      { error: "familyId is required" },
-      { status: 400 }
-    );
+    return Response.json({ error: "familyId is required" }, { status: 400 });
   }
 
   // Verify user belongs to this family
@@ -59,10 +56,7 @@ export async function GET(request: Request) {
   if (error) {
     console.error(error);
 
-    return Response.json(
-      { error: "Failed to fetch quests" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to fetch quests" }, { status: 500 });
   }
 
   return Response.json({ quests });
@@ -97,57 +91,33 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return Response.json(
-      { error: "Invalid JSON body" },
-      { status: 400 }
-    );
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const {
-    familyId,
-    title,
-    description,
-    reward,
-    type,
-    expires_at,
-  } = body;
+  const { familyId, title, description, reward, type, expires_at } = body;
 
   // Basic validation
 
   if (!familyId) {
-    return Response.json(
-      { error: "familyId is required" },
-      { status: 400 }
-    );
+    return Response.json({ error: "familyId is required" }, { status: 400 });
   }
 
   if (!title?.trim()) {
-    return Response.json(
-      { error: "Title is required" },
-      { status: 400 }
-    );
+    return Response.json({ error: "Title is required" }, { status: 400 });
   }
 
-  if (!reward || Number(reward) <= 0) {
+  const parsedReward = Number(reward);
+  if (!Number.isFinite(parsedReward) || parsedReward <= 0) {
     return Response.json(
       { error: "Reward must be greater than 0" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
-  const validTypes = [
-    "chore",
-    "study",
-    "screen-time",
-    "work",
-    "shop",
-  ];
+  const validTypes = ["chore", "study", "screen-time", "work", "shop"];
 
   if (!validTypes.includes(type)) {
-    return Response.json(
-      { error: "Invalid quest type" },
-      { status: 400 }
-    );
+    return Response.json({ error: "Invalid quest type" }, { status: 400 });
   }
 
   // Verify user belongs to family
@@ -180,10 +150,7 @@ export async function POST(request: Request) {
   if (error) {
     console.error(error);
 
-    return Response.json(
-      { error: "Failed to create quest" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to create quest" }, { status: 500 });
   }
 
   return Response.json({
