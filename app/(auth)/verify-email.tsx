@@ -7,9 +7,8 @@ import { useLocalSearchParams } from "expo-router";
 import { useSignUp } from "@clerk/clerk-expo";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
-import { AuthErrorText } from "@/components/auth/AuthErrorText";
 import { Button } from "@/components/ui/Button";
-
+import { ErrorHandler } from "@/components/ui/ErrorHandler";
 const VerifyEmail = () => {
   const [code, setCode] = useState("");
   const [focused, setFocused] = useState(false);
@@ -82,9 +81,7 @@ const VerifyEmail = () => {
         ]}
       >
         We sent a code to{" "}
-        <Text
-          style={{ color: colors.text, fontFamily: commonTheme.font.bold }}
-        >
+        <Text style={{ color: colors.text, fontFamily: commonTheme.font.bold }}>
           {email}
         </Text>
       </Text>
@@ -129,8 +126,8 @@ const VerifyEmail = () => {
         onBlur={() => setFocused(false)}
       />
 
-      <AuthErrorText error={error} />
-
+      {/* <AuthErrorText error={error} /> */}
+      <ErrorHandler error={error} type="modal" onClear={() => setError("")} />
       <Button
         onPress={handleVerify}
         label="Verify"
@@ -142,9 +139,7 @@ const VerifyEmail = () => {
 
       <Text style={[styles.footer, { color: colors.textMuted }]}>
         Didn't get the code?{" "}
-        <Text
-          style={{ color: colors.text, fontFamily: commonTheme.font.bold }}
-        >
+        <Text style={{ color: colors.text, fontFamily: commonTheme.font.bold }}>
           Check your spam folder
         </Text>
       </Text>

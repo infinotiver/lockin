@@ -42,7 +42,7 @@ function ClassicTabLayout() {
           backgroundColor: isIOS ? "transparent" : colors.surface2,
           borderTopWidth: 0,
           elevation: 0,
-          shadowOpacity: 0,
+          paddingTop: 8,
         },
         tabBarItemStyle: {
           alignItems: "center",

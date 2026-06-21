@@ -2,56 +2,93 @@ import { Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Feather } from "@expo/vector-icons";
 const HomeScreen = () => {
   const colors = useColors();
   const router = useRouter();
 
   return (
-    <ScrollView
+    <SafeAreaView
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
-      contentContainerStyle={commonTheme.layout.card}
-      showsVerticalScrollIndicator={false}
+      edges={["top"]}
     >
-      <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
-        Welcome back, USER
-      </Text>
-      <Pressable
-        onPress={() => {
-          router.navigate('/(auth)/sign-in')
-        }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
-      >
-      <Text style={{color: colors.text, fontSize: 20}}>Sign in page</Text>
-      </Pressable>
-      <Pressable
-        onPress={() => {
-          router.navigate('/(onboarding)/StartOnboarding')
-        }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
-      >
-      <Text style={{color: colors.text, fontSize: 20}}>StartOnboarding page</Text>
-      </Pressable>
-      <Pressable
-        onPress={() => {
-          router.navigate('/(onboarding)/individual')
-        }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
-      >
-        <Text style={{color: colors.text, fontSize: 20}}>individual (onboarding) page</Text>
-      </Pressable>
+      {__DEV__ && (
+        <ScrollView
+          style={[
+            commonTheme.layout.flex,
+            { backgroundColor: colors.background },
+          ]}
+          contentContainerStyle={commonTheme.layout.card}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text
+            style={[
+              commonTheme.text.sectionTitle,
+              commonTheme.layout.flex,
+              { color: colors.text },
+            ]}
+          >
+            <Feather name="info" size={20} /> Dev Mode
+          </Text>
+          <Pressable
+            onPress={() => {
+              router.navigate("/(auth)/sign-in");
+            }}
+            style={{
+              backgroundColor: colors.surface3,
+              padding: 20,
+              borderRadius: commonTheme.rounded.lg,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 20 }}>
+              Sign in page
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              router.navigate("/(onboarding)/StartOnboarding");
+            }}
+            style={{
+              backgroundColor: colors.surface3,
+              padding: 20,
+              borderRadius: commonTheme.rounded.lg,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 20 }}>
+              StartOnboarding page
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {}}
+            style={{
+              backgroundColor: colors.surface3,
+              padding: 20,
+              borderRadius: commonTheme.rounded.lg,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 20 }}>
+              individual (onboarding) page
+            </Text>
+          </Pressable>
 
-      <Pressable
-        onPress={() => {
-          router.navigate('/(onboarding)/teen')
-        }}
-        style={{ backgroundColor: colors.surface3, padding: 20}}
-      >
-        <Text style={{color: colors.text, fontSize: 20}}>teen (onboarding) page</Text>
-      </Pressable>
-
-
-    </ScrollView>
+          <Pressable
+            onPress={() => {
+              router.navigate("/(onboarding)/screen-time-permission");
+            }}
+            style={{
+              backgroundColor: colors.surface3,
+              padding: 20,
+              borderRadius: commonTheme.rounded.lg,
+            }}
+          >
+            <Text style={{ color: colors.text, fontSize: 20 }}>
+              Screen time auth page (android only)
+            </Text>
+          </Pressable>
+        </ScrollView>
+      )}
+    </SafeAreaView>
   );
 };
 

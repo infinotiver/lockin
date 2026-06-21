@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Ionicons } from "@expo/vector-icons";
 import commonTheme from "@/constants/theme";
 import * as Clipboard from "expo-clipboard";
-
+import { useShareOrCopy } from "@/hooks/useShareOrCopy";
 const { space, rounded, fontSize, font } = commonTheme;
 
 type Sender = "teen" | "parent";
@@ -47,27 +47,12 @@ const ShareCodeModal = ({ code = "ZZ-00000", sender = "parent" }: Props) => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+  const { shareOrCopy, isCopied } = useShareOrCopy();
 
-  // TODO: move handleshare to a reusable component
-  const handleShare = async () => {
-    try {
-      if (Platform.OS !== "web") {
-        // iOS / Android — native share sheet
-        await Share.share({ message: `${shareMessage} ${code}` });
-      } else if (navigator?.share) {
-        // Web on Chrome/Safari/Edge — native share
-        await navigator.share({ text: `${shareMessage} ${code}` });
-      } else {
-        // Web on Firefox/unsupported — fall back to clipboard
-        await Clipboard.setStringAsync(`${shareMessage} ${code}`);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
-    } catch (e) {
-      // Dismissed by user, ignore
-    }
+  const handlePress = () => {
+    const payload = `${shareMessage} ${code}`;
+    shareOrCopy(payload);
   };
-
   return (
     <AuthScreenWrapper>
       <AuthTitle>{title}</AuthTitle>
@@ -116,7 +101,7 @@ const ShareCodeModal = ({ code = "ZZ-00000", sender = "parent" }: Props) => {
       </View>
 
       <Button
-        onPress={handleShare}
+        onPress={handlePress}
         label="Share invite"
         variant="secondary"
         fullWidth
