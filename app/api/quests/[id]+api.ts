@@ -49,7 +49,15 @@ export async function PATCH(
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
-  const user = await clerk.users.getUser(clerkId);
+  let user;
+  try {
+    user = await clerk.users.getUser(clerkId);
+  } catch {
+    return Response.json(
+      { error: "Authentication service unavailable" },
+      { status: 502 },
+    );
+  }
   // if (user.publicMetadata?.role !== "individual") return forbidden(); allow teens to PATCH too
 
   const access = await verifyQuestAccess(clerkId, params.id);
@@ -110,7 +118,15 @@ export async function DELETE(
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
-  const user = await clerk.users.getUser(clerkId);
+  let user;
+  try {
+    user = await clerk.users.getUser(clerkId);
+  } catch {
+    return Response.json(
+      { error: "Authentication service unavailable" },
+      { status: 502 },
+    );
+  }
   if (user.publicMetadata?.role !== "individual") return forbidden();
 
   const access = await verifyQuestAccess(clerkId, id);

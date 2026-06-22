@@ -79,7 +79,15 @@ export async function POST(request: Request) {
   }
 
   // Load Clerk user
-  const user = await clerk.users.getUser(clerkId);
+  let user;
+  try {
+    user = await clerk.users.getUser(clerkId);
+  } catch {
+    return Response.json(
+      { error: "Authentication service unavailable" },
+      { status: 502 },
+    );
+  }
 
   // Teens cannot create quests
   if (user.publicMetadata?.role !== "individual") {

@@ -24,7 +24,15 @@ export async function POST(request: Request) {
   if (!clerkId) return unauthorized();
 
   // Step 2: verify they have the individual role
-  const user = await clerk.users.getUser(clerkId);
+  let user;
+  try {
+    user = await clerk.users.getUser(clerkId);
+  } catch {
+    return Response.json(
+      { error: "Authentication service unavailable" },
+      { status: 502 },
+    );
+  }
   const role = user.publicMetadata?.role;
   if (role !== "individual") return forbidden();
 
