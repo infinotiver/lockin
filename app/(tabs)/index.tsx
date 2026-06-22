@@ -81,10 +81,12 @@ const HomeScreen = () => {
         </ScrollView>
       )}
 
-      <ScreenTimePermissionModal
-        visible={showPermModal}
-        onClose={() => setShowPermModal(false)}
-      />
+      {showPermModal && (
+        <ScreenTimePermissionModal
+          visible={showPermModal}
+          onClose={() => setShowPermModal(false)}
+        />
+      )}
     </SafeAreaView>
   );
 };

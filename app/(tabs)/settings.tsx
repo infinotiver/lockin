@@ -135,10 +135,12 @@ export default function SettingsScreen() {
             isDestructive
           />
         </OptionsGroup>
-        <ScreenTimePermissionModal
-          visible={showPermModal}
-          onClose={() => setShowPermModal(false)}
-        />
+        {showPermModal && (
+          <ScreenTimePermissionModal
+            visible={showPermModal}
+            onClose={() => setShowPermModal(false)}
+          />
+        )}
         <InfoModal
           visible={showInfoModal}
           onClose={() => setShowInfoModal(false)}

@@ -48,12 +48,20 @@ const jwtKey = Buffer.from(
 
 # Error handling
 
-Use `ErrorHandler` for handling errors in the project in the frontend. It provides a way to display errors to users. Catch error usig `try-catch` block and pass the error to `ErrorHandler` to display it to users.
+Use `ErrorHandler` for handling errors in the project in the frontend. It provides a way to display errors to users. Catch error using `try-catch` block and pass the error message as a string to `ErrorHandler` to display it to users.
 **Valid types for `type` prop are `modal` and `text`**
+**Note: The `error` prop must be a string or null. Extract the error message from caught exceptions using `.message` property.**
 
 ```ts
 
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
+
+try {
+  // your code
+} catch (e) {
+  const errorMessage = e instanceof Error ? e.message : "An error occurred";
+  setError(errorMessage);
+}
 
 <ErrorHandler error={error} type="modal" onClear={() => setError("")} />
 

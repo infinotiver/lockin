@@ -16,7 +16,7 @@ export const InfoModal = ({ visible, onClose }: InfoModalProps) => {
     <BaseModal visible={visible} onClose={onClose} title="How LockIn Works">
       <View style={styles.stepList}>
         <Text style={{ color: colors.text }}>
-          We need screentime permission to calculate your daily screen time for
+          We need screen time permission to calculate your daily screen time for
           stakes eligibility
         </Text>
       </View>

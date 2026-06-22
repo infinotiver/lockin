@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
 import { useScreenTime } from "@/hooks/useScreenTime";
 import { useColors } from "@/hooks/useColors";
 import { BaseModal } from "@/components/ui/BaseModal";
@@ -25,10 +26,21 @@ export const ScreenTimePermissionModal = ({
 }: ScreenTimePermissionModalProps) => {
   const colors = useColors();
   const { permissionGranted, requestPermission } = useScreenTime();
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
   const handleSuccessContinue = () => {
     onClose();
     router.replace("/stakes");
+  };
+
+  const handleRequestPermission = async () => {
+    if (isRequestingPermission) return;
+    setIsRequestingPermission(true);
+    try {
+      await requestPermission();
+    } finally {
+      setIsRequestingPermission(false);
+    }
   };
 
   return (
@@ -89,10 +101,11 @@ export const ScreenTimePermissionModal = ({
           variant="primary"
           size="md" // 'lg' gets too bulky inside a 400px wide modal
           onPress={
-            permissionGranted ? handleSuccessContinue : requestPermission
+            permissionGranted ? handleSuccessContinue : handleRequestPermission
           }
           label={permissionGranted ? "Continue" : "Grant access"}
           fullWidth
+          disabled={isRequestingPermission}
         />
 
         {permissionGranted === false && (
