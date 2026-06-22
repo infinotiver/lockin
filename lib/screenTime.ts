@@ -1,39 +1,57 @@
-// lib/screenTime.ts
-import { NativeModules } from "react-native";
+import { NativeModules, Platform } from "react-native";
 
 const { ScreenTimeModule } = NativeModules;
 
 export type UsageReport = {
+  byApp: Record<string, number>; // packageName → ms
   totalMs: number;
-  byApp: Record<string, number>;
-  date: string;
-  collectedAt: number;
+  collectedAt: number; // unix ms
+  date: string; // 'yyyy-MM-dd'
 };
 
+export type UsageEntry = {
+  packageName: string;
+  totalMs: number;
+  lastUsed: number;
+};
+
+function assertAndroid() {
+  if (Platform.OS !== "android") {
+    throw new Error("ScreenTimeModule is Android-only for now.");
+  }
+}
+
 export async function hasUsageAccess(): Promise<boolean> {
+  assertAndroid();
   return ScreenTimeModule.hasUsageAccess();
 }
 
 export async function openUsageAccessSettings(): Promise<void> {
-  return ScreenTimeModule.openUsageAccessSettings();
+  assertAndroid();
+  await ScreenTimeModule.openUsageAccessSettings();
 }
 
 export async function getTodayUsage(): Promise<UsageReport> {
+  assertAndroid();
   return ScreenTimeModule.getTodayUsage();
 }
 
 export async function getUsageForRange(
   startMs: number,
   endMs: number,
-): Promise<{ packageName: string; totalMs: number; lastUsed: number }[]> {
+): Promise<UsageEntry[]> {
+  assertAndroid();
   return ScreenTimeModule.getUsageForRange(startMs, endMs);
 }
 
+export function msToMinutes(ms: number): number {
+  return Math.round(ms / 60_000);
+}
+
 export function msToHoursAndMinutes(ms: number): string {
-  const totalMins = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMins / 60);
-  const mins = totalMins % 60;
-  if (hours === 0) return `${mins}m`;
-  if (mins === 0) return `${hours}h`;
-  return `${hours}h ${mins}m`;
+  const totalMin = Math.floor(ms / 60_000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h === 0) return `${m}m`;
+  return `${h}h ${m}m`;
 }

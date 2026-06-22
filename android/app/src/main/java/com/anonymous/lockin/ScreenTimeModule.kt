@@ -105,7 +105,7 @@ class ScreenTimeModule(private val reactContext: ReactApplicationContext) :
         promise.resolve(result)
 
     } catch (e: SecurityException) {
-        promise.reject("PERMISSION_DENIED", "Usage access not granted")
+        promise.reject("PERMISSION_DENIED", e.message)
     } catch (e: Exception) {
         promise.reject("USAGE_ERROR", e.message)
     }
