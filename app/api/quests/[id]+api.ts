@@ -5,21 +5,23 @@ import { supabase } from "@/lib/supabase";
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
 async function verifyQuestAccess(clerkId: string, questId: string) {
-  const { data: quest } = await supabase
+  const { data: quest, error: questError } = await supabase
     .from("quests")
     .select("*")
     .eq("id", questId)
-    .single();
+    .maybeSingle();
 
+  if (questError) throw questError;
   if (!quest) return null;
 
-  const { data: membership } = await supabase
+  const { data: membership, error: memberError } = await supabase
     .from("family_members")
     .select("family_id, role")
     .eq("clerk_id", clerkId)
     .eq("family_id", quest.family_id)
-    .single();
+    .maybeSingle();
 
+  if (memberError) throw memberError;
   if (!membership) return null;
 
   return { quest, membership };
