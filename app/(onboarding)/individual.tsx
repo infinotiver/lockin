@@ -447,21 +447,14 @@ const Individual = () => {
               />
             ))}
           </View>
-          <Pressable
+
+          <Button
+            variant="ghost"
             onPress={loading ? undefined : handleSkip}
             disabled={loading}
           >
-            <Text
-              style={[
-                commonTheme.text.body,
-                {
-                  color: loading ? colors.border : colors.textMuted,
-                },
-              ]}
-            >
-              Skip
-            </Text>
-          </Pressable>
+            Skip
+          </Button>
         </View>
       </OnboardingCard>
     </ViewWrapper>

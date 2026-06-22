@@ -86,6 +86,7 @@ function RootLayoutNav() {
       const onboarded = user?.publicMetadata?.onboarded as boolean | undefined;
 
       if (!role && !inOnboarding) {
+        // fallback in cases of seriously malformed user data - this shouldn't be triggered
         router.replace("/(onboarding)/StartOnboarding");
         return;
       }
