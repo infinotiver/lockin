@@ -13,14 +13,19 @@ import { OnboardingCard } from "@/components/onboarding/OnboardingCard";
 import { OnboardingTitle } from "@/components/onboarding/OnboardingTitle";
 import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
-
-import { Copy, Check } from "lucide-react-native";
 import ShareCodeModal from "@/components/share/ShareCodeModal";
-
+import { Picker } from "@react-native-picker/picker";
 const TOTAL_STEPS = 3;
 const { width } = Dimensions.get("window");
 
 type Colors = ReturnType<typeof useColors>;
+const QUEST_TYPES = [
+  { label: "Chore", value: "chore" },
+  { label: "Study", value: "study" },
+  { label: "Screen-time", value: "screen-time" },
+  { label: "Work", value: "work" },
+  { label: "Shop", value: "shop" },
+];
 
 const StepOne = ({
   familyName,
@@ -67,12 +72,17 @@ const StepOne = ({
 );
 
 const StepTwo = ({
+  loading,
   questTitle,
   setQuestTitle,
   questDescription,
   setQuestDescription,
   questReward,
   setQuestReward,
+  questType,
+  setQuestType,
+  questExpiresAt,
+  setQuestExpiresAt,
   onNext,
   colors,
 }: {
@@ -82,8 +92,13 @@ const StepTwo = ({
   setQuestDescription: (v: string) => void;
   questReward: string;
   setQuestReward: (v: string) => void;
+  questType: string;
+  setQuestType: (v: string) => void;
+  questExpiresAt: string;
+  setQuestExpiresAt: (v: string) => void;
   onNext: () => void;
   colors: Colors;
+  loading: boolean;
 }) => (
   <View
     style={{ flex: 1, gap: commonTheme.space.md, justifyContent: "center" }}
@@ -94,48 +109,104 @@ const StepTwo = ({
         Quests are tasks your teens can complete to earn rewards.
       </Text>
     </View>
-    <FocusedInput
-      placeholder="Quest title"
-      value={questTitle}
-      onChangeText={setQuestTitle}
-      autoCapitalize="sentences"
-    />
+
+    {/* Title + Type row */}
+    <View style={{ flexDirection: "row", gap: commonTheme.space.md }}>
+      <FocusedInput
+        placeholder="Quest title"
+        value={questTitle}
+        onChangeText={setQuestTitle}
+        autoCapitalize="sentences"
+        style={{ flex: 1 }}
+      />
+      <View
+        style={{
+          flex: 0.8,
+          height: 50,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: commonTheme.rounded.xl,
+          backgroundColor: colors.surface1,
+          justifyContent: "center",
+          overflow: "hidden",
+          padding: commonTheme.space.md,
+        }}
+      >
+        <Picker
+          selectedValue={questType}
+          onValueChange={setQuestType}
+          style={{ color: colors.text }}
+          dropdownIconColor={colors.textMuted}
+        >
+          {QUEST_TYPES.map((t) => (
+            <Picker.Item
+              key={t.value}
+              label={t.label}
+              value={t.value}
+              color={colors.text}
+            />
+          ))}
+        </Picker>
+      </View>
+    </View>
+
+    {/* Description */}
     <FocusedInput
       placeholder="Description"
       value={questDescription}
       onChangeText={setQuestDescription}
       autoCapitalize="sentences"
     />
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: colors.surface1,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: commonTheme.rounded.xl,
-        paddingHorizontal: commonTheme.space.lg,
-        height: 50,
-        gap: commonTheme.space.sm,
-      }}
-    >
-      <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-        ₹
-      </Text>
+
+    {/* Expire By + Reward row */}
+    <View style={{ flexDirection: "row", gap: commonTheme.space.md }}>
       <FocusedInput
-        placeholder="Reward amount"
-        value={questReward}
-        onChangeText={setQuestReward}
+        placeholder="Expire in (days)"
+        value={questExpiresAt}
+        onChangeText={setQuestExpiresAt}
         keyboardType="numeric"
+        style={{ flex: 1 }}
+      />
+      <View
         style={{
           flex: 1,
-          borderWidth: 0,
-          paddingHorizontal: 0,
-          backgroundColor: "transparent",
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: colors.surface1,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: commonTheme.rounded.xl,
+          paddingHorizontal: commonTheme.space.lg,
+          height: 50,
+          gap: commonTheme.space.sm,
         }}
-      />
+      >
+        <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
+          ₹
+        </Text>
+        <FocusedInput
+          placeholder="Reward"
+          value={questReward}
+          onChangeText={setQuestReward}
+          keyboardType="numeric"
+          style={{
+            flex: 1,
+            borderWidth: 0,
+            paddingHorizontal: 0,
+            backgroundColor: "transparent",
+          }}
+        />
+      </View>
     </View>
-    <Button onPress={onNext} variant="primary" label="Add Quest" fullWidth />
+    <Button
+      onPress={onNext}
+      variant="primary"
+      label="Add Quest"
+      loadingLabel="Adding..."
+      loading={loading}
+      disabled={loading}
+      fullWidth
+    />
   </View>
 );
 
@@ -165,6 +236,8 @@ const Individual = () => {
   const [questTitle, setQuestTitle] = useState("");
   const [questDescription, setQuestDescription] = useState("");
   const [questReward, setQuestReward] = useState("");
+  const [questType, setQuestType] = useState("chore");
+  const [questExpiresAt, setQuestExpiresAt] = useState("");
 
   const [familyCode, setFamilyCode] = useState("");
   const [familyId, setFamilyId] = useState("");
@@ -189,6 +262,58 @@ const Individual = () => {
       return;
     }
     // Sharing.shareAsync(`yourapp://join?code=${familyCode}`)
+  };
+
+  const handleAddQuest = async () => {
+    // if no family yet (user skipped step 1), just skip ahead
+    console.log(
+      "Calling:",
+      `${process.env.EXPO_PUBLIC_API_URL}/api/${familyId}/quests`,
+    );
+    if (!familyId) {
+      handleNext();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const token = await getToken();
+
+      // convert days to an ISO timestamp
+      const expiresAt = questExpiresAt
+        ? new Date(
+            Date.now() + Number(questExpiresAt) * 24 * 60 * 60 * 1000,
+          ).toISOString()
+        : null;
+
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          familyId, // ← in body now
+          title: questTitle,
+          description: questDescription,
+          reward: questReward,
+          type: questType,
+          expires_at: expiresAt,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json();
+        console.error("Create quest error:", res.status, body);
+        return;
+      }
+
+      animateToStep(2); // move to invite step
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCreateFamily = async () => {
@@ -267,13 +392,18 @@ const Individual = () => {
       colors={colors}
     />,
     <StepTwo
+      loading={loading}
       questTitle={questTitle}
       setQuestTitle={setQuestTitle}
       questDescription={questDescription}
       setQuestDescription={setQuestDescription}
       questReward={questReward}
       setQuestReward={setQuestReward}
-      onNext={handleNext}
+      questType={questType}
+      setQuestType={setQuestType}
+      questExpiresAt={questExpiresAt}
+      setQuestExpiresAt={setQuestExpiresAt}
+      onNext={handleAddQuest}
       colors={colors}
     />,
     <StepThree
