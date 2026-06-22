@@ -67,19 +67,6 @@ const HomeScreen = () => {
           </Pressable>
 
           <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: colors.surface3,
-              padding: 20,
-              borderRadius: commonTheme.rounded.lg,
-            }}
-          >
-            <Text style={{ color: colors.text, fontSize: 20 }}>
-              individual (onboarding) page
-            </Text>
-          </Pressable>
-
-          <Pressable
             onPress={() => setShowPermModal(true)}
             style={{
               backgroundColor: colors.surface3,

@@ -1,24 +1,29 @@
-// app/(onboarding)/individual.tsx
-import { Platform } from "react-native";
-import { View, Text, Animated, Pressable, Dimensions } from "react-native";
+import {
+  Platform,
+  View,
+  Text,
+  Animated,
+  Pressable,
+  useWindowDimensions,
+  StyleSheet,
+} from "react-native";
 import { Button } from "@/components/ui/Button";
 import { FocusedInput } from "@/components/FocusedInput";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser, useAuth } from "@clerk/clerk-expo";
 import commonTheme from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
 import { ViewWrapper } from "@/components/onboarding/ViewWrapper";
 import { OnboardingCard } from "@/components/onboarding/OnboardingCard";
 import { OnboardingTitle } from "@/components/onboarding/OnboardingTitle";
-import { useAuth } from "@clerk/clerk-expo";
 import * as Clipboard from "expo-clipboard";
 import ShareCodeModal from "@/components/share/ShareCodeModal";
 import { Picker } from "@react-native-picker/picker";
-const TOTAL_STEPS = 3;
-const { width } = Dimensions.get("window");
+import { StepStepper } from "@/components/ui/StepStepper";
 
-type Colors = ReturnType<typeof useColors>;
+const TOTAL_STEPS = 3;
+
 const QUEST_TYPES = [
   { label: "Chore", value: "chore" },
   { label: "Study", value: "study" },
@@ -27,52 +32,52 @@ const QUEST_TYPES = [
   { label: "Shop", value: "shop" },
 ];
 
-const StepOne = ({
+// ─── Steps ────────────────────────────────────────────────────────────────────
+
+function StepOne({
   familyName,
   setFamilyName,
   defaultFamilyName,
   onNext,
   loading,
-  colors,
 }: {
   familyName: string;
   setFamilyName: (v: string) => void;
   defaultFamilyName: string;
   onNext: () => void;
   loading: boolean;
-  colors: Colors;
-}) => (
-  <View
-    style={{ flex: 1, gap: commonTheme.space.md, justifyContent: "center" }}
-  >
-    <View style={{ gap: commonTheme.space.xs }}>
-      <OnboardingTitle>Create your family</OnboardingTitle>
-      <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-        Give your family a name to get started.
-      </Text>
+}) {
+  const colors = useColors();
+  return (
+    <View style={styles.stepContainer}>
+      <View style={styles.stepHeader}>
+        <OnboardingTitle>Create your family</OnboardingTitle>
+        <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
+          Give your family a name to get started.
+        </Text>
+      </View>
+      <FocusedInput
+        placeholder={defaultFamilyName}
+        value={familyName}
+        onChangeText={setFamilyName}
+        autoCapitalize="words"
+        selectTextOnFocus
+        selectionColor={colors.selected}
+      />
+      <Button
+        onPress={onNext}
+        variant="primary"
+        label="Create family"
+        loadingLabel="Creating..."
+        loading={loading}
+        disabled={loading}
+        fullWidth
+      />
     </View>
-    <FocusedInput
-      placeholder={defaultFamilyName}
-      value={familyName}
-      onChangeText={setFamilyName}
-      autoCapitalize="words"
-      selectTextOnFocus
-      selectionColor={colors.selected}
-    />
-    <Button
-      onPress={onNext}
-      variant="primary"
-      label="Create Family"
-      loadingLabel="Creating..."
-      loading={loading}
-      disabled={loading}
-      fullWidth
-    />
-  </View>
-);
+  );
+}
 
-const StepTwo = ({
-  loading,
+function StepTwo({
   questTitle,
   setQuestTitle,
   questDescription,
@@ -84,7 +89,7 @@ const StepTwo = ({
   questExpiresAt,
   setQuestExpiresAt,
   onNext,
-  colors,
+  loading,
 }: {
   questTitle: string;
   setQuestTitle: (v: string) => void;
@@ -97,223 +102,184 @@ const StepTwo = ({
   questExpiresAt: string;
   setQuestExpiresAt: (v: string) => void;
   onNext: () => void;
-  colors: Colors;
   loading: boolean;
-}) => (
-  <View
-    style={{ flex: 1, gap: commonTheme.space.md, justifyContent: "center" }}
-  >
-    <View style={{ gap: commonTheme.space.xs }}>
-      <OnboardingTitle>Add your first quest</OnboardingTitle>
-      <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-        Quests are tasks your teens can complete to earn rewards.
-      </Text>
-    </View>
-
-    {/* Title + Type row */}
-    <View style={{ flexDirection: "row", gap: commonTheme.space.md }}>
-      <FocusedInput
-        placeholder="Quest title"
-        value={questTitle}
-        onChangeText={setQuestTitle}
-        autoCapitalize="sentences"
-        style={{ flex: 1 }}
-      />
-      <View
-        style={{
-          flex: 0.8,
-          height: 50,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: commonTheme.rounded.xl,
-          backgroundColor: colors.surface1,
-          justifyContent: "center",
-          overflow: "hidden",
-          padding: commonTheme.space.md,
-        }}
-      >
-        <Picker
-          selectedValue={questType}
-          onValueChange={setQuestType}
-          style={{ color: colors.text }}
-          dropdownIconColor={colors.textMuted}
-        >
-          {QUEST_TYPES.map((t) => (
-            <Picker.Item
-              key={t.value}
-              label={t.label}
-              value={t.value}
-              color={colors.text}
-            />
-          ))}
-        </Picker>
-      </View>
-    </View>
-
-    {/* Description */}
-    <FocusedInput
-      placeholder="Description"
-      value={questDescription}
-      onChangeText={setQuestDescription}
-      autoCapitalize="sentences"
-    />
-
-    {/* Expire By + Reward row */}
-    <View style={{ flexDirection: "row", gap: commonTheme.space.md }}>
-      <FocusedInput
-        placeholder="Expire in (days)"
-        value={questExpiresAt}
-        onChangeText={setQuestExpiresAt}
-        keyboardType="numeric"
-        style={{ flex: 1 }}
-      />
-      <View
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: colors.surface1,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: commonTheme.rounded.xl,
-          paddingHorizontal: commonTheme.space.lg,
-          height: 50,
-          gap: commonTheme.space.sm,
-        }}
-      >
+}) {
+  const colors = useColors();
+  return (
+    <View style={styles.stepContainer}>
+      <View style={styles.stepHeader}>
+        <OnboardingTitle>Add your first quest</OnboardingTitle>
         <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-          ₹
+          Quests are tasks your teens can complete to earn rewards.
         </Text>
-        <FocusedInput
-          placeholder="Reward"
-          value={questReward}
-          onChangeText={setQuestReward}
-          keyboardType="numeric"
-          style={{
-            flex: 1,
-            borderWidth: 0,
-            paddingHorizontal: 0,
-            backgroundColor: "transparent",
-          }}
-        />
       </View>
+
+      <View style={styles.row}>
+        <FocusedInput
+          placeholder="Quest title"
+          value={questTitle}
+          onChangeText={setQuestTitle}
+          autoCapitalize="sentences"
+          style={{ flex: 1 }}
+        />
+        <View
+          style={[
+            styles.pickerWrapper,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.surface1,
+            },
+          ]}
+        >
+          <Picker
+            selectedValue={questType}
+            onValueChange={setQuestType}
+            style={{
+              backgroundColor: colors.surface1,
+              padding: commonTheme.space.sm,
+              borderWidth: 0,
+              fontFamily: commonTheme.font.mono,
+              color: colors.textMuted,
+            }}
+            dropdownIconColor={colors.textMuted}
+          >
+            {QUEST_TYPES.map((t) => (
+              <Picker.Item
+                key={t.value}
+                label={t.label}
+                value={t.value}
+                color={colors.text}
+              />
+            ))}
+          </Picker>
+        </View>
+      </View>
+
+      <FocusedInput
+        placeholder="Description (optional)"
+        value={questDescription}
+        onChangeText={setQuestDescription}
+        autoCapitalize="sentences"
+      />
+
+      <View style={styles.row}>
+        <FocusedInput
+          placeholder="Expire in (days)"
+          value={questExpiresAt}
+          onChangeText={setQuestExpiresAt}
+          keyboardType="numeric"
+          style={{ flex: 1 }}
+        />
+        <View
+          style={[
+            styles.rewardWrapper,
+            { borderColor: colors.border, backgroundColor: colors.surface1 },
+          ]}
+        >
+          <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
+            ₹
+          </Text>
+          <FocusedInput
+            placeholder="Reward"
+            value={questReward}
+            onChangeText={setQuestReward}
+            keyboardType="numeric"
+            style={{
+              flex: 1,
+              borderWidth: 0,
+              paddingHorizontal: 0,
+              backgroundColor: "transparent",
+            }}
+          />
+        </View>
+      </View>
+
+      <Button
+        onPress={onNext}
+        variant="primary"
+        label="Add quest"
+        loadingLabel="Adding..."
+        loading={loading}
+        disabled={loading}
+        fullWidth
+      />
     </View>
-    <Button
-      onPress={onNext}
-      variant="primary"
-      label="Add Quest"
-      loadingLabel="Adding..."
-      loading={loading}
-      disabled={loading}
-      fullWidth
-    />
-  </View>
-);
+  );
+}
 
-const StepThree = ({
-  onNext,
-  familyCode,
-  copied,
-  onCopy,
-  onShare,
-  colors,
-}: {
-  onNext: () => void;
-  familyCode: string;
-  copied: boolean;
-  onCopy: () => void;
-  onShare: () => void;
-  colors: Colors;
-}) => <ShareCodeModal code={familyCode} />;
+function StepThree({ familyCode }: { familyCode: string }) {
+  return <ShareCodeModal code={familyCode} />;
+}
 
-const Individual = () => {
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
+export default function Individual() {
   const router = useRouter();
   const colors = useColors();
   const { user } = useUser();
+  const { getToken } = useAuth();
+  const { width } = useWindowDimensions();
 
   const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+
   const [familyName, setFamilyName] = useState("");
+  const [familyCode, setFamilyCode] = useState("");
+  const [familyId, setFamilyId] = useState("");
+
   const [questTitle, setQuestTitle] = useState("");
   const [questDescription, setQuestDescription] = useState("");
   const [questReward, setQuestReward] = useState("");
   const [questType, setQuestType] = useState("chore");
   const [questExpiresAt, setQuestExpiresAt] = useState("");
 
-  const [familyCode, setFamilyCode] = useState("");
-  const [familyId, setFamilyId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { getToken } = useAuth();
   const slideAnim = useRef(new Animated.Value(0)).current;
   const defaultFamilyName = `${user?.firstName ?? "Your"}'s Family`;
 
-  const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (user?.firstName && !familyName) {
+      setFamilyName(`${user.firstName}'s Family`);
+    }
+  }, [user?.firstName]);
 
-  const handleCopy = async () => {
-    await Clipboard.setStringAsync(familyCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const animateToStep = (next: number) => {
+    Animated.timing(slideAnim, {
+      toValue: -width,
+      duration: 260,
+      useNativeDriver: true,
+    }).start(() => {
+      setStep(next);
+      slideAnim.setValue(width);
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 260,
+        useNativeDriver: true,
+      }).start();
+    });
   };
 
-  const handleShare = async () => {
-    if (Platform.OS === "web") {
-      // fallback for web
-      await Clipboard.setStringAsync(`yourapp://join?code=${familyCode}`);
-      alert("Link copied to clipboard!");
-      return;
-    }
-    // Sharing.shareAsync(`yourapp://join?code=${familyCode}`)
-  };
-
-  const handleAddQuest = async () => {
-    // if no family yet (user skipped step 1), just skip ahead
-    console.log(
-      "Calling:",
-      `${process.env.EXPO_PUBLIC_API_URL}/api/${familyId}/quests`,
-    );
-    if (!familyId) {
-      handleNext();
-      return;
-    }
-
-    setLoading(true);
+  const handleFinish = async () => {
     try {
       const token = await getToken();
-
-      // convert days to an ISO timestamp
-      const expiresAt = questExpiresAt
-        ? new Date(
-            Date.now() + Number(questExpiresAt) * 24 * 60 * 60 * 1000,
-          ).toISOString()
-        : null;
-
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/user/complete-onboarding`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
         },
-        body: JSON.stringify({
-          familyId, // ← in body now
-          title: questTitle,
-          description: questDescription,
-          reward: questReward,
-          type: questType,
-          expires_at: expiresAt,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json();
-        console.error("Create quest error:", res.status, body);
-        return;
-      }
-
-      animateToStep(2); // move to invite step
+      );
+      await user?.reload();
     } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
+      console.error("complete-onboarding error:", e);
     }
+    router.replace("/(tabs)");
+  };
+
+  const handleSkip = () => {
+    if (step < TOTAL_STEPS - 1) {
+      animateToStep(step + 1);
+    }
+    // no-op on last step — skip is hidden there via hideSkipOnLast
   };
 
   const handleCreateFamily = async () => {
@@ -328,20 +294,17 @@ const Individual = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ name: familyName }),
+          body: JSON.stringify({ name: familyName || defaultFamilyName }),
         },
       );
-
       if (!res.ok) {
-        const body = await res.json();
-        console.error("Create family error:", res.status, body);
+        console.error("Create family error:", res.status, await res.json());
         return;
       }
-
       const { family } = await res.json();
       setFamilyCode(family.code);
       setFamilyId(family.id);
-      animateToStep(1); // move to quest step
+      animateToStep(1);
     } catch (e) {
       console.error(e);
     } finally {
@@ -349,37 +312,43 @@ const Individual = () => {
     }
   };
 
-  // set default family name once user loads, but only if the user hasn't typed anything
-  useEffect(() => {
-    if (user?.firstName && !familyName) {
-      setFamilyName(`${user.firstName}'s Family`);
+  const handleAddQuest = async () => {
+    if (!familyId) {
+      animateToStep(2);
+      return;
     }
-  }, [user?.firstName]);
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const expiresAt = questExpiresAt
+        ? new Date(Date.now() + Number(questExpiresAt) * 86400000).toISOString()
+        : null;
 
-  const animateToStep = (next: number) => {
-    Animated.timing(slideAnim, {
-      toValue: -width,
-      duration: 280,
-      useNativeDriver: false,
-    }).start(() => {
-      setStep(next);
-      slideAnim.setValue(width);
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 280,
-        useNativeDriver: false,
-      }).start();
-    });
-  };
-
-  const handleNext = () => {
-    if (step < TOTAL_STEPS - 1) animateToStep(step + 1);
-    else router.replace("/(tabs)");
-  };
-
-  const handleSkip = () => {
-    if (step < TOTAL_STEPS - 1) animateToStep(step + 1);
-    else router.replace("/(tabs)");
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          familyId,
+          title: questTitle,
+          description: questDescription,
+          reward: questReward,
+          type: questType,
+          expires_at: expiresAt,
+        }),
+      });
+      if (!res.ok) {
+        console.error("Create quest error:", res.status, await res.json());
+        return;
+      }
+      animateToStep(2);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const steps = [
@@ -389,10 +358,8 @@ const Individual = () => {
       defaultFamilyName={defaultFamilyName}
       onNext={handleCreateFamily}
       loading={loading}
-      colors={colors}
     />,
     <StepTwo
-      loading={loading}
       questTitle={questTitle}
       setQuestTitle={setQuestTitle}
       questDescription={questDescription}
@@ -404,61 +371,81 @@ const Individual = () => {
       questExpiresAt={questExpiresAt}
       setQuestExpiresAt={setQuestExpiresAt}
       onNext={handleAddQuest}
-      colors={colors}
+      loading={loading}
     />,
-    <StepThree
-      onNext={handleNext}
-      familyCode={familyCode}
-      copied={copied}
-      onCopy={handleCopy}
-      onShare={handleShare}
-      colors={colors}
-    />,
+    <StepThree familyCode={familyCode} />,
   ];
 
   return (
     <ViewWrapper>
       <OnboardingCard>
         <Animated.View
-          style={{ flex: 1, transform: [{ translateX: slideAnim }] }}
+          style={[
+            styles.animatedStep,
+            { transform: [{ translateX: slideAnim }] },
+          ]}
         >
           {steps[step]}
         </Animated.View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingTop: commonTheme.space.sm,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-          }}
-        >
-          <View style={{ flexDirection: "row", gap: commonTheme.space.sm }}>
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-              <View
-                key={i}
-                style={{
-                  width: i === step ? 20 : 8,
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: i === step ? colors.accent : colors.border,
-                }}
-              />
-            ))}
-          </View>
 
+        <StepStepper
+          total={TOTAL_STEPS}
+          current={step}
+          onSkip={handleSkip}
+          loading={loading}
+          hideSkipOnLast={true}
+        />
+
+        {step === TOTAL_STEPS - 1 && (
           <Button
-            variant="ghost"
-            onPress={loading ? undefined : handleSkip}
-            disabled={loading}
+            variant="primary"
+            // onPress={handleFinish}
+            onPress={() => router.replace("/(tabs)")}
+            loading={loading}
+            fullWidth
+            // style={{ marginTop: commonTheme.space.md }}
           >
-            Skip
+            Go to home
           </Button>
-        </View>
+        )}
       </OnboardingCard>
     </ViewWrapper>
   );
-};
+}
 
-export default Individual;
+const styles = StyleSheet.create({
+  animatedStep: {
+    flex: 1,
+  },
+  stepContainer: {
+    flex: 1,
+    gap: commonTheme.space.md,
+    justifyContent: "center",
+  },
+  stepHeader: {
+    gap: commonTheme.space.xs,
+  },
+  row: {
+    flexDirection: "row",
+    gap: commonTheme.space.md,
+  },
+  pickerWrapper: {
+    flex: 0.8,
+    height: 50,
+    borderWidth: 1,
+    borderRadius: commonTheme.rounded.xl,
+    justifyContent: "center",
+    overflow: "hidden",
+    paddingHorizontal: commonTheme.space.md,
+  },
+  rewardWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderRadius: commonTheme.rounded.xl,
+    paddingHorizontal: commonTheme.space.lg,
+    height: 50,
+    gap: commonTheme.space.sm,
+  },
+});
