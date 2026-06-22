@@ -1,12 +1,16 @@
+import { useState } from "react";
 import { Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
+import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
+
 const HomeScreen = () => {
   const colors = useColors();
   const router = useRouter();
+  const [showPermModal, setShowPermModal] = useState(false);
 
   return (
     <SafeAreaView
@@ -31,6 +35,7 @@ const HomeScreen = () => {
           >
             <Feather name="info" size={20} /> Dev Mode
           </Text>
+
           <Pressable
             onPress={() => {
               router.navigate("/(auth)/sign-in");
@@ -45,6 +50,7 @@ const HomeScreen = () => {
               Sign in page
             </Text>
           </Pressable>
+
           <Pressable
             onPress={() => {
               router.navigate("/(onboarding)/StartOnboarding");
@@ -59,23 +65,9 @@ const HomeScreen = () => {
               StartOnboarding page
             </Text>
           </Pressable>
-          <Pressable
-            onPress={() => {}}
-            style={{
-              backgroundColor: colors.surface3,
-              padding: 20,
-              borderRadius: commonTheme.rounded.lg,
-            }}
-          >
-            <Text style={{ color: colors.text, fontSize: 20 }}>
-              individual (onboarding) page
-            </Text>
-          </Pressable>
 
           <Pressable
-            onPress={() => {
-              router.navigate("/(onboarding)/screen-time-permission");
-            }}
+            onPress={() => setShowPermModal(true)}
             style={{
               backgroundColor: colors.surface3,
               padding: 20,
@@ -83,10 +75,17 @@ const HomeScreen = () => {
             }}
           >
             <Text style={{ color: colors.text, fontSize: 20 }}>
-              Screen time auth page (android only)
+              Test Screen Time Modal (Android)
             </Text>
           </Pressable>
         </ScrollView>
+      )}
+
+      {showPermModal && (
+        <ScreenTimePermissionModal
+          visible={showPermModal}
+          onClose={() => setShowPermModal(false)}
+        />
       )}
     </SafeAreaView>
   );

@@ -10,9 +10,9 @@ export const AuthTitle = ({ children }: { children: string }) => {
       style={[
         commonTheme.text.sectionTitle,
         {
-          padding: commonTheme.space.sm,
+          paddingTop: commonTheme.space.sm,
           color: colors.text,
-          fontFamily: commonTheme.font.monoSemibold,
+          fontFamily: commonTheme.font.bold,
         },
       ]}
     >

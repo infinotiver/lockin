@@ -24,7 +24,12 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text style={[styles.label, { color: colors.textMuted }]}>
+        <Text
+          style={[
+            styles.label,
+            { color: colors.textMuted, paddingTop: commonTheme.space.md },
+          ]}
+        >
           {label.toUpperCase()}
         </Text>
       )}

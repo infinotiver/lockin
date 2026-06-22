@@ -62,7 +62,7 @@ const fontWeight = {
 const text = StyleSheet.create({
   pageTitle: {
     fontSize: fontSize["7xl"],
-    fontFamily: font.body,
+    fontFamily: font.bold,
   },
   sectionTitle: {
     fontSize: fontSize["5xl"],

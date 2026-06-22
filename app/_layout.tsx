@@ -3,7 +3,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/tokenCache";
 import { useColors } from "@/hooks/useColors";
 import {
@@ -12,19 +12,18 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from "@expo-google-fonts/inter";
-
 import {
   JetBrainsMono_400Regular,
   JetBrainsMono_600SemiBold,
   JetBrainsMono_700Bold,
 } from "@expo-google-fonts/jetbrains-mono";
-
 import {
   PixelifySans_400Regular,
   PixelifySans_500Medium,
   PixelifySans_600SemiBold,
   PixelifySans_700Bold,
 } from "@expo-google-fonts/pixelify-sans";
+
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
@@ -66,25 +65,46 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
   const segments = useSegments();
   const router = useRouter();
+  const colors = useColors();
 
   useEffect(() => {
     if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === "(auth)";
+    const inOnboarding = segments[0] === "(onboarding)";
 
     if (!isSignedIn && !inAuthGroup) {
       router.replace("/(auth)/sign-in");
-    } else if (isSignedIn && inAuthGroup) {
-      // router.replace("/(tabs)");
-      // disabled for developing onboarding pages
-      // this will be handled differently, since there will be onboarding now
-      // TODO: This is confusing but I realized, we always need to redirect users to onboarding after signup since there is no way they have completed onboarding, and onboarded users will always have a role, so I can check if they dont have a role and redirect them to onboarding
+      return;
     }
-  }, [isSignedIn, isLoaded, segments]);
 
-  const colors = useColors()
+    if (isSignedIn) {
+      const role = user?.publicMetadata?.role as string | undefined;
+      const onboarded = user?.publicMetadata?.onboarded as boolean | undefined;
+
+      if (!role && !inOnboarding) {
+        // fallback in cases of seriously malformed user data - this shouldn't be triggered
+        router.replace("/(onboarding)/StartOnboarding");
+        return;
+      }
+
+      if (role && !onboarded && !inOnboarding) {
+        router.replace(
+          role === "teen" ? "/(onboarding)/teen" : "/(onboarding)/individual",
+        );
+        return;
+      }
+
+      if (role && onboarded && (inAuthGroup || inOnboarding)) {
+        router.replace("/(tabs)");
+        return;
+      }
+    }
+  }, [isSignedIn, isLoaded, segments, user]);
+
   return (
     <Stack
       screenOptions={{
@@ -104,4 +124,3 @@ function RootLayoutNav() {
     </Stack>
   );
 }
-

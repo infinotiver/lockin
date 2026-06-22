@@ -8,6 +8,7 @@ import android.os.Process
 import android.provider.Settings
 import com.facebook.react.bridge.*
 import java.util.Calendar
+import android.app.usage.UsageEvents
 
 class ScreenTimeModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
@@ -44,46 +45,70 @@ class ScreenTimeModule(private val reactContext: ReactApplicationContext) :
 
     @ReactMethod
     fun getTodayUsage(promise: Promise) {
-        try {
-            val usm = reactContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-
-            val cal = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-
-            val stats = usm.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                cal.timeInMillis,
-                System.currentTimeMillis()
-            )
-
-            val result = WritableNativeMap()
-            val total = WritableNativeMap()
-            var totalMs = 0L
-
-            stats?.forEach { stat ->
-                if (stat.totalTimeInForeground > 0) {
-                    total.putDouble(stat.packageName, stat.totalTimeInForeground.toDouble())
-                    totalMs += stat.totalTimeInForeground
-                }
-            }
-
-            result.putMap("byApp", total)
-            result.putDouble("totalMs", totalMs.toDouble())
-            result.putDouble("collectedAt", System.currentTimeMillis().toDouble())
-            result.putString("date", cal.time.let {
-                java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(it)
-            })
-
-            promise.resolve(result)
-        } catch (e: SecurityException) {
-            promise.reject("PERMISSION_DENIED", "Usage access not granted")
-        } catch (e: Exception) {
-            promise.reject("USAGE_ERROR", e.message)
+    try {
+        val usm = reactContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val cal = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
         }
+        val startMs = cal.timeInMillis
+        val endMs = System.currentTimeMillis()
+
+        val events = usm.queryEvents(startMs, endMs)
+        val event = UsageEvents.Event()
+
+        // track foreground start times per package
+        val foregroundStart = mutableMapOf<String, Long>()
+        val totalPerApp = mutableMapOf<String, Long>()
+
+        while (events.hasNextEvent()) {
+        events.getNextEvent(event)
+        val pkg = event.packageName
+
+        when (event.eventType) {
+            UsageEvents.Event.ACTIVITY_RESUMED -> {
+            foregroundStart[pkg] = event.timeStamp
+            }
+            UsageEvents.Event.ACTIVITY_PAUSED -> {
+            val start = foregroundStart.remove(pkg)
+            if (start != null) {
+                val duration = event.timeStamp - start
+                totalPerApp[pkg] = (totalPerApp[pkg] ?: 0L) + duration
+            }
+            }
+        }
+        }
+
+        // close any still-open sessions (app still in foreground)
+        foregroundStart.forEach { (pkg, start) ->
+        val duration = endMs - start
+        totalPerApp[pkg] = (totalPerApp[pkg] ?: 0L) + duration
+        }
+
+        val result = WritableNativeMap()
+        val byApp = WritableNativeMap()
+        var totalMs = 0L
+
+        totalPerApp.forEach { (pkg, ms) ->
+        if (ms > 0) {
+            byApp.putDouble(pkg, ms.toDouble())
+            totalMs += ms
+        }
+        }
+
+        result.putMap("byApp", byApp)
+        result.putDouble("totalMs", totalMs.toDouble())
+        result.putDouble("collectedAt", endMs.toDouble())
+        result.putString("date", java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(cal.time))
+        promise.resolve(result)
+
+    } catch (e: SecurityException) {
+        promise.reject("PERMISSION_DENIED", e.message)
+    } catch (e: Exception) {
+        promise.reject("USAGE_ERROR", e.message)
+    }
     }
 
     @ReactMethod
@@ -91,7 +116,7 @@ class ScreenTimeModule(private val reactContext: ReactApplicationContext) :
         try {
             val usm = reactContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
             val stats = usm.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
+                UsageStatsManager.INTERVAL_BEST,
                 startMs.toLong(),
                 endMs.toLong()
             )

@@ -56,7 +56,7 @@ const dark: ThemeColors = {
   background: "#000000",
   surface1: "#0A0A0A",
   surface2: "#1A1A1A",
-  surface3: "#22222280",
+  surface3: "#222222",
   text: "#FFFFFF",
   textMuted: "#888888",
   primary: "#FFFFFF",

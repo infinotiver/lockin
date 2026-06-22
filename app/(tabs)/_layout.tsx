@@ -17,6 +17,9 @@ function NativeTabLayout() {
       <NativeTabs.Trigger name="stakes">
         <Icon sf={{ default: "trophy", selected: "trophy.fill" }} />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="records">
+        <Icon sf={{ default: "calendar", selected: "calendar.fill" }} />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
       </NativeTabs.Trigger>
@@ -34,15 +37,14 @@ function ClassicTabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: false,
+        // tabBarShowLabel: false,
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.surface2,
+          backgroundColor: isIOS ? "transparent" : colors.surface3,
           borderTopWidth: 0,
           elevation: 0,
-          paddingTop: 8,
         },
         tabBarItemStyle: {
           alignItems: "center",
@@ -72,6 +74,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          tabBarLabel: "Home",
           tabBarIcon: ({ color, focused }) => (
             <Feather name="home" size={24} color={color} />
           ),
@@ -80,14 +83,25 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="stakes"
         options={{
+          tabBarLabel: "Stakes",
           tabBarIcon: ({ color, focused }) => (
             <Feather name="award" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="records"
+        options={{
+          tabBarLabel: "Reports",
+          tabBarIcon: ({ color, focused }) => (
+            <Feather name="pie-chart" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="settings"
         options={{
+          tabBarLabel: "Settings",
           tabBarIcon: ({ color, focused }) => (
             <Feather name="settings" size={24} color={color} />
           ),

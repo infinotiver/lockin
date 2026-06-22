@@ -17,7 +17,7 @@ export type UsageEntry = {
 
 function assertAndroid() {
   if (Platform.OS !== "android") {
-    throw new Error("ScreenTimeModule is Android-only in phase 1");
+    throw new Error("ScreenTimeModule is Android-only for now.");
   }
 }
 

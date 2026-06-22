@@ -2,7 +2,7 @@ import { View, Text, Animated } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import commonTheme from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "@/components/auth/AuthCard";
@@ -13,6 +13,7 @@ const StartOnboarding = () => {
   const router = useRouter();
   const colors = useColors();
   const { getToken } = useAuth();
+  const { user } = useUser();
   const [loading, setLoading] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -58,6 +59,7 @@ const StartOnboarding = () => {
         throw new Error("Failed to set role");
       }
 
+      await user?.reload(); // guard so that the layout sees updated meta data
       // role is set in Clerk, now navigate to role-specific onboarding
       router.push(
         role === "individual"

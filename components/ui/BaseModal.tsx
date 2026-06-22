@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-
+import { Button } from "./Button";
 export interface BaseModalProps {
   visible: boolean;
   title?: string;
@@ -55,10 +55,11 @@ export const BaseModal = ({
               )}
 
               {children}
-
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Text style={{ color: colors.primary }}>Close</Text>
-              </TouchableOpacity>
+              <View style={{ paddingVertical: commonTheme.space.md }}>
+                <Button variant="secondary" onPress={onClose}>
+                  <Text style={{ color: colors.primary }}>Close</Text>
+                </Button>
+              </View>
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: "100%",
     maxWidth: 400,
-    borderRadius: commonTheme.rounded.lg,
+    borderRadius: commonTheme.rounded["2xl"],
     padding: commonTheme.space.lg,
     elevation: 5,
   },
