@@ -10,7 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useState, useEffect, useCallback } from "react";
 import { useColors } from "@/hooks/useColors";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
@@ -24,7 +24,7 @@ const tabBarHeight = 60;
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
-
+  const { user } = useUser();
   const [activeTab, setActiveTab] = useState<StakeStatus>("active");
   const [showCreate, setShowCreate] = useState(false);
 
@@ -68,17 +68,13 @@ export default function StakesScreen() {
         }
 
         return {
+          familyId: user?.publicMetadata?.familyId,
           id: q.id,
           title: q.title || "Untitled Goal",
-          amount: Number(q.reward) || 0, // DB 'reward' -> UI 'amount'
-          status: translateStatus(q.status), // DB 'available' -> UI 'active'
-          category: translateCategory(q.type), // DB 'screen-time' -> UI 'Screen Time'
-          // Hard-filling the UI's mandatory math props to satisfy strict TypeScript
-          daysTotal: derivedDays || 7,
-          daysCompleted: 0,
+          reward: Number(q.reward) || 0,
+          status: translateStatus(q.status),
+          category: translateCategory(q.type),
           streak: 0,
-          progressPercent: 0,
-          daysLeft: derivedDays,
         };
       });
 
@@ -98,10 +94,6 @@ export default function StakesScreen() {
   const activeStakes = stakes.filter((s) => s.status === "active");
   const pendingStakes = stakes.filter((s) => s.status === "pending");
   const doneStakes = stakes.filter((s) => s.status === "completed");
-
-  const almostDoneCount = activeStakes.filter(
-    (s) => s.daysLeft !== undefined && s.daysLeft <= 3,
-  ).length;
 
   const tabs: TabItem<StakeStatus>[] = [
     { key: "active", label: "Active", count: activeStakes.length || undefined },
@@ -142,15 +134,6 @@ export default function StakesScreen() {
           >
             Stakes
           </Text>
-
-          {almostDoneCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.surface2 }]}>
-              <Feather name="clock" size={11} color={colors.text} />
-              <Text style={[commonTheme.text.label, { color: colors.text }]}>
-                {almostDoneCount} ending soon
-              </Text>
-            </View>
-          )}
         </View>
 
         <Pressable

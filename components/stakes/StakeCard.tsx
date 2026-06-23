@@ -3,7 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { Stake } from "@/types/stakes";
-
+import { router } from "expo-router";
 export default function StakeCard({ stake }: { stake: Stake }) {
   const colors = useColors();
   const errorColor = colors.errorColor || "#FF3B30";
@@ -14,9 +14,9 @@ export default function StakeCard({ stake }: { stake: Stake }) {
   let statusColor = colors.textMuted || colors.text;
 
   if (stake.status === "active") {
-    statusText = stake.daysLeft ? `${stake.daysLeft} days left` : "Active";
+    // statusText = stake.daysLeft ? `${stake.daysLeft} days left` : "Active";
     statusIcon = "clock";
-    statusColor = (stake.daysLeft ?? 0) <= 3 ? colors.primary : colors.text;
+    // statusColor = (stake.daysLeft ?? 0) <= 3 ? colors.primary : colors.text;
   } else if (stake.status === "completed") {
     statusText = stake.outcome === "won" ? "Completed" : "Donated";
     statusIcon = stake.outcome === "won" ? "check-circle" : "heart";
@@ -36,10 +36,10 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           padding: commonTheme.space.lg,
           gap: commonTheme.space.sm,
           borderWidth: 1,
-          borderColor:
-            stake.status === "active" && (stake.daysLeft ?? 0) <= 3
-              ? colors.surface1
-              : "transparent",
+          //   borderColor:
+          //     // stake.status === "active" && (stake.daysLeft ?? 0) <= 3
+          //       ? colors.surface1
+          //       : "transparent",
         },
       ]}
       activeOpacity={0.85}
@@ -58,7 +58,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           {stake.title}
         </Text>
         <Text style={[commonTheme.text.amount, { color: colors.text }]}>
-          ₹{stake.amount}
+          ₹{stake.reward}
         </Text>
       </View>
 

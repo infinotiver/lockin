@@ -122,7 +122,7 @@ export async function POST(request: Request) {
       description: description?.trim() ?? null,
       reward: parsedReward,
       type,
-      status: "available",
+      status: "active",
       expires_at: expires_at ?? null,
     })
     .select()
