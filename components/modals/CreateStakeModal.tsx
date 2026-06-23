@@ -16,11 +16,14 @@ import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 
 const QUEST_TYPES = [
-  { label: "Chore", value: "chore" },
-  { label: "Study", value: "study" },
-  { label: "Screen-time", value: "screen-time" },
-  { label: "Work", value: "work" },
-  { label: "Shop", value: "shop" },
+  { label: "Screen Time", value: "screen-time" },
+
+  { label: "Photo", value: "photo-verify" },
+  { label: "Health (Google Fit/Apple Health)", value: "health" },
+  {
+    label: "Other Integrations",
+    value: "integration",
+  },
 ];
 
 type CreateStakeModalProps = {
