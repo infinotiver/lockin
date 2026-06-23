@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "expo-router";
@@ -21,32 +21,19 @@ import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
 
 const tabBarHeight = 60;
 
+type UITabKey = "active" | "pending" | "completed";
+
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
   const { user } = useUser();
-  const [activeTab, setActiveTab] = useState<StakeStatus>("active");
+
+  // 2. State now strictly accepts the UI keys
+  const [activeTab, setActiveTab] = useState<UITabKey>("active");
   const [showCreate, setShowCreate] = useState(false);
 
-  // Dynamic fetch states
   const [stakes, setStakes] = useState<Stake[]>([]);
   const [loading, setLoading] = useState(false);
-
-  const translateStatus = (dbStatus: string): StakeStatus => {
-    const s = (dbStatus || "").toLowerCase();
-    if (s === "available" || s === "active") return "active";
-    if (s === "completed" || s === "pending") return "pending";
-    if (s === "approved" || s === "done") return "completed";
-    return "active"; // Safe default
-  };
-
-  const translateCategory = (dbType: string): Stake["category"] => {
-    const t = (dbType || "").toLowerCase();
-    if (t === "screen-time") return "Screen Time";
-    if (t === "study") return "Reading";
-    if (t === "chore" || t === "work") return "Exercise";
-    return "Custom";
-  };
 
   const fetchStakes = async () => {
     setLoading(true);
@@ -68,12 +55,12 @@ export default function StakesScreen() {
         }
 
         return {
-          familyId: user?.publicMetadata?.familyId,
+          familyId: (user?.publicMetadata?.familyId as string) || "",
           id: q.id,
           title: q.title || "Untitled Goal",
           reward: Number(q.reward) || 0,
-          status: translateStatus(q.status),
-          category: translateCategory(q.type),
+          status: q.status as StakeStatus,
+          type: q.type,
           streak: 0,
         };
       });
@@ -91,11 +78,20 @@ export default function StakesScreen() {
       fetchStakes();
     }, []),
   );
-  const activeStakes = stakes.filter((s) => s.status === "active");
-  const pendingStakes = stakes.filter((s) => s.status === "pending");
-  const doneStakes = stakes.filter((s) => s.status === "completed");
 
-  const tabs: TabItem<StakeStatus>[] = [
+  const activeStakes = stakes.filter(
+    (s) => s.status === "available" || s.status === "active",
+  );
+  const pendingStakes = stakes.filter((s) => s.status === "completed");
+  const doneStakes = stakes.filter(
+    (s) =>
+      s.status === "approved" ||
+      s.status === "rejected" ||
+      s.status === "expired",
+  );
+
+  // 3. Tab definitions now strictly adhere to TabItem<UITabKey>
+  const tabs: TabItem<UITabKey>[] = [
     { key: "active", label: "Active", count: activeStakes.length || undefined },
     {
       key: "pending",
@@ -112,7 +108,8 @@ export default function StakesScreen() {
         ? pendingStakes
         : doneStakes;
 
-  const emptyMessages: Record<StakeStatus, string> = {
+  // 4. Record indexed safely to the UI keys
+  const emptyMessages: Record<UITabKey, string> = {
     active: "No active stakes right now.",
     pending: "No stakes waiting for approval.",
     completed: "Finish a goal to see it here.",
@@ -123,7 +120,6 @@ export default function StakesScreen() {
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
-      {/* Header */}
       <View style={styles.header}>
         <View style={commonTheme.layout.row}>
           <Text
@@ -144,7 +140,6 @@ export default function StakesScreen() {
         </Pressable>
       </View>
 
-      {/* Tabs */}
       <View style={styles.tabsWrapper}>
         <SplitTabs
           tabs={tabs}
@@ -153,7 +148,6 @@ export default function StakesScreen() {
         />
       </View>
 
-      {/* Content Stack */}
       <ScrollView
         contentContainerStyle={[
           styles.list,
@@ -186,7 +180,7 @@ export default function StakesScreen() {
       <CreateStakeModal
         visible={showCreate}
         onClose={() => setShowCreate(false)}
-        onCreated={fetchStakes} // Callback directly triggers atomic refresh window
+        onCreated={fetchStakes}
       />
     </SafeAreaView>
   );
@@ -202,14 +196,12 @@ const styles = StyleSheet.create({
     paddingBottom: commonTheme.space.md,
     gap: commonTheme.space.md,
   },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: commonTheme.space.xs,
-    paddingHorizontal: commonTheme.space.md,
-    paddingVertical: commonTheme.space.xs,
+  fab: {
+    width: 40,
+    height: 40,
     borderRadius: commonTheme.rounded.full,
-    marginLeft: commonTheme.space.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
   tabsWrapper: {
     paddingHorizontal: commonTheme.space.lg,
@@ -218,13 +210,6 @@ const styles = StyleSheet.create({
   list: {
     paddingHorizontal: commonTheme.space.lg,
     gap: commonTheme.space.xl,
-  },
-  fab: {
-    width: 40,
-    height: 40,
-    borderRadius: commonTheme.rounded.full,
-    justifyContent: "center",
-    alignItems: "center",
   },
   inlineEmpty: {
     paddingTop: commonTheme.space["2xl"],

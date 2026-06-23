@@ -21,10 +21,6 @@ export default function StakeCard({ stake }: { stake: Stake }) {
     statusText = stake.outcome === "won" ? "Completed" : "Donated";
     statusIcon = stake.outcome === "won" ? "check-circle" : "heart";
     statusColor = stake.outcome === "won" ? colors.primary : errorColor;
-  } else if (stake.status === "pending") {
-    statusText = "Pending approval";
-    statusIcon = "loader";
-    statusColor = colors.textMuted || colors.text;
   }
 
   return (
@@ -68,7 +64,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           { color: colors.textMuted || colors.text, opacity: 0.6 },
         ]}
       >
-        {stake.category}
+        {stake.type}
       </Text>
 
       {/* Spacer */}
