@@ -7,7 +7,12 @@ export type StakeStatus =
   | "expired"; // dont have a clock???
 
 // TODO: stake statuses can be misleading and needs reforms
-export type QuestType = "chore" | "study" | "screen-time" | "work" | "shop";
+export type QuestType =
+  | "integration"
+  | "photo-verify"
+  | "screen-time"
+  | "health"
+  | "peer-verify";
 
 export type Stake = {
   id: string;

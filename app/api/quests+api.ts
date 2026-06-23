@@ -109,7 +109,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const validTypes = ["chore", "study", "screen-time", "work", "shop"];
+  const validTypes = [
+    "integration",
+    "photo-verify",
+    "screen-time",
+    "health",
+    "peer-verify",
+  ];
   if (!validTypes.includes(type)) {
     return Response.json({ error: "Invalid quest type" }, { status: 400 });
   }
