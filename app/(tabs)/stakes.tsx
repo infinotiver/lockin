@@ -1,37 +1,108 @@
-import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@clerk/clerk-expo";
+import { useFocusEffect } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
 import type { Stake, StakeStatus } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
 import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
-const STAKE_TABS: TabItem<StakeStatus>[] = [
-  { key: "active", label: "Active" },
-  { key: "pending", label: "Pending" },
-  { key: "done", label: "Done" },
-];
 
-const STAKES: Stake[] = []; // [TODO] fetch from backend
+const tabBarHeight = 60;
 
 export default function StakesScreen() {
   const colors = useColors();
+  const { getToken } = useAuth();
+
   const [activeTab, setActiveTab] = useState<StakeStatus>("active");
   const [showCreate, setShowCreate] = useState(false);
-  const activeStakes = STAKES.filter((s) => s.status === "active");
-  const pendingStakes = STAKES.filter((s) => s.status === "pending");
-  const doneStakes = STAKES.filter((s) => s.status === "done");
+
+  // Dynamic fetch states
+  const [stakes, setStakes] = useState<Stake[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const translateStatus = (dbStatus: string): StakeStatus => {
+    const s = (dbStatus || "").toLowerCase();
+    if (s === "available" || s === "active") return "active";
+    if (s === "completed" || s === "pending") return "pending";
+    if (s === "approved" || s === "done") return "completed";
+    return "active"; // Safe default
+  };
+
+  const translateCategory = (dbType: string): Stake["category"] => {
+    const t = (dbType || "").toLowerCase();
+    if (t === "screen-time") return "Screen Time";
+    if (t === "study") return "Reading";
+    if (t === "chore" || t === "work") return "Exercise";
+    return "Custom";
+  };
+
+  const fetchStakes = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) return;
+      const body = await res.json();
+
+      const mappedStakes: Stake[] = (body.quests || []).map((q: any): Stake => {
+        let derivedDays = 0;
+        if (q.expires_at) {
+          const diff = new Date(q.expires_at).getTime() - Date.now();
+          derivedDays = Math.max(0, Math.ceil(diff / 86400000));
+        }
+
+        return {
+          id: q.id,
+          title: q.title || "Untitled Goal",
+          amount: Number(q.reward) || 0, // DB 'reward' -> UI 'amount'
+          status: translateStatus(q.status), // DB 'available' -> UI 'active'
+          category: translateCategory(q.type), // DB 'screen-time' -> UI 'Screen Time'
+          // Hard-filling the UI's mandatory math props to satisfy strict TypeScript
+          daysTotal: derivedDays || 7,
+          daysCompleted: 0,
+          streak: 0,
+          progressPercent: 0,
+          daysLeft: derivedDays,
+        };
+      });
+
+      setStakes(mappedStakes);
+    } catch (e) {
+      console.error("[StakesScreen] Translation mapping failed:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStakes();
+    }, []),
+  );
+  const activeStakes = stakes.filter((s) => s.status === "active");
+  const pendingStakes = stakes.filter((s) => s.status === "pending");
+  const doneStakes = stakes.filter((s) => s.status === "completed");
 
   const almostDoneCount = activeStakes.filter(
     (s) => s.daysLeft !== undefined && s.daysLeft <= 3,
   ).length;
 
-  const tabBarHeight = 60;
-
-  // Build tabs with counts
   const tabs: TabItem<StakeStatus>[] = [
     { key: "active", label: "Active", count: activeStakes.length || undefined },
     {
@@ -39,7 +110,7 @@ export default function StakesScreen() {
       label: "Pending",
       count: pendingStakes.length || undefined,
     },
-    { key: "done", label: "Done", count: doneStakes.length || undefined },
+    { key: "completed", label: "Done", count: doneStakes.length || undefined },
   ];
 
   const visibleStakes =
@@ -52,8 +123,7 @@ export default function StakesScreen() {
   const emptyMessages: Record<StakeStatus, string> = {
     active: "No active stakes right now.",
     pending: "No stakes waiting for approval.",
-    done: "Finish a goal to see it here.",
-    // failed: "No failed stakes.",
+    completed: "Finish a goal to see it here.",
   };
 
   return (
@@ -61,16 +131,13 @@ export default function StakesScreen() {
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
-      {/* ── Header ── */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={commonTheme.layout.row}>
           <Text
             style={[
               commonTheme.text.pageTitle,
-              {
-                color: colors.text,
-                fontFamily: commonTheme.font.bold,
-              },
+              { color: colors.text, fontFamily: commonTheme.font.bold },
             ]}
           >
             Stakes
@@ -94,7 +161,7 @@ export default function StakesScreen() {
         </Pressable>
       </View>
 
-      {/* ── Tabs ── */}
+      {/* Tabs */}
       <View style={styles.tabsWrapper}>
         <SplitTabs
           tabs={tabs}
@@ -103,7 +170,7 @@ export default function StakesScreen() {
         />
       </View>
 
-      {/* ── Content ── */}
+      {/* Content Stack */}
       <ScrollView
         contentContainerStyle={[
           styles.list,
@@ -111,7 +178,11 @@ export default function StakesScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {STAKES.length === 0 ? (
+        {loading && stakes.length === 0 ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="small" color={colors.textMuted} />
+          </View>
+        ) : stakes.length === 0 ? (
           <GlobalEmptyState />
         ) : visibleStakes.length === 0 ? (
           <View style={styles.inlineEmpty}>
@@ -128,13 +199,11 @@ export default function StakesScreen() {
           />
         )}
       </ScrollView>
+
       <CreateStakeModal
         visible={showCreate}
         onClose={() => setShowCreate(false)}
-        familyId={"yourFamilyId"}
-        onCreated={() => {
-          // refetch stakes
-        }}
+        onCreated={fetchStakes} // Callback directly triggers atomic refresh window
       />
     </SafeAreaView>
   );
@@ -182,5 +251,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.4,
     fontFamily: commonTheme.font.body,
+  },
+  center: {
+    paddingTop: commonTheme.space["2xl"],
+    alignItems: "center",
   },
 });

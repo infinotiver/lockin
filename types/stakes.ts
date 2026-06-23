@@ -1,4 +1,4 @@
-export type StakeStatus = "active" | "pending" | "done";
+export type StakeStatus = "active" | "pending" | "completed";
 
 export type Stake = {
   id: string;
@@ -6,7 +6,6 @@ export type Stake = {
   amount: number;
   status: StakeStatus;
   category: "Screen Time" | "Exercise" | "Reading" | "Custom";
-  role: "Teen" | "Parent";
   daysTotal: number;
   daysCompleted: number;
   streak: number;

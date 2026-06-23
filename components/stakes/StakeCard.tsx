@@ -17,7 +17,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
     statusText = stake.daysLeft ? `${stake.daysLeft} days left` : "Active";
     statusIcon = "clock";
     statusColor = (stake.daysLeft ?? 0) <= 3 ? colors.primary : colors.text;
-  } else if (stake.status === "done") {
+  } else if (stake.status === "completed") {
     statusText = stake.outcome === "won" ? "Completed" : "Donated";
     statusIcon = stake.outcome === "won" ? "check-circle" : "heart";
     statusColor = stake.outcome === "won" ? colors.primary : errorColor;
@@ -58,7 +58,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           {stake.title}
         </Text>
         <Text style={[commonTheme.text.amount, { color: colors.text }]}>
-          ${stake.amount}
+          ₹{stake.amount}
         </Text>
       </View>
 

@@ -4,6 +4,7 @@ import { useUser, useAuth } from "@clerk/clerk-expo";
 import { BaseModal } from "@/components/ui/BaseModal";
 import { Button } from "@/components/ui/Button";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 
 type Member = {
   id: string;
@@ -37,12 +38,6 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
   const familyId = user?.publicMetadata?.familyId;
 
   useEffect(() => {
-    console.log("[ViewFamilyModal] Visibility changed:", {
-      visible,
-      familyId,
-      userId: user?.id,
-    });
-
     if (visible) {
       fetchFamilyDetails();
     } else {
@@ -51,13 +46,8 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
   }, [visible]);
 
   const fetchFamilyDetails = async () => {
-    console.log(
-      "[ViewFamilyModal] Internal target metadata familyId:",
-      familyId,
-    );
     if (!familyId) {
       const msg = "No family associated with this profile metadata.";
-      console.warn("[ViewFamilyModal] Aborting fetch:", msg);
       setError(msg);
       return;
     }
@@ -66,11 +56,9 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
     setError("");
 
     try {
-      console.log("[ViewFamilyModal] Fetching token from session context...");
       const token = await getToken();
 
       const targetUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/families`;
-      console.log("[ViewFamilyModal] Executing GET request:", targetUrl);
 
       const res = await fetch(targetUrl, {
         method: "GET",
@@ -79,12 +67,7 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
         },
       });
 
-      console.log(
-        "[ViewFamilyModal] Server responded with status code:",
-        res.status,
-      );
       const body = await res.json();
-      console.log("[ViewFamilyModal] Decoded payload body:", body);
 
       if (!res.ok) {
         setError(body?.error ?? "Failed to look up family details.");
@@ -105,7 +88,7 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
   };
 
   return (
-    <BaseModal visible={visible} onClose={onClose} title={family.name}>
+    <BaseModal visible={visible} onClose={onClose} title="Family Details">
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -125,20 +108,17 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
         {!loading && !error && family && (
           <View>
             <View>
+              <Text style={{ color: colors.text }}>{family.name}</Text>
               <Text style={{ color: colors.textMuted }}>ID: {family.id}</Text>
             </View>
 
-            <View>
+            <View style={{ paddingVertical: commonTheme.space.md }}>
               <Text style={{ color: colors.textMuted }}>
                 Registered Members ({members.length})
               </Text>
 
               {members.map((member, index) => {
                 const isCurrentUser = member.clerk_id === user?.id;
-                console.log(
-                  `[ViewFamilyModal] Rendering roster row [${index}]:`,
-                  { memberId: member.id, isCurrentUser },
-                );
 
                 return (
                   <View key={member.id}>

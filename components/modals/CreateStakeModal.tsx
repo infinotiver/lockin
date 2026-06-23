@@ -26,14 +26,12 @@ const QUEST_TYPES = [
 type CreateStakeModalProps = {
   visible: boolean;
   onClose: () => void;
-  familyId: string;
   onCreated?: () => void;
 };
 
 export function CreateStakeModal({
   visible,
   onClose,
-  familyId,
   onCreated,
 }: CreateStakeModalProps) {
   const colors = useColors();
@@ -85,7 +83,6 @@ export function CreateStakeModal({
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          familyId,
           title: title.trim(),
           description: description.trim(),
           reward: Number(reward),
