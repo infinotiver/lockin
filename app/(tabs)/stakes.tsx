@@ -61,6 +61,8 @@ export default function StakesScreen() {
           reward: Number(q.reward) || 0,
           status: q.status as StakeStatus,
           type: q.type,
+          created_at: q.created_at,
+          expires_at: q.expires_at,
           streak: 0,
         };
       });

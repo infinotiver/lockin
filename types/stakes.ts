@@ -17,6 +17,8 @@ export type Stake = {
   status: StakeStatus;
   type: QuestType;
   iconUrl?: string;
+  created_at: string;
+  expires_at: string;
 
   // --- Optional UI   ---
   streak?: number;
