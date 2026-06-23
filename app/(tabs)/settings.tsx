@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { styles } from "@/constants/settings.styles";
@@ -16,13 +16,18 @@ import { OptionsRow } from "@/components/ui/OptionsRow";
 import { OptionsGroup } from "@/components/ui/OptionsGroup";
 import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
 import { InfoModal } from "@/components/modals/InfoModal";
+import { ViewFamilyModal } from "@/components/modals/ViewFamilyModal";
 export default function SettingsScreen() {
   const colors = useColors();
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showPermModal, setShowPermModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showFamilyModal, setShowFamilyModal] = useState(false);
+
+  const [familyName, setFamilyName] = useState<string>("");
+  const [loadingFamily, setLoadingFamily] = useState<boolean>(false);
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
@@ -39,6 +44,33 @@ export default function SettingsScreen() {
       .join("")
       .toUpperCase() || "?";
 
+  const loadSettingsContext = async () => {
+    const familyId = user?.publicMetadata?.familyId;
+    if (!familyId) return;
+
+    setLoadingFamily(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/families`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        setFamilyName(data.family?.name || "");
+      }
+    } catch (e) {
+    } finally {
+      setLoadingFamily(false);
+    }
+  };
+  useEffect(() => {
+    loadSettingsContext();
+  }, [user?.publicMetadata?.familyId]);
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -102,7 +134,11 @@ export default function SettingsScreen() {
 
         {/* Family */}
         <OptionsGroup label="Family link">
-          <OptionsRow icon="heart" label="Family centre" onPress={() => {}} />
+          <OptionsRow
+            icon="heart"
+            label={familyName || "No Family Attached"}
+            onPress={() => setShowFamilyModal(true)}
+          />
           <OptionsRow
             icon="user-plus"
             label="Invite member"
@@ -144,6 +180,10 @@ export default function SettingsScreen() {
         <InfoModal
           visible={showInfoModal}
           onClose={() => setShowInfoModal(false)}
+        />
+        <ViewFamilyModal
+          visible={showFamilyModal}
+          onClose={() => setShowFamilyModal(false)}
         />
       </ScrollView>
     </SafeAreaView>

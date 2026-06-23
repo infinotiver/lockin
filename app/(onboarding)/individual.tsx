@@ -6,20 +6,19 @@ import {
   Pressable,
   useWindowDimensions,
   StyleSheet,
+  ScrollView,
 } from "react-native";
-import { Button } from "@/components/ui/Button";
-import { FocusedInput } from "@/components/FocusedInput";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useUser, useAuth } from "@clerk/clerk-expo";
+import { Button } from "@/components/ui/Button";
+import { FocusedInput } from "@/components/FocusedInput";
 import commonTheme from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
 import { ViewWrapper } from "@/components/onboarding/ViewWrapper";
 import { OnboardingCard } from "@/components/onboarding/OnboardingCard";
 import { OnboardingTitle } from "@/components/onboarding/OnboardingTitle";
-import * as Clipboard from "expo-clipboard";
 import ShareCodeModal from "@/components/share/ShareCodeModal";
-import { Picker } from "@react-native-picker/picker";
 import { StepStepper } from "@/components/ui/StepStepper";
 
 const TOTAL_STEPS = 3;
@@ -114,38 +113,46 @@ function StepTwo({
         </Text>
       </View>
 
-      <View style={styles.row}>
-        <FocusedInput
-          placeholder="Quest title"
-          value={questTitle}
-          onChangeText={setQuestTitle}
-          autoCapitalize="sentences"
-          style={{ flex: 1 }}
-        />
-        <View
-          style={[
-            styles.pickerWrapper,
-            { borderColor: colors.border, backgroundColor: colors.surface1 },
-          ]}
-        >
-          <Picker
-            selectedValue={questType}
-            onValueChange={setQuestType}
-            style={{ color: colors.text }}
-            dropdownIconColor={colors.textMuted}
-          >
-            {QUEST_TYPES.map((t) => (
-              <Picker.Item
-                key={t.value}
-                label={t.label}
-                value={t.value}
-                color={colors.text}
-              />
-            ))}
-          </Picker>
-        </View>
-      </View>
+      {/* Title */}
+      <FocusedInput
+        placeholder="Quest title"
+        value={questTitle}
+        onChangeText={setQuestTitle}
+        autoCapitalize="sentences"
+      />
 
+      {/* Horizontal Category Pill Selector */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.pillContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        {QUEST_TYPES.map((t) => {
+          const isSelected = questType === t.value;
+          return (
+            <Pressable
+              key={t.value}
+              onPress={() => setQuestType(t.value)}
+              style={[
+                styles.pill,
+                { backgroundColor: isSelected ? colors.text : colors.surface1 },
+              ]}
+            >
+              <Text
+                style={{
+                  color: isSelected ? colors.surface1 : colors.text,
+                  fontWeight: isSelected ? "600" : "400",
+                }}
+              >
+                {t.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {/* Description */}
       <FocusedInput
         placeholder="Description (optional)"
         value={questDescription}
@@ -153,37 +160,20 @@ function StepTwo({
         autoCapitalize="sentences"
       />
 
-      <View style={styles.row}>
-        <FocusedInput
-          placeholder="Expire in (days)"
-          value={questExpiresAt}
-          onChangeText={setQuestExpiresAt}
-          keyboardType="numeric"
-          style={{ flex: 1 }}
-        />
-        <View
-          style={[
-            styles.rewardWrapper,
-            { borderColor: colors.border, backgroundColor: colors.surface1 },
-          ]}
-        >
-          <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-            ₹
-          </Text>
-          <FocusedInput
-            placeholder="Reward"
-            value={questReward}
-            onChangeText={setQuestReward}
-            keyboardType="numeric"
-            style={{
-              flex: 1,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              backgroundColor: "transparent",
-            }}
-          />
-        </View>
-      </View>
+      {/* Duration */}
+      <FocusedInput
+        placeholder="Expire in (days)"
+        value={questExpiresAt}
+        onChangeText={setQuestExpiresAt}
+        keyboardType="numeric"
+      />
+
+      <FocusedInput
+        placeholder="Reward amount"
+        value={questReward}
+        onChangeText={setQuestReward}
+        keyboardType="numeric"
+      />
 
       <Button
         onPress={onNext}
@@ -250,27 +240,42 @@ export default function Individual() {
   };
 
   const handleFinish = async () => {
+    if (!familyId) return;
+    setLoading(true);
     try {
       const token = await getToken();
-      await fetch(
+
+      // FIXED: Stringifying payload body to pass the target family ID context
+      const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/user/complete-onboarding`,
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ familyId }),
         },
       );
+
+      if (!res.ok) {
+        console.error("complete-onboarding route response error:", res.status);
+        return;
+      }
+
       await user?.reload();
+      router.replace("/(tabs)");
     } catch (e) {
       console.error("complete-onboarding error:", e);
+    } finally {
+      setLoading(false);
     }
-    router.replace("/(tabs)");
   };
 
   const handleSkip = () => {
     if (step < TOTAL_STEPS - 1) {
       animateToStep(step + 1);
     }
-    // no-op on last step — skip is hidden there via hideSkipOnLast
   };
 
   const handleCreateFamily = async () => {
@@ -293,14 +298,18 @@ export default function Individual() {
         return;
       }
       const { family } = await res.json();
-      setFamilyCode(family.code);
-      setFamilyId(family.id);
-      animateToStep(1);
+      setSelectedFamilyData(family.code, family.id);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
+  };
+
+  const setSelectedFamilyData = (code: string, id: string) => {
+    setFamilyCode(code);
+    setFamilyId(id);
+    animateToStep(1);
   };
 
   const handleAddQuest = async () => {
@@ -323,9 +332,9 @@ export default function Individual() {
         },
         body: JSON.stringify({
           familyId,
-          title: questTitle,
-          description: questDescription,
-          reward: questReward,
+          title: questTitle.trim(),
+          description: questDescription.trim(),
+          reward: Number(questReward),
           type: questType,
           expires_at: expiresAt,
         }),
@@ -392,8 +401,8 @@ export default function Individual() {
             variant="primary"
             onPress={handleFinish}
             loading={loading}
+            disabled={loading}
             fullWidth
-            // style={{ marginTop: commonTheme.space.md }}
           >
             Go to home
           </Button>
@@ -409,33 +418,22 @@ const styles = StyleSheet.create({
   },
   stepContainer: {
     flex: 1,
-    gap: commonTheme.space.md,
+    gap: commonTheme.space.lg,
     justifyContent: "center",
   },
   stepHeader: {
     gap: commonTheme.space.xs,
+    marginBottom: commonTheme.space.xs,
   },
-  row: {
-    flexDirection: "row",
-    gap: commonTheme.space.md,
-  },
-  pickerWrapper: {
-    flex: 0.8,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: commonTheme.rounded.xl,
-    justifyContent: "center",
-    overflow: "hidden",
-    paddingHorizontal: commonTheme.space.md,
-  },
-  rewardWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: commonTheme.rounded.xl,
-    paddingHorizontal: commonTheme.space.lg,
-    height: 50,
+  pillContainer: {
     gap: commonTheme.space.sm,
+    paddingVertical: commonTheme.space.xs,
+  },
+  pill: {
+    paddingHorizontal: commonTheme.space.lg,
+    paddingVertical: commonTheme.space.sm,
+    borderRadius: commonTheme.rounded.lg,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
 });
