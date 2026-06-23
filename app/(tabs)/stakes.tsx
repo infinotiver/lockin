@@ -8,7 +8,7 @@ import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
 import type { Stake, StakeStatus } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
-
+import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
 const STAKE_TABS: TabItem<StakeStatus>[] = [
   { key: "active", label: "Active" },
   { key: "pending", label: "Pending" },
@@ -20,7 +20,7 @@ const STAKES: Stake[] = []; // [TODO] fetch from backend
 export default function StakesScreen() {
   const colors = useColors();
   const [activeTab, setActiveTab] = useState<StakeStatus>("active");
-
+  const [showCreate, setShowCreate] = useState(false);
   const activeStakes = STAKES.filter((s) => s.status === "active");
   const pendingStakes = STAKES.filter((s) => s.status === "pending");
   const doneStakes = STAKES.filter((s) => s.status === "done");
@@ -88,7 +88,7 @@ export default function StakesScreen() {
 
         <Pressable
           style={[styles.fab, { backgroundColor: colors.surface2 }]}
-          onPress={() => {}}
+          onPress={() => setShowCreate(true)}
         >
           <Feather name="plus" size={22} color={colors.text} />
         </Pressable>
@@ -128,6 +128,14 @@ export default function StakesScreen() {
           />
         )}
       </ScrollView>
+      <CreateStakeModal
+        visible={showCreate}
+        onClose={() => setShowCreate(false)}
+        familyId={"yourFamilyId"}
+        onCreated={() => {
+          // refetch stakes
+        }}
+      />
     </SafeAreaView>
   );
 }

@@ -110,7 +110,7 @@ function StepTwo({
       <View style={styles.stepHeader}>
         <OnboardingTitle>Add your first quest</OnboardingTitle>
         <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-          Quests are tasks your teens can complete to earn rewards.
+          Stake money to build your habit
         </Text>
       </View>
 
@@ -125,22 +125,13 @@ function StepTwo({
         <View
           style={[
             styles.pickerWrapper,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.surface1,
-            },
+            { borderColor: colors.border, backgroundColor: colors.surface1 },
           ]}
         >
           <Picker
             selectedValue={questType}
             onValueChange={setQuestType}
-            style={{
-              backgroundColor: colors.surface1,
-              padding: commonTheme.space.sm,
-              borderWidth: 0,
-              fontFamily: commonTheme.font.mono,
-              color: colors.textMuted,
-            }}
+            style={{ color: colors.text }}
             dropdownIconColor={colors.textMuted}
           >
             {QUEST_TYPES.map((t) => (
@@ -399,8 +390,7 @@ export default function Individual() {
         {step === TOTAL_STEPS - 1 && (
           <Button
             variant="primary"
-            // onPress={handleFinish}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={handleFinish}
             loading={loading}
             fullWidth
             // style={{ marginTop: commonTheme.space.md }}
