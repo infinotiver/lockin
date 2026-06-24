@@ -5,8 +5,8 @@ import commonTheme from "@/constants/theme";
 import type { Stake, StakeStatus } from "@/types/stakes";
 
 type GlyphName = keyof typeof Feather.glyphMap;
-
-const getStatusUI = (status: StakeStatus, colors: any) => {
+type StatusUI = { text: string; icon: GlyphName; color: string };
+const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
   switch (status) {
     case "active":
       return { text: "In progress", icon: "clock", color: colors.primary };

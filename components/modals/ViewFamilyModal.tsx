@@ -43,8 +43,7 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
     } else {
       setError("");
     }
-  }, [visible]);
-
+  }, [visible, familyId]);
   const fetchFamilyDetails = async () => {
     if (!familyId) {
       const msg = "No family associated with this profile metadata.";
