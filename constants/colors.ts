@@ -61,7 +61,7 @@ const dark: ThemeColors = {
   textMuted: "#888888",
   primary: "#FFFFFF",
   onPrimary: "#000000",
-  accent: "#FB923C",
+  accent: "#158228",
   onAccent: "#fff",
   secondary: "#0A0A0A",
   onSecondary: "#FFFFFF",

@@ -65,10 +65,10 @@ export const Button = ({
     { bg: string; border: number; borderColor: string; text: string }
   > = {
     primary: {
-      bg: colors.accent,
+      bg: colors.primary,
       border: 0,
       borderColor: "transparent",
-      text: colors.onAccent,
+      text: colors.onPrimary,
     },
     secondary: {
       bg: colors.surface3,
