@@ -90,7 +90,11 @@ export default function StakeCard({ stake }: { stake: Stake }) {
                 },
               ]}
             >
-              {formatDuration(stake.description.limitMs)} max
+              <Text style={{ color: colors.accent }}>
+                {formatDuration(stake.description.limitMs)}
+              </Text>{" "}
+              max {stake.description.scope}/day till{" "}
+              <Text style={{ color: colors.accent }}> {dueDate}</Text>
             </Text>
           )}
         </View>
@@ -135,7 +139,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
               style={[commonTheme.text.bodyStrong, { color: colors.textMuted }]}
             >
               {startDate && dueDate ? `${startDate} → ` : ""}
-              {dueDate ? `Due ${dueDate}` : startDate || ""}
+              {dueDate ? `${dueDate}` : startDate || ""}
             </Text>
           </View>
         )}
