@@ -18,6 +18,7 @@ import type { Stake, StakeStatus } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
 import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
+import { mapStake } from "@/lib/mapStake";
 
 const tabBarHeight = 60;
 
@@ -47,25 +48,9 @@ export default function StakesScreen() {
       if (!res.ok) return;
       const body = await res.json();
 
-      const mappedStakes: Stake[] = (body.quests || []).map((q: any): Stake => {
-        let derivedDays = 0;
-        if (q.expires_at) {
-          const diff = new Date(q.expires_at).getTime() - Date.now();
-          derivedDays = Math.max(0, Math.ceil(diff / 86400000));
-        }
-
-        return {
-          familyId: (user?.publicMetadata?.familyId as string) || "",
-          id: q.id,
-          title: q.title || "Untitled Goal",
-          reward: Number(q.reward) || 0,
-          status: q.status as StakeStatus,
-          type: q.type,
-          created_at: q.created_at,
-          expires_at: q.expires_at,
-          streak: 0,
-        };
-      });
+      const mappedStakes: Stake[] = (body.quests || []).map((q: any) =>
+        mapStake(q),
+      );
 
       setStakes(mappedStakes);
     } catch (e) {
@@ -81,15 +66,13 @@ export default function StakesScreen() {
     }, []),
   );
 
-  const activeStakes = stakes.filter(
-    (s) => s.status === "available" || s.status === "active",
-  );
-  const pendingStakes = stakes.filter((s) => s.status === "completed");
+  const activeStakes = stakes.filter((s) => s.status === "active");
+  const pendingStakes = stakes.filter((s) => s.status === "pending");
   const doneStakes = stakes.filter(
     (s) =>
-      s.status === "approved" ||
+      s.status === "completed" ||
       s.status === "rejected" ||
-      s.status === "expired",
+      s.status === "failed",
   );
 
   // 3. Tab definitions now strictly adhere to TabItem<UITabKey>

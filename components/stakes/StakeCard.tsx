@@ -7,31 +7,18 @@ import { router } from "expo-router";
 
 type GlyphName = keyof typeof Feather.glyphMap;
 
-// 1. Pure dictionary lookup for all 6 DB states
-const getStatusUI = (
-  status: StakeStatus,
-  colors: any,
-): { text: string; icon: GlyphName; color: string } => {
-  const successGreen = "#34C759";
-  const errorRed = colors.errorColor || "#FF3B30";
-  const primary = colors.primary || "#007AFF";
-  const muted = colors.textMuted || "#8E8E93";
-
+const getStatusUI = (status: StakeStatus, colors: any) => {
   switch (status) {
-    case "available":
-      return { text: "Available", icon: "plus-circle", color: primary };
     case "active":
-      return { text: "In Progress", icon: "clock", color: primary };
+      return { text: "In progress", icon: "clock", color: colors.primary };
+    case "pending":
+      return { text: "In review", icon: "eye", color: colors.text };
     case "completed":
-      return { text: "In Review", icon: "eye", color: colors.text };
-    case "approved":
-      return { text: "Settled", icon: "check-circle", color: successGreen };
+      return { text: "Won", icon: "check-circle", color: "#34C759" };
+    case "failed":
+      return { text: "Failed", icon: "x-circle", color: colors.destructive };
     case "rejected":
-      return { text: "Rejected", icon: "x-circle", color: errorRed };
-    case "expired":
-      return { text: "Expired", icon: "slash", color: muted };
-    default:
-      return { text: "Unknown", icon: "help-circle", color: muted };
+      return { text: "Rejected", icon: "slash", color: colors.destructive };
   }
 };
 

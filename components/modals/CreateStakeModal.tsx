@@ -215,7 +215,7 @@ export function CreateStakeModal({
 const styles = StyleSheet.create({
   scroll: {
     gap: commonTheme.space.lg,
-    paddingBottom: commonTheme.space.xl,
+    // paddingBottom: commonTheme.space.xl,
   },
   pillContainer: {
     gap: commonTheme.space.sm,
