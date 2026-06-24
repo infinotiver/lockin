@@ -1,5 +1,12 @@
-// components/ui/Button.tsx
-import { Pressable, Text, ActivityIndicator, View } from "react-native";
+import {
+  Pressable,
+  Text,
+  ActivityIndicator,
+  View,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 
@@ -7,7 +14,7 @@ export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = {
-  onPress: () => void;
+  onPress?: () => void;
   children?: React.ReactNode;
   label?: string;
   loadingLabel?: string;
@@ -19,6 +26,8 @@ type ButtonProps = {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   monospace?: boolean;
+  style?: ViewStyle;
+  textStyle?: TextStyle;
 };
 
 const SIZE: Record<
@@ -27,22 +36,22 @@ const SIZE: Record<
 > = {
   sm: {
     height: 36,
-    fontSize: commonTheme.fontSize.md,
+    fontSize: commonTheme.fontSize.sm,
     px: commonTheme.space.md,
   },
   md: {
     height: 44,
-    fontSize: commonTheme.fontSize.lg,
+    fontSize: commonTheme.fontSize.md,
     px: commonTheme.space.lg,
   },
   lg: {
     height: 52,
-    fontSize: commonTheme.fontSize["2xl"],
+    fontSize: commonTheme.fontSize.lg,
     px: commonTheme.space.xl,
   },
 };
 
-export const Button = ({
+export function Button({
   onPress,
   children,
   label,
@@ -54,13 +63,15 @@ export const Button = ({
   fullWidth = false,
   leftIcon,
   rightIcon,
-  monospace,
-}: ButtonProps) => {
+  monospace = false,
+  style,
+  textStyle,
+}: ButtonProps) {
   const colors = useColors();
   const isDisabled = disabled || loading;
   const { height, fontSize, px } = SIZE[size];
 
-  const VARIANT: Record<
+  const variants: Record<
     ButtonVariant,
     { bg: string; border: number; borderColor: string; text: string }
   > = {
@@ -71,7 +82,7 @@ export const Button = ({
       text: colors.onPrimary,
     },
     secondary: {
-      bg: colors.surface3,
+      bg: colors.surface1,
       border: 1,
       borderColor: colors.border,
       text: colors.text,
@@ -83,63 +94,76 @@ export const Button = ({
       text: colors.textMuted,
     },
     destructive: {
-      bg: colors.errorColor,
+      bg: colors.destructive,
       border: 0,
       borderColor: "transparent",
       text: "#fff",
     },
   };
 
-  const { bg, border, borderColor, text } = VARIANT[variant] ?? VARIANT.primary;
-  const content = loading && loadingLabel ? loadingLabel : (children ?? label);
+  const { bg, border, borderColor, text } = variants[variant];
+  const displayContent =
+    loading && loadingLabel ? loadingLabel : (children ?? label);
 
   return (
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed }) => ({
-        height,
-        paddingHorizontal: px,
-        borderRadius: commonTheme.rounded["full"],
-        borderWidth: border,
-        borderColor,
-        backgroundColor: bg,
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: commonTheme.space.sm,
-        alignSelf: fullWidth ? "stretch" : "auto",
-        opacity: isDisabled ? 0.45 : pressed ? 0.82 : 1,
-      })}
+      style={({ pressed }) => [
+        styles.base,
+        {
+          height,
+          paddingHorizontal: px,
+          borderRadius: commonTheme.rounded.full,
+          borderWidth: border,
+          borderColor,
+          backgroundColor: bg,
+          alignSelf: fullWidth ? "stretch" : "auto",
+          opacity: isDisabled ? 0.45 : pressed ? 0.8 : 1,
+        },
+        style,
+      ]}
     >
+      {/* Left: spinner or icon */}
       {loading ? (
         <ActivityIndicator size="small" color={text} />
       ) : leftIcon ? (
         <View>{leftIcon}</View>
       ) : null}
 
-      {typeof content === "string" ? (
+      {/* Label */}
+      {typeof displayContent === "string" ? (
         <Text
           style={[
             commonTheme.text.button,
             {
               fontSize,
               color: text,
-
-              ...(monospace && {
-                fontFamily: commonTheme.font.monoBold,
-                color: text,
-              }),
+              fontFamily: monospace
+                ? commonTheme.font.monoBold
+                : commonTheme.font.bold,
             },
+            textStyle,
           ]}
+          numberOfLines={1}
         >
-          {content}
+          {displayContent}
         </Text>
       ) : (
-        content
+        displayContent
       )}
 
-      {!loading && rightIcon && <View>{rightIcon}</View>}
+      {/* Right icon */}
+      {!loading && rightIcon ? <View>{rightIcon}</View> : null}
     </Pressable>
   );
-};
+}
+
+const styles = StyleSheet.create({
+  base: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: commonTheme.space.sm,
+  },
+});

@@ -245,7 +245,6 @@ export default function Individual() {
     try {
       const token = await getToken();
 
-      // FIXED: Stringifying payload body to pass the target family ID context
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/user/complete-onboarding`,
         {

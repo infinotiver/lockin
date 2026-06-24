@@ -5,7 +5,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  TouchableWithoutFeedback,
+  Pressable,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
@@ -34,9 +34,9 @@ export const BaseModal = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <Pressable onPress={onClose}>
         <View style={styles.overlay}>
-          <TouchableWithoutFeedback>
+          <Pressable>
             <View
               style={[
                 styles.modalContent,
@@ -61,9 +61,9 @@ export const BaseModal = ({
                 </Button>
               </View>
             </View>
-          </TouchableWithoutFeedback>
+          </Pressable>
         </View>
-      </TouchableWithoutFeedback>
+      </Pressable>
     </Modal>
   );
 };

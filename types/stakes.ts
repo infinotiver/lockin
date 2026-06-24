@@ -18,7 +18,7 @@ export type Stake = {
   id: string;
   familyId: string;
   title: string;
-  description?: string;
+  description?: any;
   reward: number;
   type: QuestType;
   icon_url?: string;
