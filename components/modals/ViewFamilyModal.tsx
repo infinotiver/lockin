@@ -106,21 +106,38 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
 
         {!loading && !error && family && (
           <View>
-            <View>
-              <Text style={{ color: colors.text }}>{family.name}</Text>
-              <Text style={{ color: colors.textMuted }}>ID: {family.id}</Text>
+            <View
+              style={[
+                {
+                  paddingVertical: commonTheme.space.md,
+                },
+              ]}
+            >
+              <Text
+                style={[commonTheme.text.cardTitle, { color: colors.text }]}
+              >
+                {family.name}
+              </Text>
             </View>
+            <Text style={[{ color: colors.text }]}>
+              {members.length} member(s)
+            </Text>
 
             <View style={{ paddingVertical: commonTheme.space.md }}>
-              <Text style={{ color: colors.textMuted }}>
-                Registered Members ({members.length})
-              </Text>
-
               {members.map((member, index) => {
                 const isCurrentUser = member.clerk_id === user?.id;
 
                 return (
-                  <View key={member.id}>
+                  <View
+                    key={member.id}
+                    style={[
+                      commonTheme.layout.flex,
+                      commonTheme.layout.row,
+                      {
+                        justifyContent: "space-between",
+                      },
+                    ]}
+                  >
                     <Text style={{ color: colors.text }}>
                       {isCurrentUser
                         ? `${user?.firstName || "You (Active Context)"}`

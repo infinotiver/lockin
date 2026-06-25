@@ -137,6 +137,8 @@ export function CreateStakeModal({
       setType("screen-time");
       setExpiresIn("");
       setError("");
+      setRuleHours("");
+      setRuleMins("");
     }
   }, [visible]);
 
