@@ -1,127 +1,189 @@
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-import type { Stake } from "@/types/stakes";
+import type { Stake, StakeStatus } from "@/types/stakes";
+
+type GlyphName = keyof typeof Feather.glyphMap;
+type StatusUI = { text: string; icon: GlyphName; color: string };
+const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
+  switch (status) {
+    case "active":
+      return { text: "In progress", icon: "clock", color: colors.primary };
+    case "pending":
+      return { text: "In review", icon: "eye", color: colors.text };
+    case "completed":
+      return { text: "Won", icon: "check-circle", color: "#34C759" };
+    case "failed":
+      return { text: "Failed", icon: "x-circle", color: colors.destructive };
+    case "rejected":
+      return { text: "Rejected", icon: "slash", color: colors.destructive };
+    default:
+      return { text: "Available", icon: "circle", color: colors.textMuted };
+  }
+};
+
+const formatDate = (isoDate?: string | null) => {
+  if (!isoDate) return null;
+  const d = new Date(isoDate);
+  return isNaN(d.getTime())
+    ? null
+    : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+const formatDuration = (ms: number): string => {
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+
+  if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
+  if (hours > 0) return `${hours}h`;
+  return `${mins}m`;
+};
 
 export default function StakeCard({ stake }: { stake: Stake }) {
   const colors = useColors();
-  const errorColor = colors.errorColor || "#FF3B30";
+  const statusUI = getStatusUI(stake.status, colors);
 
-  // 1. Determine Status UI cleanly before rendering
-  let statusText = "";
-  let statusIcon: keyof typeof Feather.glyphMap = "circle";
-  let statusColor = colors.textMuted || colors.text;
+  const startDate = formatDate(stake.created_at);
+  const dueDate = formatDate(stake.expires_at);
 
-  if (stake.status === "active") {
-    statusText = stake.daysLeft ? `${stake.daysLeft} days left` : "Active";
-    statusIcon = "clock";
-    statusColor = (stake.daysLeft ?? 0) <= 3 ? colors.primary : colors.text;
-  } else if (stake.status === "done") {
-    statusText = stake.outcome === "won" ? "Completed" : "Donated";
-    statusIcon = stake.outcome === "won" ? "check-circle" : "heart";
-    statusColor = stake.outcome === "won" ? colors.primary : errorColor;
-  } else if (stake.status === "pending") {
-    statusText = "Pending approval";
-    statusIcon = "loader";
-    statusColor = colors.textMuted || colors.text;
-  }
+  const isScreenTimeRule =
+    typeof stake.description === "object" &&
+    stake.description?.type === "screen_time_limit";
 
   return (
-    <TouchableOpacity
+    <View
       style={[
         commonTheme.layout.card,
-        {
-          backgroundColor: colors.surface2,
-          padding: commonTheme.space.lg,
-          gap: commonTheme.space.sm,
-          borderWidth: 1,
-          borderColor:
-            stake.status === "active" && (stake.daysLeft ?? 0) <= 3
-              ? colors.surface1
-              : "transparent",
-        },
+        styles.cardContainer,
+        { backgroundColor: colors.surface2, borderColor: colors.surface1 },
       ]}
-      activeOpacity={0.85}
     >
-      {/* Top Row: Title & Amount */}
       <View
         style={[commonTheme.layout.rowBetween, { alignItems: "flex-start" }]}
       >
+        <View style={styles.leftColumn}>
+          <View style={[{ paddingBottom: commonTheme.space.xs }]}>
+            <Text
+              style={[commonTheme.text.caption, { color: colors.textMuted }]}
+            >
+              {stake.type?.toUpperCase() || "QUEST"}
+            </Text>
+          </View>
+
+          <Text
+            style={[
+              commonTheme.text.sectionTitle,
+              { color: colors.text, marginTop: commonTheme.space.xs },
+            ]}
+          >
+            {stake.title}
+          </Text>
+          {isScreenTimeRule && (
+            <Text
+              style={[
+                commonTheme.text.sectionTitle,
+                {
+                  color: colors.textMuted,
+                  marginVertical: commonTheme.space.sm,
+                },
+              ]}
+            >
+              <Text style={{ color: colors.accent }}>
+                {formatDuration(stake.description.limitMs)}
+              </Text>{" "}
+              max {stake.description.scope}/day till{" "}
+              <Text style={{ color: colors.accent }}> {dueDate}</Text>
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.rightColumn}>
+          <Text
+            style={[
+              commonTheme.text.amountLarge,
+              { color: colors.text, textAlign: "right" },
+            ]}
+          >
+            ₹{stake.reward}
+          </Text>
+        </View>
+      </View>
+
+      {typeof stake.description === "string" && stake.description ? (
         <Text
-          style={[
-            commonTheme.text.cardTitle,
-            { color: colors.text, flex: 1, marginRight: commonTheme.space.md },
-          ]}
-          numberOfLines={2}
+          style={[styles.description, { color: colors.textMuted }]}
+          numberOfLines={1}
         >
-          {stake.title}
+          {stake.description}
         </Text>
-        <Text style={[commonTheme.text.amount, { color: colors.text }]}>
-          ${stake.amount}
-        </Text>
-      </View>
+      ) : null}
 
-      <Text
-        style={[
-          commonTheme.text.caption,
-          { color: colors.textMuted || colors.text, opacity: 0.6 },
-        ]}
-      >
-        {stake.category}
-      </Text>
-
-      {/* Spacer */}
-      <View style={{ height: commonTheme.space.xs }} />
-
-      <View
-        style={[
-          commonTheme.layout.rowBetween,
-          {
-            marginTop: commonTheme.space.xs,
-            paddingTop: commonTheme.space.sm,
-          },
-        ]}
-      >
-        {/* Left: Dynamic Status */}
-        <View
-          style={[commonTheme.layout.row, { alignItems: "center", gap: 6 }]}
-        >
-          <Feather name={statusIcon} size={14} color={statusColor} />
-          <Text
-            style={[
-              commonTheme.text.bodyStrong,
-              { color: statusColor, fontSize: 13 },
-            ]}
-          >
-            {statusText}
-          </Text>
-        </View>
-
-        {/* Right: View Details Action */}
-        <View
-          style={[commonTheme.layout.row, { alignItems: "center", gap: 4 }]}
-        >
-          <Text
-            style={[
-              commonTheme.text.bodyStrong,
-              {
-                color: colors.textMuted || colors.text,
-                fontSize: 13,
-                opacity: 0.6,
-              },
-            ]}
-          >
-            Details
-          </Text>
+      <View style={commonTheme.layout.rowBetween}>
+        <View style={[commonTheme.layout.row, styles.alignCenter, { gap: 6 }]}>
           <Feather
-            name="chevron-right"
-            size={16}
-            color={colors.textMuted || colors.text}
-            style={{ opacity: 0.6 }}
+            name={statusUI?.icon as GlyphName}
+            size={14}
+            color={statusUI?.color}
           />
+          <Text style={[styles.statusText, { color: statusUI?.color }]}>
+            {statusUI?.text}
+          </Text>
         </View>
+
+        {(startDate || dueDate) && (
+          <View style={styles.dateRow}>
+            <Feather name="calendar" size={12} color={colors.textMuted} />
+            <Text
+              style={[commonTheme.text.bodyStrong, { color: colors.textMuted }]}
+            >
+              {startDate && dueDate ? `${startDate} → ` : ""}
+              {dueDate ? `${dueDate}` : startDate || ""}
+            </Text>
+          </View>
+        )}
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    padding: commonTheme.space.md,
+    gap: commonTheme.space.sm,
+    borderWidth: 1,
+  },
+  leftColumn: {
+    flex: 1,
+    alignItems: "flex-start",
+    marginRight: commonTheme.space.md,
+  },
+  rightColumn: {
+    alignItems: "flex-end",
+    justifyContent: "flex-start",
+  },
+
+  metricSubtitle: {
+    fontSize: 12,
+    fontFamily: commonTheme.font.medium,
+    marginTop: 2,
+  },
+  description: {
+    fontSize: 13,
+    lineHeight: 16,
+    marginTop: -2,
+  },
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  alignCenter: {
+    alignItems: "center",
+  },
+  statusText: {
+    fontSize: 12,
+    fontFamily: commonTheme.font.medium,
+  },
+});

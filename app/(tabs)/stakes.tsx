@@ -1,45 +1,89 @@
-import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useColors } from "@/hooks/useColors";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { useFocusEffect } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
 import type { Stake, StakeStatus } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
+import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
+import { mapStake } from "@/lib/mapStake";
 
-const STAKE_TABS: TabItem<StakeStatus>[] = [
-  { key: "active", label: "Active" },
-  { key: "pending", label: "Pending" },
-  { key: "done", label: "Done" },
-];
+const tabBarHeight = 60;
 
-const STAKES: Stake[] = []; // [TODO] fetch from backend
+type UITabKey = "active" | "pending" | "completed";
 
 export default function StakesScreen() {
   const colors = useColors();
-  const [activeTab, setActiveTab] = useState<StakeStatus>("active");
+  const { getToken } = useAuth();
+  const { user } = useUser();
 
-  const activeStakes = STAKES.filter((s) => s.status === "active");
-  const pendingStakes = STAKES.filter((s) => s.status === "pending");
-  const doneStakes = STAKES.filter((s) => s.status === "done");
+  // 2. State now strictly accepts the UI keys
+  const [activeTab, setActiveTab] = useState<UITabKey>("active");
+  const [showCreate, setShowCreate] = useState(false);
 
-  const almostDoneCount = activeStakes.filter(
-    (s) => s.daysLeft !== undefined && s.daysLeft <= 3,
-  ).length;
+  const [stakes, setStakes] = useState<Stake[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const tabBarHeight = 60;
+  const fetchStakes = async () => {
+    setLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-  // Build tabs with counts
-  const tabs: TabItem<StakeStatus>[] = [
+      if (!res.ok) return;
+      const body = await res.json();
+
+      const mappedStakes: Stake[] = (body.quests || []).map((q: any) =>
+        mapStake(q),
+      );
+
+      setStakes(mappedStakes);
+    } catch (e) {
+      console.error("[StakesScreen] Translation mapping failed:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStakes();
+    }, []),
+  );
+
+  const activeStakes = stakes.filter((s) => s.status === "active");
+  const pendingStakes = stakes.filter((s) => s.status === "pending");
+  const doneStakes = stakes.filter(
+    (s) =>
+      s.status === "completed" ||
+      s.status === "rejected" ||
+      s.status === "failed",
+  );
+
+  // 3. Tab definitions now strictly adhere to TabItem<UITabKey>
+  const tabs: TabItem<UITabKey>[] = [
     { key: "active", label: "Active", count: activeStakes.length || undefined },
     {
       key: "pending",
       label: "Pending",
       count: pendingStakes.length || undefined,
     },
-    { key: "done", label: "Done", count: doneStakes.length || undefined },
+    { key: "completed", label: "Done", count: doneStakes.length || undefined },
   ];
 
   const visibleStakes =
@@ -49,11 +93,11 @@ export default function StakesScreen() {
         ? pendingStakes
         : doneStakes;
 
-  const emptyMessages: Record<StakeStatus, string> = {
+  // 4. Record indexed safely to the UI keys
+  const emptyMessages: Record<UITabKey, string> = {
     active: "No active stakes right now.",
     pending: "No stakes waiting for approval.",
-    done: "Finish a goal to see it here.",
-    // failed: "No failed stakes.",
+    completed: "Finish a goal to see it here.",
   };
 
   return (
@@ -61,40 +105,26 @@ export default function StakesScreen() {
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
-      {/* ── Header ── */}
       <View style={styles.header}>
         <View style={commonTheme.layout.row}>
           <Text
             style={[
               commonTheme.text.pageTitle,
-              {
-                color: colors.text,
-                fontFamily: commonTheme.font.bold,
-              },
+              { color: colors.text, fontFamily: commonTheme.font.bold },
             ]}
           >
             Stakes
           </Text>
-
-          {almostDoneCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.surface2 }]}>
-              <Feather name="clock" size={11} color={colors.text} />
-              <Text style={[commonTheme.text.label, { color: colors.text }]}>
-                {almostDoneCount} ending soon
-              </Text>
-            </View>
-          )}
         </View>
 
         <Pressable
           style={[styles.fab, { backgroundColor: colors.surface2 }]}
-          onPress={() => {}}
+          onPress={() => setShowCreate(true)}
         >
           <Feather name="plus" size={22} color={colors.text} />
         </Pressable>
       </View>
 
-      {/* ── Tabs ── */}
       <View style={styles.tabsWrapper}>
         <SplitTabs
           tabs={tabs}
@@ -103,7 +133,6 @@ export default function StakesScreen() {
         />
       </View>
 
-      {/* ── Content ── */}
       <ScrollView
         contentContainerStyle={[
           styles.list,
@@ -111,7 +140,11 @@ export default function StakesScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {STAKES.length === 0 ? (
+        {loading && stakes.length === 0 ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="small" color={colors.textMuted} />
+          </View>
+        ) : stakes.length === 0 ? (
           <GlobalEmptyState />
         ) : visibleStakes.length === 0 ? (
           <View style={styles.inlineEmpty}>
@@ -128,6 +161,12 @@ export default function StakesScreen() {
           />
         )}
       </ScrollView>
+
+      <CreateStakeModal
+        visible={showCreate}
+        onClose={() => setShowCreate(false)}
+        onCreated={fetchStakes}
+      />
     </SafeAreaView>
   );
 }
@@ -142,14 +181,12 @@ const styles = StyleSheet.create({
     paddingBottom: commonTheme.space.md,
     gap: commonTheme.space.md,
   },
-  badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: commonTheme.space.xs,
-    paddingHorizontal: commonTheme.space.md,
-    paddingVertical: commonTheme.space.xs,
+  fab: {
+    width: 40,
+    height: 40,
     borderRadius: commonTheme.rounded.full,
-    marginLeft: commonTheme.space.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
   tabsWrapper: {
     paddingHorizontal: commonTheme.space.lg,
@@ -159,13 +196,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: commonTheme.space.lg,
     gap: commonTheme.space.xl,
   },
-  fab: {
-    width: 40,
-    height: 40,
-    borderRadius: commonTheme.rounded.full,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   inlineEmpty: {
     paddingTop: commonTheme.space["2xl"],
     alignItems: "center",
@@ -174,5 +204,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.4,
     fontFamily: commonTheme.font.body,
+  },
+  center: {
+    paddingTop: commonTheme.space["2xl"],
+    alignItems: "center",
   },
 });

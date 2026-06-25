@@ -3,47 +3,29 @@ import {
   View,
   Text,
   Animated,
-  Pressable,
   useWindowDimensions,
   StyleSheet,
 } from "react-native";
-import { Button } from "@/components/ui/Button";
-import { FocusedInput } from "@/components/FocusedInput";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { useUser, useAuth } from "@clerk/clerk-expo";
+import { Button } from "@/components/ui/Button";
 import commonTheme from "@/constants/theme";
 import { useColors } from "@/hooks/useColors";
 import { ViewWrapper } from "@/components/onboarding/ViewWrapper";
 import { OnboardingCard } from "@/components/onboarding/OnboardingCard";
 import { OnboardingTitle } from "@/components/onboarding/OnboardingTitle";
-import * as Clipboard from "expo-clipboard";
 import ShareCodeModal from "@/components/share/ShareCodeModal";
-import { Picker } from "@react-native-picker/picker";
 import { StepStepper } from "@/components/ui/StepStepper";
+import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 2;
 
-const QUEST_TYPES = [
-  { label: "Chore", value: "chore" },
-  { label: "Study", value: "study" },
-  { label: "Screen-time", value: "screen-time" },
-  { label: "Work", value: "work" },
-  { label: "Shop", value: "shop" },
-];
-
-// ─── Steps ────────────────────────────────────────────────────────────────────
-
+// step 1: intro and auto family creatio
 function StepOne({
-  familyName,
-  setFamilyName,
-  defaultFamilyName,
   onNext,
   loading,
 }: {
-  familyName: string;
-  setFamilyName: (v: string) => void;
-  defaultFamilyName: string;
   onNext: () => void;
   loading: boolean;
 }) {
@@ -51,24 +33,22 @@ function StepOne({
   return (
     <View style={styles.stepContainer}>
       <View style={styles.stepHeader}>
-        <OnboardingTitle>Create your family</OnboardingTitle>
-        <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-          Give your family a name to get started.
+        <OnboardingTitle>Build better habits</OnboardingTitle>
+        <Text
+          style={[
+            commonTheme.text.body,
+            { color: colors.textMuted, textAlign: "center" },
+          ]}
+        >
+          Stake money against daily milestones, build consistency, and secure
+          your focus areas.
         </Text>
       </View>
-      <FocusedInput
-        placeholder={defaultFamilyName}
-        value={familyName}
-        onChangeText={setFamilyName}
-        autoCapitalize="words"
-        selectTextOnFocus
-        selectionColor={colors.selected}
-      />
       <Button
         onPress={onNext}
         variant="primary"
-        label="Create family"
-        loadingLabel="Creating..."
+        label="Get Started"
+        loadingLabel="Initializing family..."
         loading={loading}
         disabled={loading}
         fullWidth
@@ -77,141 +57,48 @@ function StepOne({
   );
 }
 
-function StepTwo({
-  questTitle,
-  setQuestTitle,
-  questDescription,
-  setQuestDescription,
-  questReward,
-  setQuestReward,
-  questType,
-  setQuestType,
-  questExpiresAt,
-  setQuestExpiresAt,
-  onNext,
-  loading,
-}: {
-  questTitle: string;
-  setQuestTitle: (v: string) => void;
-  questDescription: string;
-  setQuestDescription: (v: string) => void;
-  questReward: string;
-  setQuestReward: (v: string) => void;
-  questType: string;
-  setQuestType: (v: string) => void;
-  questExpiresAt: string;
-  setQuestExpiresAt: (v: string) => void;
-  onNext: () => void;
-  loading: boolean;
-}) {
+// step 2
+function StepTwo({ onNext }: { onNext: () => void }) {
   const colors = useColors();
+  const [showSystemModal, setShowSystemModal] = useState(false);
+
   return (
     <View style={styles.stepContainer}>
       <View style={styles.stepHeader}>
-        <OnboardingTitle>Add your first quest</OnboardingTitle>
-        <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-          Quests are tasks your teens can complete to earn rewards.
+        <OnboardingTitle>Permissions</OnboardingTitle>
+        <Text
+          style={[
+            commonTheme.text.body,
+            { color: colors.textMuted, textAlign: "center" },
+          ]}
+        >
+          LockIn need the following permission for tracking and limiting
+          screen-time
         </Text>
       </View>
 
-      <View style={styles.row}>
-        <FocusedInput
-          placeholder="Quest title"
-          value={questTitle}
-          onChangeText={setQuestTitle}
-          autoCapitalize="sentences"
-          style={{ flex: 1 }}
+      {Platform.OS === "android" && (
+        <Button
+          onPress={() => setShowSystemModal(true)}
+          variant="secondary"
+          label="Grant Screen Time Access"
+          fullWidth
         />
-        <View
-          style={[
-            styles.pickerWrapper,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.surface1,
-            },
-          ]}
-        >
-          <Picker
-            selectedValue={questType}
-            onValueChange={setQuestType}
-            style={{
-              backgroundColor: colors.surface1,
-              padding: commonTheme.space.sm,
-              borderWidth: 0,
-              fontFamily: commonTheme.font.mono,
-              color: colors.textMuted,
-            }}
-            dropdownIconColor={colors.textMuted}
-          >
-            {QUEST_TYPES.map((t) => (
-              <Picker.Item
-                key={t.value}
-                label={t.label}
-                value={t.value}
-                color={colors.text}
-              />
-            ))}
-          </Picker>
-        </View>
-      </View>
+      )}
 
-      <FocusedInput
-        placeholder="Description (optional)"
-        value={questDescription}
-        onChangeText={setQuestDescription}
-        autoCapitalize="sentences"
-      />
-
-      <View style={styles.row}>
-        <FocusedInput
-          placeholder="Expire in (days)"
-          value={questExpiresAt}
-          onChangeText={setQuestExpiresAt}
-          keyboardType="numeric"
-          style={{ flex: 1 }}
+      {showSystemModal && (
+        <ScreenTimePermissionModal
+          visible={showSystemModal}
+          onClose={() => setShowSystemModal(false)}
         />
-        <View
-          style={[
-            styles.rewardWrapper,
-            { borderColor: colors.border, backgroundColor: colors.surface1 },
-          ]}
-        >
-          <Text style={[commonTheme.text.body, { color: colors.textMuted }]}>
-            ₹
-          </Text>
-          <FocusedInput
-            placeholder="Reward"
-            value={questReward}
-            onChangeText={setQuestReward}
-            keyboardType="numeric"
-            style={{
-              flex: 1,
-              borderWidth: 0,
-              paddingHorizontal: 0,
-              backgroundColor: "transparent",
-            }}
-          />
-        </View>
-      </View>
-
-      <Button
-        onPress={onNext}
-        variant="primary"
-        label="Add quest"
-        loadingLabel="Adding..."
-        loading={loading}
-        disabled={loading}
-        fullWidth
-      />
+      )}
     </View>
   );
 }
 
-function StepThree({ familyCode }: { familyCode: string }) {
-  return <ShareCodeModal code={familyCode} />;
-}
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+// function StepThree({ familyCode }: { familyCode: string }) {
+//   return <ShareCodeModal code={familyCode} />;
+// }
 
 export default function Individual() {
   const router = useRouter();
@@ -223,24 +110,10 @@ export default function Individual() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const [familyName, setFamilyName] = useState("");
   const [familyCode, setFamilyCode] = useState("");
   const [familyId, setFamilyId] = useState("");
 
-  const [questTitle, setQuestTitle] = useState("");
-  const [questDescription, setQuestDescription] = useState("");
-  const [questReward, setQuestReward] = useState("");
-  const [questType, setQuestType] = useState("chore");
-  const [questExpiresAt, setQuestExpiresAt] = useState("");
-
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const defaultFamilyName = `${user?.firstName ?? "Your"}'s Family`;
-
-  useEffect(() => {
-    if (user?.firstName && !familyName) {
-      setFamilyName(`${user.firstName}'s Family`);
-    }
-  }, [user?.firstName]);
 
   const animateToStep = (next: number) => {
     Animated.timing(slideAnim, {
@@ -258,34 +131,12 @@ export default function Individual() {
     });
   };
 
-  const handleFinish = async () => {
-    try {
-      const token = await getToken();
-      await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/user/complete-onboarding`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-      await user?.reload();
-    } catch (e) {
-      console.error("complete-onboarding error:", e);
-    }
-    router.replace("/(tabs)");
-  };
-
-  const handleSkip = () => {
-    if (step < TOTAL_STEPS - 1) {
-      animateToStep(step + 1);
-    }
-    // no-op on last step — skip is hidden there via hideSkipOnLast
-  };
-
   const handleCreateFamily = async () => {
     setLoading(true);
     try {
       const token = await getToken();
+      const derivedName = `${user?.firstName ?? "Your"}'s Family`;
+
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/families`,
         {
@@ -294,86 +145,70 @@ export default function Individual() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ name: familyName || defaultFamilyName }),
+          body: JSON.stringify({ name: derivedName }),
         },
       );
+
       if (!res.ok) {
-        console.error("Create family error:", res.status, await res.json());
+        console.error("Automated family generation failed:", res.status);
         return;
       }
+
       const { family } = await res.json();
       setFamilyCode(family.code);
       setFamilyId(family.id);
+
+      // Successfully registered unit, proceed immediately to permissions panel
       animateToStep(1);
     } catch (e) {
-      console.error(e);
+      console.error("[Onboarding] Automated provisioning error:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddQuest = async () => {
-    if (!familyId) {
-      animateToStep(2);
-      return;
-    }
+  const handleFinishOnboarding = async () => {
+    if (!familyId) return;
     setLoading(true);
     try {
       const token = await getToken();
-      const expiresAt = questExpiresAt
-        ? new Date(Date.now() + Number(questExpiresAt) * 86400000).toISOString()
-        : null;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/user/complete-onboarding`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ familyId }),
         },
-        body: JSON.stringify({
-          familyId,
-          title: questTitle,
-          description: questDescription,
-          reward: questReward,
-          type: questType,
-          expires_at: expiresAt,
-        }),
-      });
+      );
+
       if (!res.ok) {
-        console.error("Create quest error:", res.status, await res.json());
+        console.error("Syncing completion state returned failure:", res.status);
         return;
       }
-      animateToStep(2);
+
+      await user?.reload();
+      router.replace("/(tabs)");
     } catch (e) {
-      console.error(e);
+      console.error("[Onboarding] Final transaction processing failed:", e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSkip = () => {
+    if (step < TOTAL_STEPS - 1) {
+      animateToStep(step + 1);
     }
   };
 
   const steps = [
-    <StepOne
-      familyName={familyName}
-      setFamilyName={setFamilyName}
-      defaultFamilyName={defaultFamilyName}
-      onNext={handleCreateFamily}
-      loading={loading}
-    />,
-    <StepTwo
-      questTitle={questTitle}
-      setQuestTitle={setQuestTitle}
-      questDescription={questDescription}
-      setQuestDescription={setQuestDescription}
-      questReward={questReward}
-      setQuestReward={setQuestReward}
-      questType={questType}
-      setQuestType={setQuestType}
-      questExpiresAt={questExpiresAt}
-      setQuestExpiresAt={setQuestExpiresAt}
-      onNext={handleAddQuest}
-      loading={loading}
-    />,
-    <StepThree familyCode={familyCode} />,
+    <StepOne onNext={handleCreateFamily} loading={loading} />,
+    <StepTwo onNext={() => animateToStep(2)} />,
+    // <StepThree familyCode={familyCode} />,
   ];
 
   return (
@@ -399,11 +234,10 @@ export default function Individual() {
         {step === TOTAL_STEPS - 1 && (
           <Button
             variant="primary"
-            // onPress={handleFinish}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={handleFinishOnboarding}
             loading={loading}
+            disabled={loading}
             fullWidth
-            // style={{ marginTop: commonTheme.space.md }}
           >
             Go to home
           </Button>
@@ -419,33 +253,14 @@ const styles = StyleSheet.create({
   },
   stepContainer: {
     flex: 1,
-    gap: commonTheme.space.md,
+    gap: commonTheme.space.xl,
     justifyContent: "center",
-  },
-  stepHeader: {
-    gap: commonTheme.space.xs,
-  },
-  row: {
-    flexDirection: "row",
-    gap: commonTheme.space.md,
-  },
-  pickerWrapper: {
-    flex: 0.8,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: commonTheme.rounded.xl,
-    justifyContent: "center",
-    overflow: "hidden",
+    alignItems: "center",
     paddingHorizontal: commonTheme.space.md,
   },
-  rewardWrapper: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderRadius: commonTheme.rounded.xl,
-    paddingHorizontal: commonTheme.space.lg,
-    height: 50,
+  stepHeader: {
     gap: commonTheme.space.sm,
+    alignItems: "center",
+    marginBottom: commonTheme.space.sm,
   },
 });

@@ -17,7 +17,7 @@ export default function RecordsScreen() {
   const { report, formattedTotal, loading, error, permissionGranted, sync } =
     useScreenTime();
 
-  // ─── FALLBACK 1: iOS / Web ──────────────────────────────────────────────────
+  // Records can be shown on android only
   if (Platform.OS !== "android") {
     return (
       <SafeAreaView
@@ -45,7 +45,7 @@ export default function RecordsScreen() {
     );
   }
 
-  // ─── FALLBACK 2: No Permission ──────────────────────────────────────────────
+  //ERROR: No permission
   if (permissionGranted === false) {
     return (
       <SafeAreaView
@@ -121,7 +121,6 @@ export default function RecordsScreen() {
           </Text>
         )}
 
-        {/* ─── HERO: TODAY'S TOTAL ────────────────────────────────────────── */}
         <View style={{ gap: commonTheme.space.xs }}>
           <Text style={[commonTheme.text.label, { color: colors.textMuted }]}>
             Today's Screen Time
@@ -137,94 +136,6 @@ export default function RecordsScreen() {
             </Text>
           )}
         </View>
-
-        {/* ─── PER-APP BREAKDOWN ──────────────────────────────────────────── */}
-        {appEntries.length > 0 && (
-          <View style={{ gap: commonTheme.space.sm }}>
-            <Text style={[commonTheme.text.label, { color: colors.textMuted }]}>
-              By App
-            </Text>
-
-            <View
-              style={[
-                {
-                  backgroundColor: colors.surface2,
-                  borderRadius: commonTheme.rounded.xl,
-                  paddingHorizontal: commonTheme.space.lg,
-                },
-              ]}
-            >
-              {appEntries.map(([pkg, ms], index) => {
-                const percent = totalMs > 0 ? ms / totalMs : 0;
-                const appName = pkg.split(".").pop() ?? pkg;
-                const isLast = index === appEntries.length - 1;
-
-                return (
-                  <View
-                    key={pkg}
-                    style={{ paddingVertical: commonTheme.space.md }}
-                  >
-                    {/* Header Row */}
-                    <View
-                      style={[
-                        commonTheme.layout.rowBetween,
-                        { marginBottom: commonTheme.space.xs },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          commonTheme.text.bodyStrong,
-                          { color: colors.text, flex: 1 },
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {appName}
-                      </Text>
-                      <Text
-                        style={[
-                          commonTheme.text.body,
-                          { color: colors.textMuted },
-                        ]}
-                      >
-                        {msToHoursAndMinutes(ms)}
-                      </Text>
-                    </View>
-
-                    {/* Progress Track (Reused native theme bars) */}
-                    <View
-                      style={[
-                        commonTheme.layout.progressBar,
-                        { backgroundColor: colors.background },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          commonTheme.layout.progressFill,
-                          {
-                            backgroundColor: colors.primary,
-                            width: `${Math.round(percent * 100)}%`,
-                          },
-                        ]}
-                      />
-                    </View>
-
-                    {!isLast && (
-                      <View
-                        style={[
-                          styles.divider,
-                          {
-                            backgroundColor: colors.border || colors.background,
-                            marginTop: commonTheme.space.md,
-                          },
-                        ]}
-                      />
-                    )}
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        )}
 
         {!loading && appEntries.length === 0 && !error && (
           <View
@@ -243,7 +154,6 @@ export default function RecordsScreen() {
   );
 }
 
-// Look at how small this is now:
 const styles = StyleSheet.create({
   scrollContainer: {
     paddingHorizontal: commonTheme.space.lg,

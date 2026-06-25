@@ -87,7 +87,7 @@ function RootLayoutNav() {
 
       if (!role && !inOnboarding) {
         // fallback in cases of seriously malformed user data - this shouldn't be triggered
-        router.replace("/(onboarding)/StartOnboarding");
+        router.replace("/(onboarding)/individual");
         return;
       }
 
@@ -115,7 +115,6 @@ function RootLayoutNav() {
       }}
     >
       <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(onboarding)/StartOnboarding" />
       <Stack.Screen name="(onboarding)/individual" />
       <Stack.Screen name="(onboarding)/teen" />
       <Stack.Screen name="(tabs)" />

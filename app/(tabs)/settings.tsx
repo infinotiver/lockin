@@ -7,7 +7,7 @@ import {
   Platform,
 } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { styles } from "@/constants/settings.styles";
@@ -16,13 +16,26 @@ import { OptionsRow } from "@/components/ui/OptionsRow";
 import { OptionsGroup } from "@/components/ui/OptionsGroup";
 import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
 import { InfoModal } from "@/components/modals/InfoModal";
+import { ViewFamilyModal } from "@/components/modals/ViewFamilyModal";
+import type { Stake } from "@/types/stakes";
+
 export default function SettingsScreen() {
   const colors = useColors();
   const { user } = useUser();
-  const { signOut } = useAuth();
+  const { signOut, getToken } = useAuth();
+
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [showPermModal, setShowPermModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showFamilyModal, setShowFamilyModal] = useState(false);
+
+  const [familyName, setFamilyName] = useState<string>("");
+  const [loadingFamily, setLoadingFamily] = useState<boolean>(false);
+  const [familyLoadError, setFamilyLoadError] = useState(false);
+  // Real data state trackers
+  const [stakesCount, setStakesCount] = useState<number>(0);
+  const [completedCount, setCompletedCount] = useState<number>(0);
+
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
@@ -38,6 +51,72 @@ export default function SettingsScreen() {
       .filter(Boolean)
       .join("")
       .toUpperCase() || "?";
+
+  const loadSettingsContext = async () => {
+    const familyId = user?.publicMetadata?.familyId;
+    if (!familyId) {
+      setFamilyName("");
+      setFamilyLoadError(false);
+      return;
+    }
+    setLoadingFamily(true);
+    setFamilyLoadError(false);
+    try {
+      const token = await getToken();
+
+      // 1. Fetch Family Meta Context
+      const familyRes = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/families`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (familyRes.ok) {
+        const data = await familyRes.json();
+        setFamilyName(data.family?.name || "");
+      } else {
+        setFamilyName("");
+        setFamilyLoadError(true);
+      }
+
+      // 2. Fetch Quests Dataset to derive live user metrics
+      const questsRes = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/quests`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (questsRes.ok) {
+        const body = await questsRes.json();
+        const rawQuests: any[] = body.quests || [];
+
+        // Active stakes: Quests currently running on the board
+        const activeStakes = rawQuests.filter(
+          (q) => q.status === "available" || q.status === "active",
+        );
+
+        // Completed stakes: Finalized, paid out, or review-passed milestones
+        const finishedStakes = rawQuests.filter(
+          (q) => q.status === "completed" || q.status === "approved",
+        );
+
+        setStakesCount(activeStakes.length);
+        setCompletedCount(finishedStakes.length);
+      }
+    } catch (e) {
+      console.error("[SettingsScreen] Context aggregation failed:", e);
+    } finally {
+      setLoadingFamily(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSettingsContext();
+  }, [user?.publicMetadata?.familyId]);
 
   return (
     <SafeAreaView
@@ -93,16 +172,26 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Stats */}
+        {/* Stats Grid using real-time dataset boundaries */}
         <View style={styles.statsContainer}>
-          <StatCard value="2" label="Stakes" colors={colors} />
-          <StatCard value="5" label="Completed" colors={colors} />
+          <StatCard value={stakesCount} label="Stakes" colors={colors} />
+          <StatCard value={completedCount} label="Completed" colors={colors} />
           <StatCard value="1" label="Streak" colors={colors} />
         </View>
 
         {/* Family */}
         <OptionsGroup label="Family link">
-          <OptionsRow icon="heart" label="Family centre" onPress={() => {}} />
+          <OptionsRow
+            icon="heart"
+            label={
+              loadingFamily
+                ? "Loading family..."
+                : familyLoadError
+                  ? "Family unavailable"
+                  : familyName || "No Family Attached"
+            }
+            onPress={() => setShowFamilyModal(true)}
+          />
           <OptionsRow
             icon="user-plus"
             label="Invite member"
@@ -135,6 +224,7 @@ export default function SettingsScreen() {
             isDestructive
           />
         </OptionsGroup>
+
         {showPermModal && (
           <ScreenTimePermissionModal
             visible={showPermModal}
@@ -144,6 +234,10 @@ export default function SettingsScreen() {
         <InfoModal
           visible={showInfoModal}
           onClose={() => setShowInfoModal(false)}
+        />
+        <ViewFamilyModal
+          visible={showFamilyModal}
+          onClose={() => setShowFamilyModal(false)}
         />
       </ScrollView>
     </SafeAreaView>

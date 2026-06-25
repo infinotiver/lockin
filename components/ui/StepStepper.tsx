@@ -5,10 +5,10 @@ import commonTheme from "@/constants/theme";
 type StepStepperProps = {
   total: number;
   current: number;
-  onSkip?: () => void;
-  skipLabel?: string;
-  loading?: boolean;
-  hideSkipOnLast?: boolean;
+  onSkip?: () => void; // Optional
+  skipLabel?: string; // Optional
+  loading?: boolean; // Optional
+  hideSkipOnLast?: boolean; // Optional
 };
 
 export function StepStepper({
@@ -22,8 +22,11 @@ export function StepStepper({
   const colors = useColors();
   const isLast = current === total - 1;
 
+  const shouldShowSkip = onSkip && !(hideSkipOnLast && isLast);
+
   return (
     <View style={[styles.row, { borderTopColor: colors.border }]}>
+      {/* Step Tracker Dots */}
       <View style={styles.dots}>
         {Array.from({ length: total }).map((_, i) => (
           <View
@@ -32,14 +35,15 @@ export function StepStepper({
               styles.dot,
               {
                 width: i === current ? 20 : 8,
-                backgroundColor: i === current ? colors.accent : colors.border,
+                backgroundColor:
+                  i === current ? colors.accent : colors.surface3,
               },
             ]}
           />
         ))}
       </View>
 
-      {onSkip && !(hideSkipOnLast && isLast) && (
+      {shouldShowSkip ? (
         <Pressable
           onPress={loading ? undefined : onSkip}
           disabled={loading}
@@ -47,13 +51,18 @@ export function StepStepper({
         >
           <Text
             style={[
-              styles.skipText,
+              styles.actionText,
               { color: loading ? colors.border : colors.textMuted },
             ]}
           >
             {skipLabel}
           </Text>
         </Pressable>
+      ) : (
+        /* Fallback label when field/step is required to maintain UI grid balance */
+        <Text style={[styles.actionText, { color: colors.textMuted }]}>
+          {current + 1} / {total}
+        </Text>
       )}
     </View>
   );
@@ -75,7 +84,7 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  skipText: {
+  actionText: {
     fontSize: 14,
     fontFamily: commonTheme.font.body,
   },
