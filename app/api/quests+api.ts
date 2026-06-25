@@ -62,6 +62,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "Failed to fetch quests" }, { status: 500 });
   }
 
+  // parse description
   const serializedQuests = (quests || []).map((q) => ({
     ...q,
     description: parseDescription(q.description),
@@ -111,19 +112,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  // =================================================================
-  // 🚨 CHECKPOINT 1: THE RAW ARRIVAL
-  // =================================================================
-  console.log("\n--------------------------------------------------");
-  console.log("📍 [CHECKPOINT 1] RAW BODY RECEIVED FROM EXPO:");
-  console.log(JSON.stringify(body, null, 2));
-  console.log("-> Value of body.description:", body.description);
-  console.log(
-    "-> JavaScript typeof body.description:",
-    typeof body.description,
-  );
-  console.log("--------------------------------------------------\n");
-
   const { title, description, reward, type, expires_at } = body;
 
   if (!title?.trim()) {
@@ -149,29 +137,17 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid quest type" }, { status: 400 });
   }
 
-  // =================================================================
-  // 🚨 CHECKPOINT 2: THE PARSER
-  // =================================================================
   let finalDescription = null;
-
-  console.log("📍 [CHECKPOINT 2] EVALUATING DESCRIPTION PARSER:");
-  console.log(`-> Evaluates as truthy? : ${Boolean(description)}`);
 
   if (description) {
     if (typeof description === "object") {
-      console.log("-> Branch caught: 'object'. Running JSON.stringify()");
       finalDescription = JSON.stringify(description);
     } else {
-      console.log("-> Branch caught: 'string'. Running .trim() || null");
       finalDescription = description.trim() || null;
     }
   }
 
-  console.log(`-> Resulting finalDescription variable:`, finalDescription);
-  console.log(`-> Resulting typeof:`, typeof finalDescription);
-  console.log("--------------------------------------------------\n");
-
-  // Pack the payload into an explicit object so we can log it before sending
+  // Pack the payload into an explicit object
   const dbInsertPayload = {
     family_id: familyId,
     title: title.trim(),
@@ -182,13 +158,6 @@ export async function POST(request: Request) {
     expires_at: expires_at ?? null,
   };
 
-  // =================================================================
-  // 🚨 CHECKPOINT 3: THE SUPABASE HANDOFF
-  // =================================================================
-  console.log("📍 [CHECKPOINT 3] EXACT PAYLOAD HANDED TO SUPABASE:");
-  console.log(JSON.stringify(dbInsertPayload, null, 2));
-  console.log("--------------------------------------------------\n");
-
   const { data: quest, error } = await supabase
     .from("quests")
     .insert(dbInsertPayload)
@@ -196,7 +165,6 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    console.error("SUPABASE INSERT ERROR:", error);
     return Response.json({ error: "Failed to create quest" }, { status: 500 });
   }
 
