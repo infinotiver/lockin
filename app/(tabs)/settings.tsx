@@ -31,7 +31,7 @@ export default function SettingsScreen() {
 
   const [familyName, setFamilyName] = useState<string>("");
   const [loadingFamily, setLoadingFamily] = useState<boolean>(false);
-
+  const [familyLoadError, setFamilyLoadError] = useState(false);
   // Real data state trackers
   const [stakesCount, setStakesCount] = useState<number>(0);
   const [completedCount, setCompletedCount] = useState<number>(0);
@@ -54,9 +54,13 @@ export default function SettingsScreen() {
 
   const loadSettingsContext = async () => {
     const familyId = user?.publicMetadata?.familyId;
-    if (!familyId) return;
-
+    if (!familyId) {
+      setFamilyName("");
+      setFamilyLoadError(false);
+      return;
+    }
     setLoadingFamily(true);
+    setFamilyLoadError(false);
     try {
       const token = await getToken();
 
@@ -72,6 +76,9 @@ export default function SettingsScreen() {
       if (familyRes.ok) {
         const data = await familyRes.json();
         setFamilyName(data.family?.name || "");
+      } else {
+        setFamilyName("");
+        setFamilyLoadError(true);
       }
 
       // 2. Fetch Quests Dataset to derive live user metrics
@@ -177,8 +184,11 @@ export default function SettingsScreen() {
           <OptionsRow
             icon="heart"
             label={
-              familyName ||
-              (loadingFamily ? "Loading..." : "No Family Attached")
+              loadingFamily
+                ? "Loading family..."
+                : familyLoadError
+                  ? "Family unavailable"
+                  : familyName || "No Family Attached"
             }
             onPress={() => setShowFamilyModal(true)}
           />
