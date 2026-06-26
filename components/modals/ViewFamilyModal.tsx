@@ -76,10 +76,7 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
       setFamily(body.family);
       setMembers(body.members || []);
     } catch (e) {
-      console.error(
-        "[ViewFamilyModal] Error captured during fetch pipeline:",
-        e,
-      );
+      console.error(e);
       setError("Network or server failure connecting to household registry.");
     } finally {
       setLoading(false);
@@ -141,7 +138,7 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
                     <Text style={{ color: colors.text }}>
                       {isCurrentUser
                         ? `${user?.firstName || "You (Active Context)"}`
-                        : `User (${member.clerk_id.substring(0, 12)}...)`}
+                        : `Unknown User`}
                     </Text>
                     <Text style={{ color: colors.textMuted }}>
                       {member.role}
