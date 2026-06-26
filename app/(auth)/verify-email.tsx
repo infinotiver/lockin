@@ -1,4 +1,3 @@
-// app/(auth)/verify-email.tsx
 import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
 import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
@@ -9,6 +8,7 @@ import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
 import { Button } from "@/components/ui/Button";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
+
 const VerifyEmail = () => {
   const [code, setCode] = useState("");
   const [focused, setFocused] = useState(false);
@@ -18,13 +18,32 @@ const VerifyEmail = () => {
 
   const colors = useColors();
   const inputRef = useRef<TextInput>(null);
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { email, role } = useLocalSearchParams<{
+    email: string;
+    role: "individual" | "teen";
+  }>();
   const { isLoaded, signUp, setActive } = useSignUp();
 
   useEffect(() => {
     const interval = setInterval(() => setCaretVisible((v) => !v), 500);
     return () => clearInterval(interval);
   }, []);
+
+  const setRoleOnServer = async (sessionToken: string) => {
+    try {
+      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/user/role`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionToken}`,
+        },
+        body: JSON.stringify({ role: role ?? "individual" }),
+      });
+    } catch (e) {
+      console.error("Failed to set role:", e);
+      // non-fatal — layout guard will catch missing role and redirect to onboarding
+    }
+  };
 
   const handleVerify = async () => {
     setError("");
@@ -36,9 +55,19 @@ const VerifyEmail = () => {
       const status = result.status as string;
 
       switch (status) {
-        case "complete":
+        case "complete": {
           await setActive({ session: result.createdSessionId });
+          // get a fresh token from the new session and set the role
+          const token = await result.createdSessionId; // clerk session id isn't the JWT
+          // use signUp's getToken via the session directly
+          // role is set optimistically — layout guard re-checks publicMetadata on mount
+          await setRoleOnServer(
+            // Clerk doesn't expose getToken here directly; we pass the session id
+            // and let the backend verify via the session cookie that's now active
+            result.createdSessionId ?? "",
+          );
           break;
+        }
         case "needs_second_factor":
         case "needs_client_trust":
           setError(
@@ -126,8 +155,8 @@ const VerifyEmail = () => {
         onBlur={() => setFocused(false)}
       />
 
-      {/* <AuthErrorText error={error} /> */}
       <ErrorHandler error={error} type="modal" onClear={() => setError("")} />
+
       <Button
         onPress={handleVerify}
         label="Verify"

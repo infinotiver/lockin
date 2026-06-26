@@ -1,7 +1,7 @@
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import "react-native-reanimated";
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/tokenCache";
@@ -23,6 +23,7 @@ import {
   PixelifySans_600SemiBold,
   PixelifySans_700Bold,
 } from "@expo-google-fonts/pixelify-sans";
+import { GoTrueClient } from "@supabase/supabase-js";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -64,12 +65,61 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, getToken } = useAuth();
   const { user } = useUser();
   const segments = useSegments();
   const router = useRouter();
   const colors = useColors();
 
+  const rolePromotionAttempted = useRef(false);
+
+  // Extract primitive values so React tracks actual data changes, not object references
+  const publicRole = user?.publicMetadata?.role as string | undefined;
+  const unsafeRole = user?.unsafeMetadata?.role as string | undefined;
+  const onboarded = user?.publicMetadata?.onboarded as boolean | undefined;
+
+  // 1. Decoupled Promotion Pipeline
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !user) return;
+
+    if (!publicRole && unsafeRole && !rolePromotionAttempted.current) {
+      rolePromotionAttempted.current = true;
+
+      const promoteRole = async () => {
+        try {
+          const token = await getToken();
+          if (!token) return;
+
+          const res = await fetch(
+            `${process.env.EXPO_PUBLIC_API_URL}/api/user/role`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ role: unsafeRole }),
+            },
+          );
+
+          if (res.ok) {
+            // Force Clerk to strictly pull the fresh JWT/Session claims
+            await user.reload();
+          }
+        } catch (e) {
+          console.error(
+            "[RootLayout] Role promotion synchronization failed:",
+            e,
+          );
+          rolePromotionAttempted.current = false; // Retry allowed on next mount if network dropped
+        }
+      };
+
+      promoteRole();
+    }
+  }, [isSignedIn, isLoaded, publicRole, unsafeRole, user]);
+
+  // 2. Strict Navigation Guard
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -82,28 +132,24 @@ function RootLayoutNav() {
     }
 
     if (isSignedIn) {
-      const role = user?.publicMetadata?.role as string | undefined;
-      const onboarded = user?.publicMetadata?.onboarded as boolean | undefined;
+      // If promotion is currently inflight, hold navigation boundary strictly
+      if (!publicRole) return;
 
-      if (!role && !inOnboarding) {
-        // fallback in cases of seriously malformed user data - this shouldn't be triggered
-        router.replace("/(onboarding)/individual");
-        return;
-      }
-
-      if (role && !onboarded && !inOnboarding) {
+      if (!onboarded && !inOnboarding) {
         router.replace(
-          role === "teen" ? "/(onboarding)/teen" : "/(onboarding)/individual",
+          publicRole === "teen"
+            ? "/(onboarding)/teen"
+            : "/(onboarding)/individual",
         );
         return;
       }
 
-      if (role && onboarded && (inAuthGroup || inOnboarding)) {
+      if (publicRole && onboarded && (inAuthGroup || inOnboarding)) {
         router.replace("/(tabs)");
         return;
       }
     }
-  }, [isSignedIn, isLoaded, segments, user]);
+  }, [isSignedIn, isLoaded, segments, publicRole, onboarded]); // <-- Bound strictly to primitive values
 
   return (
     <Stack
