@@ -10,61 +10,90 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { useState, useCallback } from "react";
 import { useColors } from "@/hooks/useColors";
-import { useAuth, useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "expo-router";
+import { useAuth } from "@clerk/clerk-expo";
+import { useFocusEffect, useRouter } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
-import type { Stake, StakeStatus } from "@/types/stakes";
+import type { Stake } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
 import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { mapStake } from "@/lib/mapStake";
-
-const tabBarHeight = 60;
+import { useStakeChecker } from "@/hooks/useStakeChecker";
+import { canCreateStake } from "@/lib/stakeChecker";
 
 type UITabKey = "active" | "pending" | "completed";
+
+const EMPTY_MESSAGES: Record<UITabKey, string> = {
+  active: "No active stakes right now.",
+  pending: "No stakes waiting for approval.",
+  completed: "Finish a goal to see it here.",
+};
 
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
-  const { user } = useUser();
+  const router = useRouter();
 
-  // 2. State now strictly accepts the UI keys
   const [activeTab, setActiveTab] = useState<UITabKey>("active");
   const [showCreate, setShowCreate] = useState(false);
-
   const [stakes, setStakes] = useState<Stake[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const fetchStakes = async () => {
+  // dialog state
+  const [blockDialog, setBlockDialog] = useState({
+    visible: false,
+    message: "",
+  });
+  const [warnDialog, setWarnDialog] = useState({ visible: false, message: "" });
+
+  const fetchStakes = useCallback(async () => {
     setLoading(true);
     try {
       const token = await getToken();
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!res.ok) return;
       const body = await res.json();
-
-      const mappedStakes: Stake[] = (body.quests || []).map((q: any) =>
-        mapStake(q),
-      );
-
-      setStakes(mappedStakes);
+      setStakes((body.quests || []).map((q: any) => mapStake(q)));
     } catch (e) {
-      console.error("[StakesScreen] Translation mapping failed:", e);
+      console.error("[StakesScreen] fetch failed:", e);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchStakes();
-    }, []),
+    }, [fetchStakes]),
   );
+
+  useStakeChecker({
+    stakes,
+    onComplete: (id) => {
+      console.log("stake complete:", id);
+      // TODO: PATCH /api/quests/[id] → completed
+      fetchStakes();
+    },
+    onFail: (id, message) => {
+      console.log("stake failed:", id, message);
+      // TODO: PATCH /api/quests/[id] → failed
+      setWarnDialog({
+        visible: true,
+        message: message ?? "You missed your goal.",
+      });
+      fetchStakes();
+    },
+    onWarn: (_id, message) => {
+      setWarnDialog({
+        visible: true,
+        message: message ?? "You've exceeded today's screen time limit.",
+      });
+    },
+  });
 
   const activeStakes = stakes.filter((s) => s.status === "active");
   const pendingStakes = stakes.filter((s) => s.status === "pending");
@@ -75,7 +104,6 @@ export default function StakesScreen() {
       s.status === "failed",
   );
 
-  // 3. Tab definitions now strictly adhere to TabItem<UITabKey>
   const tabs: TabItem<UITabKey>[] = [
     { key: "active", label: "Active", count: activeStakes.length || undefined },
     {
@@ -93,11 +121,16 @@ export default function StakesScreen() {
         ? pendingStakes
         : doneStakes;
 
-  // 4. Record indexed safely to the UI keys
-  const emptyMessages: Record<UITabKey, string> = {
-    active: "No active stakes right now.",
-    pending: "No stakes waiting for approval.",
-    completed: "Finish a goal to see it here.",
+  const handleFABPress = () => {
+    const { allowed, reason } = canCreateStake(stakes, "screen-time");
+    if (!allowed) {
+      setBlockDialog({
+        visible: true,
+        message: reason ?? "You already have an active stake.",
+      });
+      return;
+    }
+    setShowCreate(true);
   };
 
   return (
@@ -106,20 +139,17 @@ export default function StakesScreen() {
       edges={["top"]}
     >
       <View style={styles.header}>
-        <View style={commonTheme.layout.row}>
-          <Text
-            style={[
-              commonTheme.text.pageTitle,
-              { color: colors.text, fontFamily: commonTheme.font.bold },
-            ]}
-          >
-            Stakes
-          </Text>
-        </View>
-
+        <Text
+          style={[
+            commonTheme.text.pageTitle,
+            { color: colors.text, fontFamily: commonTheme.font.bold },
+          ]}
+        >
+          Stakes
+        </Text>
         <Pressable
           style={[styles.fab, { backgroundColor: colors.surface2 }]}
-          onPress={() => setShowCreate(true)}
+          onPress={handleFABPress}
         >
           <Feather name="plus" size={22} color={colors.text} />
         </Pressable>
@@ -136,7 +166,7 @@ export default function StakesScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.list,
-          { paddingBottom: tabBarHeight + commonTheme.space["2xl"] + 40 },
+          { paddingBottom: commonTheme.space["2xl"] },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -147,9 +177,9 @@ export default function StakesScreen() {
         ) : stakes.length === 0 ? (
           <GlobalEmptyState />
         ) : visibleStakes.length === 0 ? (
-          <View style={styles.inlineEmpty}>
-            <Text style={[styles.inlineEmptyText, { color: colors.text }]}>
-              {emptyMessages[activeTab]}
+          <View style={styles.center}>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+              {EMPTY_MESSAGES[activeTab]}
             </Text>
           </View>
         ) : (
@@ -157,7 +187,7 @@ export default function StakesScreen() {
             title=""
             data={visibleStakes}
             colors={colors}
-            emptyMessage={emptyMessages[activeTab]}
+            emptyMessage={EMPTY_MESSAGES[activeTab]}
           />
         )}
       </ScrollView>
@@ -166,6 +196,44 @@ export default function StakesScreen() {
         visible={showCreate}
         onClose={() => setShowCreate(false)}
         onCreated={fetchStakes}
+      />
+
+      <ConfirmDialog
+        visible={blockDialog.visible}
+        title="Can't create stake"
+        message={blockDialog.message}
+        primary={{
+          label: "Got it",
+          onPress: () => setBlockDialog({ visible: false, message: "" }),
+        }}
+        secondary={{
+          label: "View active",
+          variant: "ghost",
+          onPress: () => {
+            setActiveTab("active");
+            setBlockDialog({ visible: false, message: "" });
+          },
+        }}
+        onDismiss={() => setBlockDialog({ visible: false, message: "" })}
+      />
+
+      <ConfirmDialog
+        visible={warnDialog.visible}
+        title="Heads up"
+        message={warnDialog.message}
+        primary={{
+          label: "Dismiss",
+          onPress: () => setWarnDialog({ visible: false, message: "" }),
+        }}
+        secondary={{
+          label: "View records",
+          variant: "ghost",
+          onPress: () => {
+            setWarnDialog({ visible: false, message: "" });
+            router.push("/(tabs)/records");
+          },
+        }}
+        onDismiss={() => setWarnDialog({ visible: false, message: "" })}
       />
     </SafeAreaView>
   );
@@ -179,7 +247,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: commonTheme.space.lg,
     paddingTop: commonTheme.space.sm,
     paddingBottom: commonTheme.space.md,
-    gap: commonTheme.space.md,
   },
   fab: {
     width: 40,
@@ -196,17 +263,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: commonTheme.space.lg,
     gap: commonTheme.space.xl,
   },
-  inlineEmpty: {
-    paddingTop: commonTheme.space["2xl"],
-    alignItems: "center",
-  },
-  inlineEmptyText: {
-    fontSize: 14,
-    opacity: 0.4,
-    fontFamily: commonTheme.font.body,
-  },
   center: {
     paddingTop: commonTheme.space["2xl"],
     alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    opacity: 0.4,
+    fontFamily: commonTheme.font.body,
   },
 });

@@ -4,7 +4,7 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
   return withAndroidManifest(config, (config) => {
     const manifest = config.modResults.manifest;
 
-    // Add PACKAGE_USAGE_STATS permission
+    // add usage stats permission
     if (!manifest["uses-permission"]) {
       manifest["uses-permission"] = [];
     }
@@ -15,25 +15,22 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
 
     if (!hasPermission) {
       manifest["uses-permission"].push({
-        $: {
-          "android:name": "android.permission.PACKAGE_USAGE_STATS",
-          "tools:ignore": "ProtectedPermissions",
-        },
+        $: { "android:name": "android.permission.PACKAGE_USAGE_STATS" },
       });
     }
 
-    // Cast to any to bypass missing provider type
+    // patch the startup provider
     const application = manifest.application?.[0] as any;
     if (application) {
       if (!application.provider) application.provider = [];
 
-      // Find existing provider instead of just checking if it exists
+      // reuse the existing provider if present
       let provider = application.provider.find(
         (p: any) =>
           p.$["android:name"] === "androidx.startup.InitializationProvider",
       );
 
-      // If provider doesn't exist, create it
+      // add the provider if missing
       if (!provider) {
         provider = {
           $: {
@@ -47,7 +44,7 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
         application.provider.push(provider);
       }
 
-      // Ensure meta-data exists regardless of whether provider was just created or already existed
+      // keep workmanager init registered
       if (!provider["meta-data"]) provider["meta-data"] = [];
 
       const hasMetaData = provider["meta-data"].some(

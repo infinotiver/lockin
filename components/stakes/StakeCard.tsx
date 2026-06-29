@@ -3,7 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { Stake, StakeStatus } from "@/types/stakes";
-
+import { Button } from "../ui/Button";
 type GlyphName = keyof typeof Feather.glyphMap;
 type StatusUI = { text: string; icon: GlyphName; color: string };
 const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
@@ -86,15 +86,23 @@ export default function StakeCard({ stake }: { stake: Stake }) {
                 commonTheme.text.sectionTitle,
                 {
                   color: colors.textMuted,
-                  marginVertical: commonTheme.space.sm,
                 },
               ]}
             >
               <Text style={{ color: colors.accent }}>
-                {formatDuration(stake.description.limitMs)}
+                {formatDuration(stake.rule?.limitMs || 0)}
               </Text>{" "}
-              max {stake.description.scope}/day till{" "}
-              <Text style={{ color: colors.accent }}> {dueDate}</Text>
+              max {stake.rule?.scope}/day till{" "}
+              <View
+                style={{
+                  backgroundColor: colors.accent,
+                  paddingHorizontal: commonTheme.space.sm,
+                  paddingVertical: commonTheme.space.xs,
+                  borderRadius: commonTheme.rounded.xl,
+                }}
+              >
+                <Text style={{ color: colors.background }}>{dueDate}</Text>
+              </View>
             </Text>
           )}
         </View>
