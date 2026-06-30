@@ -5,10 +5,11 @@ import {
   StyleSheet,
   Pressable,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@clerk/clerk-expo";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -19,6 +20,7 @@ import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
 import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { mapStake } from "@/lib/mapStake";
 import { useStakeChecker } from "@/hooks/useStakeChecker";
 import { canCreateStake } from "@/lib/stakeChecker";
@@ -31,6 +33,9 @@ const EMPTY_MESSAGES: Record<UITabKey, string> = {
   completed: "Finish a goal to see it here.",
 };
 
+// key used to track if the platform warning has been shown this session
+const PLATFORM_WARN_KEY = "stakes_platform_warn_shown";
+
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
@@ -42,27 +47,45 @@ export default function StakesScreen() {
   const [showCreate, setShowCreate] = useState(false);
   const [stakes, setStakes] = useState<Stake[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState("");
 
   const fetchingRef = useRef(false);
   const finalizingRef = useRef(new Set<string>());
+  const platformWarnShown = useRef(false);
 
-  // dialog state
   const [blockDialog, setBlockDialog] = useState({
     visible: false,
     message: "",
   });
   const [warnDialog, setWarnDialog] = useState({ visible: false, message: "" });
+  const [infoDialog, setInfoDialog] = useState({
+    visible: false,
+    title: "",
+    message: "",
+  });
+
+  // show platform warning once per session on non-Android
+  useEffect(() => {
+    if (Platform.OS !== "android" && !platformWarnShown.current) {
+      platformWarnShown.current = true;
+      setInfoDialog({
+        visible: true,
+        title: "Android only",
+        message:
+          "Screen time tracking is only available on Android. Stakes will be visible but automatic verification won't run on this device.",
+      });
+    }
+  }, []);
 
   const fetchStakes = useCallback(async () => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
     setLoading(true);
+    setFetchError("");
 
     try {
       const token = await getTokenRef.current();
-      if (!token) {
-        throw new Error("Missing auth token.");
-      }
+      if (!token) throw new Error("Missing auth token.");
 
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -76,9 +99,7 @@ export default function StakesScreen() {
       const body = await res.json();
       setStakes((body.quests || []).map((q: any) => mapStake(q)));
     } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "Failed to fetch stakes.";
-      console.log(message);
+      setFetchError(e instanceof Error ? e.message : "Failed to fetch stakes.");
     } finally {
       fetchingRef.current = false;
       setLoading(false);
@@ -87,15 +108,13 @@ export default function StakesScreen() {
 
   const finalizeStake = useCallback(
     async (stakeId: string, status: "completed" | "failed") => {
-      const finalizeKey = `${stakeId}:${status}`;
-      if (finalizingRef.current.has(finalizeKey)) return;
-      finalizingRef.current.add(finalizeKey);
+      const key = `${stakeId}:${status}`;
+      if (finalizingRef.current.has(key)) return;
+      finalizingRef.current.add(key);
 
       try {
         const token = await getTokenRef.current();
-        if (!token) {
-          throw new Error("Missing auth token.");
-        }
+        if (!token) throw new Error("Missing auth token.");
 
         const res = await fetch(
           `${process.env.EXPO_PUBLIC_API_URL}/api/quests/${stakeId}`,
@@ -108,19 +127,29 @@ export default function StakesScreen() {
             body: JSON.stringify({ status }),
           },
         );
-        const body = await res.json().catch(() => null);
 
         if (!res.ok) {
-          throw new Error(body?.error ?? "Failed to update stake status.");
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? "Failed to update stake.");
         }
 
         await fetchStakes();
+
+        if (status === "completed") {
+          setInfoDialog({
+            visible: true,
+            title: "Stake complete 🎉",
+            message: "You hit your goal. The reward has been marked as yours.",
+          });
+        }
       } catch (e) {
-        const message =
-          e instanceof Error ? e.message : "Failed to update stake status.";
-        console.log(message);
+        setWarnDialog({
+          visible: true,
+          message:
+            e instanceof Error ? e.message : "Failed to update stake status.",
+        });
       } finally {
-        finalizingRef.current.delete(finalizeKey);
+        finalizingRef.current.delete(key);
       }
     },
     [fetchStakes],
@@ -138,16 +167,23 @@ export default function StakesScreen() {
       void finalizeStake(id, "completed");
     },
     onFail: (id, message) => {
-      if (message?.toLowerCase().includes("usage access permission")) {
-        setWarnDialog({
+      const isPermission = message?.toLowerCase().includes("usage access");
+      if (isPermission) {
+        setInfoDialog({
           visible: true,
-          message: "Usage access is required to check this stake.",
+          title: "Permission required",
+          message:
+            "Usage access was revoked. Re-enable it in Settings → Permissions to keep your stake active.",
         });
         return;
       }
-
       void finalizeStake(id, "failed");
-      console.log("Stake failed", message ?? "You missed your goal.");
+      setWarnDialog({
+        visible: true,
+        message:
+          message ??
+          "You missed your goal. The stake has been marked as failed.",
+      });
     },
     onWarn: (_id, message) => {
       setWarnDialog({
@@ -155,11 +191,21 @@ export default function StakesScreen() {
         message: message ?? "You've exceeded today's screen time limit.",
       });
     },
-    onUnsupported: (message) => {
-      console.log("Screen time unavailable", message);
+    onUnsupported: (_message) => {
+      // already handled by the one-time platform warning on mount
     },
     onError: (message) => {
-      console.log("Stake checker error", message);
+      // only surface checker errors if there are active screen-time stakes
+      const hasActiveScreenTime = stakes.some(
+        (s) => s.status === "active" && s.type === "screen-time",
+      );
+      if (hasActiveScreenTime) {
+        setWarnDialog({
+          visible: true,
+          message:
+            message ?? "Could not run stake check. Will retry next time.",
+        });
+      }
     },
   });
 
@@ -223,6 +269,17 @@ export default function StakesScreen() {
         </Pressable>
       </View>
 
+      {/* Fetch error — inline, dismissable */}
+      {!!fetchError && (
+        <View style={styles.errorWrapper}>
+          <ErrorHandler
+            error={fetchError}
+            type="text"
+            onClear={() => setFetchError("")}
+          />
+        </View>
+      )}
+
       <View style={styles.tabsWrapper}>
         <SplitTabs
           tabs={tabs}
@@ -266,9 +323,10 @@ export default function StakesScreen() {
         onCreated={fetchStakes}
       />
 
+      {/* Block: can't create another stake */}
       <ConfirmDialog
         visible={blockDialog.visible}
-        title="Can't create stake"
+        title="One stake at a time"
         message={blockDialog.message}
         primary={{
           label: "Got it",
@@ -285,6 +343,7 @@ export default function StakesScreen() {
         onDismiss={() => setBlockDialog({ visible: false, message: "" })}
       />
 
+      {/* Warn: over limit or stake failed */}
       <ConfirmDialog
         visible={warnDialog.visible}
         title="Heads up"
@@ -302,6 +361,29 @@ export default function StakesScreen() {
           },
         }}
         onDismiss={() => setWarnDialog({ visible: false, message: "" })}
+      />
+
+      {/* Info: platform notice, completion, permission */}
+      <ConfirmDialog
+        visible={infoDialog.visible}
+        title={infoDialog.title}
+        message={infoDialog.message}
+        primary={{
+          label: "Got it",
+          onPress: () =>
+            setInfoDialog({ visible: false, title: "", message: "" }),
+        }}
+        secondary={{
+          label: "Settings",
+          variant: "ghost",
+          onPress: () => {
+            setInfoDialog({ visible: false, title: "", message: "" });
+            router.push("/(tabs)/settings");
+          },
+        }}
+        onDismiss={() =>
+          setInfoDialog({ visible: false, title: "", message: "" })
+        }
       />
     </SafeAreaView>
   );
@@ -322,6 +404,10 @@ const styles = StyleSheet.create({
     borderRadius: commonTheme.rounded.full,
     justifyContent: "center",
     alignItems: "center",
+  },
+  errorWrapper: {
+    paddingHorizontal: commonTheme.space.lg,
+    paddingBottom: commonTheme.space.sm,
   },
   tabsWrapper: {
     paddingHorizontal: commonTheme.space.lg,
