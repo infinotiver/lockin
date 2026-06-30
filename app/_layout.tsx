@@ -165,7 +165,6 @@ function RootLayoutNav() {
       <Stack.Screen name="(onboarding)/teen" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="+not-found" />
-      <Stack.Screen name="share-code" options={{ presentation: "modal" }} />
     </Stack>
   );
 }
