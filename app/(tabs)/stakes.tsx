@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@clerk/clerk-expo";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -35,11 +35,16 @@ export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
   const router = useRouter();
+  const getTokenRef = useRef(getToken);
+  getTokenRef.current = getToken;
 
   const [activeTab, setActiveTab] = useState<UITabKey>("active");
   const [showCreate, setShowCreate] = useState(false);
   const [stakes, setStakes] = useState<Stake[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const fetchingRef = useRef(false);
+  const finalizingRef = useRef(new Set<string>());
 
   // dialog state
   const [blockDialog, setBlockDialog] = useState({
@@ -49,49 +54,112 @@ export default function StakesScreen() {
   const [warnDialog, setWarnDialog] = useState({ visible: false, message: "" });
 
   const fetchStakes = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     setLoading(true);
+
     try {
-      const token = await getToken();
+      const token = await getTokenRef.current();
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) return;
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to fetch stakes.");
+      }
+
       const body = await res.json();
       setStakes((body.quests || []).map((q: any) => mapStake(q)));
     } catch (e) {
-      console.error("[StakesScreen] fetch failed:", e);
+      const message =
+        e instanceof Error ? e.message : "Failed to fetch stakes.";
+      console.log(message);
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
   }, []);
 
+  const finalizeStake = useCallback(
+    async (stakeId: string, status: "completed" | "failed") => {
+      const finalizeKey = `${stakeId}:${status}`;
+      if (finalizingRef.current.has(finalizeKey)) return;
+      finalizingRef.current.add(finalizeKey);
+
+      try {
+        const token = await getTokenRef.current();
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
+
+        const res = await fetch(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/quests/${stakeId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ status }),
+          },
+        );
+        const body = await res.json().catch(() => null);
+
+        if (!res.ok) {
+          throw new Error(body?.error ?? "Failed to update stake status.");
+        }
+
+        await fetchStakes();
+      } catch (e) {
+        const message =
+          e instanceof Error ? e.message : "Failed to update stake status.";
+        console.log(message);
+      } finally {
+        finalizingRef.current.delete(finalizeKey);
+      }
+    },
+    [fetchStakes],
+  );
+
   useFocusEffect(
     useCallback(() => {
-      fetchStakes();
+      void fetchStakes();
     }, [fetchStakes]),
   );
 
   useStakeChecker({
     stakes,
     onComplete: (id) => {
-      console.log("stake complete:", id);
-      // TODO: PATCH /api/quests/[id] → completed
-      fetchStakes();
+      void finalizeStake(id, "completed");
     },
     onFail: (id, message) => {
-      console.log("stake failed:", id, message);
-      // TODO: PATCH /api/quests/[id] → failed
-      setWarnDialog({
-        visible: true,
-        message: message ?? "You missed your goal.",
-      });
-      fetchStakes();
+      if (message?.toLowerCase().includes("usage access permission")) {
+        setWarnDialog({
+          visible: true,
+          message: "Usage access is required to check this stake.",
+        });
+        return;
+      }
+
+      void finalizeStake(id, "failed");
+      console.log("Stake failed", message ?? "You missed your goal.");
     },
     onWarn: (_id, message) => {
       setWarnDialog({
         visible: true,
         message: message ?? "You've exceeded today's screen time limit.",
       });
+    },
+    onUnsupported: (message) => {
+      console.log("Screen time unavailable", message);
+    },
+    onError: (message) => {
+      console.log("Stake checker error", message);
     },
   });
 

@@ -15,6 +15,7 @@ import { BaseModal } from "@/components/ui/BaseModal";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { QuestType } from "@/types/stakes";
+import { runStakeChecks } from "@/lib/stakeChecker";
 
 type ScreenTimeRule = {
   type: "screen_time_limit";
@@ -215,6 +216,7 @@ export function CreateStakeModal({
       }
 
       onCreated?.();
+
       onClose();
     } catch (e) {
       console.error(e);

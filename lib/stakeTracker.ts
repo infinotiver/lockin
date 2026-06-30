@@ -87,11 +87,16 @@ export async function allDaysPassed(
   const end = new Date(expiresAt);
   const expectedDates: string[] = [];
 
-  const d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const cursor = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate(),
+  );
   const endKey = localDateKey(end);
-  while (localDateKey(d) <= endKey) {
-    expectedDates.push(localDateKey(d));
-    d.setDate(d.getDate() + 1);
+
+  while (localDateKey(cursor) <= endKey) {
+    expectedDates.push(localDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
   }
 
   const { data, error } = await supabase
@@ -105,7 +110,6 @@ export async function allDaysPassed(
   // every day must exist and stay under limit
   return expectedDates.every((date) => {
     const row = data.find((r) => r.date === date);
-    if (!row) return false;
-    return dayPassed(row as DayRecord, limitMs);
+    return !!row && row.total_ms <= limitMs;
   });
 }
