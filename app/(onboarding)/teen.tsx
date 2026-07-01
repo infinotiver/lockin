@@ -123,7 +123,7 @@ export default function TeenOnboarding() {
               }}
               autoCapitalize="characters"
               autoCorrect={false}
-              maxLength={10}
+              maxLength={6}
             />
             {!!error && (
               <Text style={[styles.errorText, { color: colors.destructive }]}>

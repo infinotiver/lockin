@@ -3,13 +3,13 @@ import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { useLocalSearchParams } from "expo-router";
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignUp, useAuth } from "@clerk/clerk-expo";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
 import { Button } from "@/components/ui/Button";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
 
-const VerifyEmail = () => {
+export default function VerifyEmail() {
   const [code, setCode] = useState("");
   const [focused, setFocused] = useState(false);
   const [caretVisible, setCaretVisible] = useState(false);
@@ -18,81 +18,64 @@ const VerifyEmail = () => {
 
   const colors = useColors();
   const inputRef = useRef<TextInput>(null);
+
   const { email, role } = useLocalSearchParams<{
     email: string;
     role: "individual" | "teen";
   }>();
+
   const { isLoaded, signUp, setActive } = useSignUp();
+  const { getToken } = useAuth();
 
   useEffect(() => {
-    const interval = setInterval(() => setCaretVisible((v) => !v), 500);
+    const interval = setInterval(() => {
+      setCaretVisible((v) => !v);
+    }, 500);
+
     return () => clearInterval(interval);
   }, []);
 
-  const setRoleOnServer = async (sessionToken: string) => {
-    try {
-      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/user/role`, {
+  const setRoleOnServer = async () => {
+    const token = await getToken();
+    if (!token) throw new Error("Missing auth token");
+
+    const res = await fetch(
+      `${process.env.EXPO_PUBLIC_API_URL}/api/user/role`,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ role: role ?? "individual" }),
-      });
-    } catch (e) {
-      console.error("Failed to set role:", e);
-      // non-fatal — layout guard will catch missing role and redirect to onboarding
+      },
+    );
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error || `Role sync failed (${res.status})`);
     }
   };
 
   const handleVerify = async () => {
     setError("");
     if (!isLoaded) return;
+
     setLoading(true);
 
     try {
       const result = await signUp.attemptEmailAddressVerification({ code });
-      const status = result.status as string;
 
-      switch (status) {
-        case "complete": {
-          await setActive({ session: result.createdSessionId });
-          // get a fresh token from the new session and set the role
-          const token = await result.createdSessionId; // clerk session id isn't the JWT
-          // use signUp's getToken via the session directly
-          // role is set optimistically — layout guard re-checks publicMetadata on mount
-          await setRoleOnServer(
-            // Clerk doesn't expose getToken here directly; we pass the session id
-            // and let the backend verify via the session cookie that's now active
-            result.createdSessionId ?? "",
-          );
-          break;
-        }
-        case "needs_second_factor":
-        case "needs_client_trust":
-          setError(
-            "Multi-factor authentication is required but not yet supported.",
-          );
-          break;
-        case "needs_new_password":
-          setError("Password reset required. Please contact support.");
-          break;
-        case "needs_identifier":
-        case "needs_first_factor":
-          setError("Additional verification required. Please try again.");
-          break;
-        default:
-          setError(
-            `Verification incomplete (${status ?? "unknown"}). Please try again.`,
-          );
-          break;
+      if (result.status !== "complete") {
+        setError(`Verification incomplete (${result.status}).`);
+        return;
       }
+
+      await setActive({ session: result.createdSessionId });
+
+      await setRoleOnServer();
     } catch (e: any) {
-      setError(
-        e.errors?.[0]?.longMessage ||
-          e.errors?.[0]?.message ||
-          "Something went wrong.",
-      );
+      setError(e.errors?.[0]?.message || e.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -102,13 +85,7 @@ const VerifyEmail = () => {
     <AuthScreenWrapper>
       <AuthTitle>Check your email</AuthTitle>
 
-      <Text
-        style={[
-          commonTheme.text.body,
-          styles.subtitle,
-          { color: colors.textMuted },
-        ]}
-      >
+      <Text style={[styles.subtitle, { color: colors.textMuted }]}>
         We sent a code to{" "}
         <Text style={{ color: colors.text, fontFamily: commonTheme.font.bold }}>
           {email}
@@ -119,6 +96,7 @@ const VerifyEmail = () => {
         <View style={styles.codeRow}>
           {[0, 1, 2, 3, 4, 5].map((i) => {
             const isActive = focused && i === code.length;
+
             return (
               <View
                 key={i}
@@ -174,7 +152,7 @@ const VerifyEmail = () => {
       </Text>
     </AuthScreenWrapper>
   );
-};
+}
 
 const styles = StyleSheet.create({
   subtitle: {
@@ -215,5 +193,3 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
-
-export default VerifyEmail;

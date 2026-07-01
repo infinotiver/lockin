@@ -86,8 +86,11 @@ function RootLayoutNav() {
       rolePromotionAttempted.current = true;
 
       const promoteRole = async () => {
+        let success = false;
+
         try {
           const token = await getToken();
+
           if (!token) return;
 
           const res = await fetch(
@@ -102,16 +105,19 @@ function RootLayoutNav() {
             },
           );
 
-          if (res.ok) {
-            // Force Clerk to strictly pull the fresh JWT/Session claims
-            await user.reload();
-          }
+          if (!res.ok) return;
+
+          await user.reload();
+          success = true;
         } catch (e) {
           console.error(
             "[RootLayout] Role promotion synchronization failed:",
             e,
           );
-          rolePromotionAttempted.current = false; // Retry allowed on next mount if network dropped
+        } finally {
+          if (!success) {
+            rolePromotionAttempted.current = false;
+          }
         }
       };
 

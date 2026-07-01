@@ -119,6 +119,9 @@ const SignUp = () => {
             <Pressable
               key={r.value}
               onPress={() => setRole(r.value)}
+              accessibilityRole={"radio"}
+              accessibilityState={{ selected: isSelected }}
+              accessibilityLabel={`${r.label}. ${r.description}`}
               style={[
                 styles.roleCard,
                 {

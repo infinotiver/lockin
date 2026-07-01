@@ -180,7 +180,8 @@ export default function SettingsScreen() {
         <View style={styles.statsContainer}>
           <StatCard value={stakesCount} label="Stakes" colors={colors} />
           <StatCard value={completedCount} label="Completed" colors={colors} />
-          <StatCard value="1" label="Streak" colors={colors} />
+          <StatCard value="1" label="Streak" colors={colors} /> // TODO: fetch
+          real streak data
         </View>
 
         {/* Family Options */}

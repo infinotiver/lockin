@@ -7,15 +7,7 @@ import {
   today,
   localDateKey,
 } from "@/lib/stakeTracker";
-import type { Stake } from "@/types/stakes";
-
-export type CheckAction =
-  | "pass"
-  | "warn"
-  | "complete"
-  | "fail"
-  | "skip"
-  | "unsupported";
+import type { Stake, CheckAction } from "@/types/stakes";
 
 export type CheckResult = {
   stakeId: string;

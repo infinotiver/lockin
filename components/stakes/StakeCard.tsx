@@ -81,18 +81,28 @@ export default function StakeCard({ stake }: { stake: Stake }) {
             {stake.title}
           </Text>
           {isScreenTimeRule && (
-            <Text
+            <View
               style={[
-                commonTheme.text.sectionTitle,
+                commonTheme.layout.row,
                 {
-                  color: colors.textMuted,
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: commonTheme.space.xs,
                 },
               ]}
             >
-              <Text style={{ color: colors.accent }}>
-                {formatDuration(stake.rule?.limitMs || 0)}
-              </Text>{" "}
-              max {stake.rule?.scope}/day till{" "}
+              <Text
+                style={[
+                  commonTheme.text.sectionTitle,
+                  { color: colors.textMuted },
+                ]}
+              >
+                <Text style={{ color: colors.accent }}>
+                  {formatDuration(stake.rule?.limitMs || 0)}
+                </Text>{" "}
+                max {stake.rule?.scope}/day till
+              </Text>
+
               <View
                 style={{
                   backgroundColor: colors.accent,
@@ -103,7 +113,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
               >
                 <Text style={{ color: colors.background }}>{dueDate}</Text>
               </View>
-            </Text>
+            </View>
           )}
         </View>
 

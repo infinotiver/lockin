@@ -138,8 +138,9 @@ export default function StakesScreen() {
         if (status === "completed") {
           setInfoDialog({
             visible: true,
-            title: "Stake complete 🎉",
-            message: "You hit your goal. The reward has been marked as yours.",
+            title: "Stake complete",
+            message:
+              "You hit your goal. The reward has been marked as yours (WIP).",
           });
         }
       } catch (e) {
