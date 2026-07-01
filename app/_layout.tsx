@@ -23,7 +23,6 @@ import {
   PixelifySans_600SemiBold,
   PixelifySans_700Bold,
 } from "@expo-google-fonts/pixelify-sans";
-import { GoTrueClient } from "@supabase/supabase-js";
 
 export { ErrorBoundary } from "expo-router";
 

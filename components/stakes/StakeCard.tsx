@@ -3,7 +3,7 @@ import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { Stake, StakeStatus } from "@/types/stakes";
-import { Button } from "../ui/Button";
+
 type GlyphName = keyof typeof Feather.glyphMap;
 type StatusUI = { text: string; icon: GlyphName; color: string };
 const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
@@ -80,7 +80,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           >
             {stake.title}
           </Text>
-          {isScreenTimeRule && (
+          {(isScreenTimeRule || stake.rule?.type === "screen_time_limit") && (
             <View
               style={[
                 commonTheme.layout.row,

@@ -15,7 +15,7 @@ export type QuestType =
   | "photo-verify" // planned
   | "health" // planned
   | "peer-verify" // planned
-  | "integration"; // planed
+  | "integration"; // planned
 
 // per day check actions on each stake
 export type CheckAction =

@@ -33,9 +33,6 @@ const EMPTY_MESSAGES: Record<UITabKey, string> = {
   completed: "Finish a goal to see it here.",
 };
 
-// key used to track if the platform warning has been shown this session
-const PLATFORM_WARN_KEY = "stakes_platform_warn_shown";
-
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();

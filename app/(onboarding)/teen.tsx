@@ -36,7 +36,10 @@ export default function TeenOnboarding() {
 
     try {
       const token = await getToken();
-
+      if (!token) {
+        setError("Authentication expired. Please sign in again.");
+        return;
+      }
       const joinRes = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/families/join`,
         {
@@ -120,7 +123,7 @@ export default function TeenOnboarding() {
           {/* Invite Code Input Gateway */}
           <View style={styles.inputGroup}>
             <FocusedInput
-              placeholder="ENTER 6-DIGIT CODE"
+              placeholder="Enter family code"
               value={inviteCode}
               onChangeText={(text) => {
                 setInviteCode(text.toUpperCase());
