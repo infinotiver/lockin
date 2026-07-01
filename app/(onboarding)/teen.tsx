@@ -50,11 +50,16 @@ export default function TeenOnboarding() {
       );
 
       const joinBody = await joinRes.json();
-
       if (!joinRes.ok) {
-        setError(joinBody?.error ?? "Failed to verify invite code.");
-        setLoading(false);
-        return;
+        const msg = joinBody?.error ?? "";
+        // TODO: this is a quick fix, better option is to update backend API
+        // treat duplicate membership as success
+        if (msg.toLowerCase().includes("already") || joinRes.status === 409) {
+          // continue as success path
+        } else {
+          setError(msg || "Failed to verify invite code.");
+          return;
+        }
       }
 
       const resolvedFamilyId = joinBody.family_id;

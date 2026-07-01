@@ -96,7 +96,7 @@ export function useStakeChecker({
       }
 
       for (const result of checkResults) {
-        const terminalKey = `${result.stakeId}:${result.action}`;
+        const terminalKey = `${result.stakeId}:${result.action}:${result.message ?? ""}`;
 
         switch (result.action) {
           case "complete":
