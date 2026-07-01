@@ -66,3 +66,7 @@ try {
 <ErrorHandler error={error} type="modal" onClear={() => setError("")} />
 
 ```
+
+___
+
+*Note*: Quests/Stakes are used interchangeably in code and they refer to one and the same thing. The term "Stake" is used mostly in UI while "Quest" is used in code.

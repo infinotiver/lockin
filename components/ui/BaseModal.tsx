@@ -47,7 +47,7 @@ export const BaseModal = ({
 
             <View style={{ paddingTop: commonTheme.space.md }}>
               <Button variant="secondary" onPress={onClose}>
-                <Text style={{ color: colors.primary }}>Close</Text>
+                <Text style={{ color: colors.onSecondary }}>Close</Text>
               </Button>
             </View>
           </View>

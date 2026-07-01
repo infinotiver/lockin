@@ -1,22 +1,26 @@
 // components/share/ShareCodeModal.tsx
-import { View, Text, Pressable, Share, Platform } from "react-native";
+
+import { View, Text, Pressable } from "react-native";
 import { useState } from "react";
 import { useColors } from "@/hooks/useColors";
-import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
 import { Button } from "@/components/ui/Button";
 import { Ionicons } from "@expo/vector-icons";
 import commonTheme from "@/constants/theme";
 import * as Clipboard from "expo-clipboard";
 import { useShareOrCopy } from "@/hooks/useShareOrCopy";
+import { BaseModal } from "../ui/BaseModal";
+
 const { space, rounded, fontSize, font } = commonTheme;
 
 type Sender = "teen" | "parent";
 
-type Props = {
+interface ShareCodeModalProps {
   code?: string;
   sender?: Sender;
-};
+  visible: boolean;
+  onClose: () => void;
+}
 
 const COPY: Record<
   Sender,
@@ -24,92 +28,135 @@ const COPY: Record<
 > = {
   teen: {
     title: "Invite your parent",
-    subtitle:
-      "Share this code with your parent so they can set up your allowance on LockIn.",
-    shareMessage:
-      "Hey! I'm using LockIn to manage my allowance. Join as my parent using code",
+    subtitle: "Send this code to your parent to join your family.",
+    shareMessage: "Join my family on LockIn using this code:",
   },
   parent: {
     title: "Invite your teen",
-    subtitle:
-      "Share this code with your teen so they can join your family on LockIn.",
-    shareMessage: "Hey! I've set up LockIn for your allowance. Join using code",
+    subtitle: "Send this code to your teen to join your family.",
+    shareMessage: "Join my family on LockIn using this code:",
   },
 };
 
-const ShareCodeModal = ({ code = "ZZ-00000", sender = "parent" }: Props) => {
+const DEFAULT_COPY = {
+  title: "Invite family",
+  subtitle: "Use this code to invite people to your family.",
+  shareMessage: "Join my family on LockIn using this code:",
+};
+
+const ShareCodeModal = ({
+  code = "ZZ-00000",
+  sender,
+  visible,
+  onClose,
+}: ShareCodeModalProps) => {
   const colors = useColors();
   const [copied, setCopied] = useState(false);
-  const { title, subtitle, shareMessage } = COPY[sender];
+  const { shareOrCopy } = useShareOrCopy();
+
+  const { title, subtitle, shareMessage } = sender
+    ? COPY[sender]
+    : DEFAULT_COPY;
 
   const handleCopy = async () => {
     await Clipboard.setStringAsync(code);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  const { shareOrCopy, isCopied } = useShareOrCopy();
 
-  const handlePress = () => {
-    const payload = `${shareMessage} ${code}`;
-    shareOrCopy(payload);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
   };
+
+  const handleShare = () => {
+    shareOrCopy(`${shareMessage} ${code}`);
+  };
+
   return (
-    <AuthScreenWrapper>
+    <BaseModal visible={visible} onClose={onClose}>
       <AuthTitle>{title}</AuthTitle>
 
-      <Text
-        style={{
-          color: colors.textMuted,
-          fontSize: fontSize.md,
-          fontFamily: font.body,
-          lineHeight: 20,
-        }}
-      >
-        {subtitle}
-      </Text>
+      {!!subtitle && (
+        <Text
+          style={{
+            color: colors.textMuted,
+            fontSize: fontSize.md,
+            fontFamily: font.body,
+            lineHeight: 22,
+          }}
+        >
+          {subtitle}
+        </Text>
+      )}
 
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
           backgroundColor: colors.surface2,
-          borderRadius: rounded.lg,
+          borderRadius: rounded.xl,
           borderWidth: 1,
           borderColor: colors.border,
-          paddingHorizontal: space.lg,
-          paddingVertical: space.md,
+          gap: space.sm,
         }}
       >
-        <Text
+        <View
           style={{
-            fontFamily: font.mono,
-            fontSize: fontSize["5xl"],
-            color: colors.text,
-            letterSpacing: 8,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: space.md,
+            marginVertical: space.lg,
+            borderRadius: rounded.md,
+            backgroundColor: colors.surface3,
           }}
         >
-          {code}
-        </Text>
-        <Pressable onPress={handleCopy} style={{ padding: space.xs }}>
-          <Ionicons
-            name={copied ? "checkmark" : "copy-outline"}
-            size={20}
-            color={copied ? colors.accent : colors.textMuted}
-          />
-        </Pressable>
+          <Text
+            style={{
+              fontFamily: font.mono,
+              fontSize: fontSize["4xl"],
+              color: colors.text,
+              letterSpacing: 4,
+            }}
+          >
+            {code}
+          </Text>
+
+          <Pressable
+            onPress={handleCopy}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: space.xs,
+              padding: space.xs,
+            }}
+          >
+            <Ionicons
+              name={copied ? "checkmark" : "copy-outline"}
+              size={20}
+              color={copied ? colors.accent : colors.textMuted}
+            />
+
+            <Text
+              style={{
+                color: copied ? colors.accent : colors.textMuted,
+                fontSize: fontSize.sm,
+                fontFamily: font.medium,
+              }}
+            >
+              {copied ? "Copied" : "Copy"}
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <Button
-        onPress={handlePress}
+        onPress={handleShare}
         label="Share invite"
-        variant="secondary"
+        variant="primary"
         fullWidth
         leftIcon={
           <Ionicons name="share-outline" size={16} color={colors.text} />
         }
       />
-    </AuthScreenWrapper>
+    </BaseModal>
   );
 };
 

@@ -17,7 +17,7 @@ import { OptionsGroup } from "@/components/ui/OptionsGroup";
 import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
 import { InfoModal } from "@/components/modals/InfoModal";
 import { ViewFamilyModal } from "@/components/modals/ViewFamilyModal";
-import type { Stake } from "@/types/stakes";
+import ShareCodeModal from "@/components/share/ShareCodeModal";
 
 export default function SettingsScreen() {
   const colors = useColors();
@@ -28,11 +28,13 @@ export default function SettingsScreen() {
   const [showPermModal, setShowPermModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false); // Modal display control
 
   const [familyName, setFamilyName] = useState<string>("");
+  const [familyCode, setFamilyCode] = useState<string>(""); // Captured code state
   const [loadingFamily, setLoadingFamily] = useState<boolean>(false);
   const [familyLoadError, setFamilyLoadError] = useState(false);
-  // Real data state trackers
+
   const [stakesCount, setStakesCount] = useState<number>(0);
   const [completedCount, setCompletedCount] = useState<number>(0);
 
@@ -56,6 +58,7 @@ export default function SettingsScreen() {
     const familyId = user?.publicMetadata?.familyId;
     if (!familyId) {
       setFamilyName("");
+      setFamilyCode("");
       setFamilyLoadError(false);
       return;
     }
@@ -76,8 +79,10 @@ export default function SettingsScreen() {
       if (familyRes.ok) {
         const data = await familyRes.json();
         setFamilyName(data.family?.name || "");
+        setFamilyCode(data.family?.code || "");
       } else {
         setFamilyName("");
+        setFamilyCode("");
         setFamilyLoadError(true);
       }
 
@@ -94,12 +99,10 @@ export default function SettingsScreen() {
         const body = await questsRes.json();
         const rawQuests: any[] = body.quests || [];
 
-        // Active stakes: Quests currently running on the board
         const activeStakes = rawQuests.filter(
           (q) => q.status === "available" || q.status === "active",
         );
 
-        // Completed stakes: Finalized, paid out, or review-passed milestones
         const finishedStakes = rawQuests.filter(
           (q) => q.status === "completed" || q.status === "approved",
         );
@@ -146,6 +149,7 @@ export default function SettingsScreen() {
         {/* Profile Card */}
         <TouchableOpacity
           style={[styles.profileCard, { backgroundColor: colors.surface2 }]}
+          activeOpacity={0.8}
         >
           {user?.imageUrl ? (
             <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
@@ -172,14 +176,15 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Stats Grid using real-time dataset boundaries */}
+        {/* Stats Grid */}
         <View style={styles.statsContainer}>
           <StatCard value={stakesCount} label="Stakes" colors={colors} />
           <StatCard value={completedCount} label="Completed" colors={colors} />
+          {/* TODO: fetch real stakes*/}
           <StatCard value="1" label="Streak" colors={colors} />
         </View>
 
-        {/* Family */}
+        {/* Family Options */}
         <OptionsGroup label="Family link">
           <OptionsRow
             icon="heart"
@@ -195,11 +200,13 @@ export default function SettingsScreen() {
           <OptionsRow
             icon="user-plus"
             label="Invite member"
-            onPress={() => {}}
+            onPress={() => {
+              if (familyCode) setShowShareModal(true);
+            }}
           />
         </OptionsGroup>
 
-        {/* Permissions — only render group if on Android */}
+        {/* Permissions — Android Only */}
         {Platform.OS === "android" && (
           <OptionsGroup label="Permissions">
             <OptionsRow
@@ -231,14 +238,24 @@ export default function SettingsScreen() {
             onClose={() => setShowPermModal(false)}
           />
         )}
+
         <InfoModal
           visible={showInfoModal}
           onClose={() => setShowInfoModal(false)}
         />
+
         <ViewFamilyModal
           visible={showFamilyModal}
           onClose={() => setShowFamilyModal(false)}
         />
+
+        {showShareModal && (
+          <ShareCodeModal
+            code={familyCode}
+            visible={showShareModal}
+            onClose={() => setShowShareModal(false)}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

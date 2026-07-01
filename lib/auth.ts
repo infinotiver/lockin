@@ -4,7 +4,7 @@ export async function verifyAuth(request: Request) {
   try {
     const token = request.headers.get("Authorization")?.replace("Bearer ", "");
 
-    console.log("token present:", !!token);
+    // console.log("token present:", !!token);
 
     if (!token) return null;
 
@@ -32,3 +32,4 @@ export function unauthorized() {
 export function forbidden() {
   return Response.json({ error: "Forbidden" }, { status: 403 });
 }
+

@@ -215,6 +215,7 @@ export function CreateStakeModal({
       }
 
       onCreated?.();
+
       onClose();
     } catch (e) {
       console.error(e);
