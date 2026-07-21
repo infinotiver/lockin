@@ -1,5 +1,5 @@
 import type { Stake, QuestType, StakeRule } from "@/types/stakes";
-import { localDateKey } from "@/lib/stakeTracker";
+import { localDateKey } from "@/lib/stakeEvaluator";
 
 function isStakeRule(value: unknown): value is StakeRule {
   return (
@@ -38,7 +38,11 @@ function countLocalDaysInclusive(
   const start = startValue instanceof Date ? startValue : new Date(startValue);
   const end = endValue instanceof Date ? endValue : new Date(endValue);
   const endKey = localDateKey(end);
-  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const cursor = new Date(
+    start.getFullYear(),
+    start.getMonth(),
+    start.getDate(),
+  );
   let count = 0;
 
   while (localDateKey(cursor) <= endKey) {
@@ -53,7 +57,9 @@ export function mapStake(q: any): Stake {
   const now = new Date();
   const expiresMs = q.expires_at ? new Date(q.expires_at).getTime() : null;
 
-  const daysTotal = expiresMs ? countLocalDaysInclusive(q.created_at, q.expires_at) : 0;
+  const daysTotal = expiresMs
+    ? countLocalDaysInclusive(q.created_at, q.expires_at)
+    : 0;
   const daysLeft =
     expiresMs && now.getTime() <= expiresMs
       ? countLocalDaysInclusive(now, q.expires_at)
