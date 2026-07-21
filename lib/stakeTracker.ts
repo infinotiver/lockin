@@ -3,15 +3,15 @@ import type { DayRecord, StakeTrackingData } from "@/types/stakes";
 
 export function localDateKey(value: Date | string = new Date()): string {
   const date = value instanceof Date ? value : new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
 export const today = () => localDateKey();
 
-// read stake day rows
 export async function getTracking(stakeId: string): Promise<StakeTrackingData> {
   const { data, error } = await supabase
     .from("stake_days")
@@ -24,6 +24,7 @@ export async function getTracking(stakeId: string): Promise<StakeTrackingData> {
   }
 
   const days: Record<string, DayRecord> = {};
+
   for (const row of data ?? []) {
     days[row.date] = {
       date: row.date,
@@ -36,17 +37,33 @@ export async function getTracking(stakeId: string): Promise<StakeTrackingData> {
   return { stakeId, days };
 }
 
-// write today's raw screen time
+// returns the DayRecord if exists, null if not
+export async function getDayRecord(
+  stakeId: string,
+  date: string,
+): Promise<DayRecord | null> {
+  const { data, error } = await supabase
+    .from("stake_days")
+    .select("date, total_ms, clerk_ids, checked_at")
+    .eq("stake_id", stakeId)
+    .eq("date", date)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as DayRecord;
+}
+
 export async function markDay(
   stakeId: string,
   clerkIds: string[],
   totalMs: number,
+  date: string = today(),
 ): Promise<void> {
   const { error } = await supabase.from("stake_days").upsert(
     {
       stake_id: stakeId,
       clerk_ids: clerkIds,
-      date: today(),
+      date,
       total_ms: totalMs,
       checked_at: new Date().toISOString(),
     },
@@ -58,44 +75,49 @@ export async function markDay(
   }
 }
 
-// check if today already has a record
-export async function isTodayChecked(stakeId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("stake_days")
-    .select("id")
-    .eq("stake_id", stakeId)
-    .eq("date", today())
-    .maybeSingle();
-
-  if (error) return false;
-  return !!data;
-}
-
-// derive pass/fail for a day
 export function dayPassed(record: DayRecord, limitMs: number): boolean {
   return record.total_ms <= limitMs;
 }
 
-// check every local day in range
+// returns dates in [startDate, endDate] that have no stake_days row
+export async function getMissingDates(
+  stakeId: string,
+  startDate: string,
+  endDate: string,
+): Promise<string[]> {
+  const cursor = new Date(startDate);
+  const end = new Date(endDate);
+  const all: string[] = [];
+
+  while (localDateKey(cursor) <= localDateKey(end)) {
+    all.push(localDateKey(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const { data, error } = await supabase
+    .from("stake_days")
+    .select("date")
+    .eq("stake_id", stakeId)
+    .in("date", all);
+
+  if (error) return all; // conservative: treat all as missing
+
+  const existing = new Set((data ?? []).map((r) => r.date));
+  return all.filter((d) => !existing.has(d));
+}
+
 export async function allDaysPassed(
   stakeId: string,
   startDate: string,
   expiresAt: string,
   limitMs: number,
 ): Promise<boolean> {
-  const start = new Date(startDate);
+  const cursor = new Date(startDate);
   const end = new Date(expiresAt);
-  const expectedDates: string[] = [];
+  const expected: string[] = [];
 
-  const cursor = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate(),
-  );
-  const endKey = localDateKey(end);
-
-  while (localDateKey(cursor) <= endKey) {
-    expectedDates.push(localDateKey(cursor));
+  while (localDateKey(cursor) <= localDateKey(end)) {
+    expected.push(localDateKey(cursor));
     cursor.setDate(cursor.getDate() + 1);
   }
 
@@ -103,12 +125,11 @@ export async function allDaysPassed(
     .from("stake_days")
     .select("date, total_ms")
     .eq("stake_id", stakeId)
-    .in("date", expectedDates);
+    .in("date", expected);
 
   if (error || !data) return false;
 
-  // every day must exist and stay under limit
-  return expectedDates.every((date) => {
+  return expected.every((date) => {
     const row = data.find((r) => r.date === date);
     return !!row && row.total_ms <= limitMs;
   });

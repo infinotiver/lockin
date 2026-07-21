@@ -1,12 +1,22 @@
 // types/stakes.ts
 
 // stake statuses
-export type StakeStatus =
-  | "active" // running, being tracked
-  | "pending" // submitted for verification (teen only, meaningless for individual)
-  | "completed" // verified and won — money back
-  | "failed" // missed the goal or expired unresolved
-  | "rejected"; // parent said no (teen only)
+export const validStatuses = [
+  "active",
+  "pending",
+  "completed",
+  "failed",
+  "rejected",
+] as const;
+
+export type StakeStatus = (typeof validStatuses)[number];
+
+// export type StakeStatus =
+//   | "active" // running, being tracked
+//   | "pending" // submitted for verification (teen only, meaningless for individual)
+//   | "completed" // verified and won — money back
+//   | "failed" // missed the goal or expired unresolved
+//   | "rejected"; // parent said no (teen only)
 
 // type of quests/stake
 

@@ -1,7 +1,8 @@
 import { createClerkClient } from "@clerk/backend";
 import { verifyAuth, unauthorized, forbidden } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-
+import { validStatuses } from "@/types/stakes";
+import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
 async function verifyQuestAccess(clerkId: string, questId: string) {
@@ -41,73 +42,30 @@ export async function GET(
   return Response.json({ quest: access.quest });
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
-  const { id } = params;
+export async function PATCH(request: Request, { id }: { id: string }) {
   const clerkId = await verifyAuth(request);
+
   if (!clerkId) return unauthorized();
 
-  let user;
-  try {
-    user = await clerk.users.getUser(clerkId);
-  } catch {
-    return Response.json(
-      { error: "Authentication service unavailable" },
-      { status: 502 },
-    );
-  }
-  // if (user.publicMetadata?.role !== "individual") return forbidden(); allow teens to PATCH too
-
-  const access = await verifyQuestAccess(clerkId, params.id);
-  if (!access) return forbidden();
-  const userRole = access.membership.role;
-
-  let body: any;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
-  if (userRole === "teen") {
-    const attemptedKeys = Object.keys(body);
-    const tryingToCheat =
-      attemptedKeys.length > 1 || attemptedKeys[0] !== "status";
-
-    if (tryingToCheat || body.status !== "completed") {
-      return Response.json(
-        { error: "Teens can only mark quests as completed" },
-        { status: 403 },
-      );
-    }
-  }
-  const allowedFields = [
-    "title",
-    "description",
-    "reward",
-    "type",
-    "icon_url",
-    "status",
-    "expires_at",
-  ];
-  const updates: any = {};
-  for (const field of allowedFields) {
-    if (body[field] !== undefined) updates[field] = body[field];
+  const { status } = await request.json();
+  if (!validStatuses.includes(status)) {
+    return Response.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const { data: updated, error } = await supabase
+  // verify the quest belongs to this user's family
+  const user = await clerk.users.getUser(clerkId);
+  const familyId = user.publicMetadata?.familyId;
+
+  const { data, error } = await supabase
     .from("quests")
-    .update(updates)
-    .eq("id", params.id)
+    .update({ status })
+    .eq("id", id)
+    .eq("family_id", familyId)
     .select()
     .single();
 
-  if (error) {
-    return Response.json({ error: "Failed to update quest" }, { status: 500 });
-  }
-
-  return Response.json({ success: true, quest: updated });
+  if (error || !data) return Response.json({ error: "Quest not found" }, { status: 404 });
+  return Response.json({ quest: data });
 }
 
 export async function DELETE(

@@ -159,17 +159,31 @@ function RootLayoutNav() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        // headerShown: false,
         contentStyle: {
           backgroundColor: colors.background,
         },
       }}
     >
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(onboarding)/individual" />
-      <Stack.Screen name="(onboarding)/teen" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="+not-found" />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="(onboarding)/individual"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="(onboarding)/teen" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="stake/[id]"
+        options={{
+          title: "Stake details",
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.surface3,
+          },
+          headerTintColor: colors.text,
+        }}
+      />
     </Stack>
   );
 }

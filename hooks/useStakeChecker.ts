@@ -15,6 +15,28 @@ type Options = {
   onError?: (message: string) => void;
 };
 
+type CheckLog = {
+  timestamp: string;
+  message: string;
+  type: "info" | "success" | "warn" | "error";
+};
+
+const log = (
+  logs: React.RefObject<CheckLog[]>,
+  type: CheckLog["type"],
+  message: string,
+) => {
+  const entry: CheckLog = {
+    timestamp: new Date().toISOString(),
+    message,
+    type,
+  };
+  logs.current = [entry, ...logs.current].slice(0, 50); // keep last 50
+  if (__DEV__) {
+    console.log(`[StakeChecker] ${type} ${message}`);
+  }
+};
+
 export function useStakeChecker({
   stakes,
   onComplete,
@@ -25,9 +47,11 @@ export function useStakeChecker({
 }: Options) {
   const { user } = useUser();
   const clerkId = user?.id;
+
   const [results, setResults] = useState<CheckResult[]>([]);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastCheckedAt, setLastCheckedAt] = useState<string | null>(null);
 
   const checkingRef = useRef(false);
   const stakesRef = useRef(stakes);
@@ -39,6 +63,7 @@ export function useStakeChecker({
   const onErrorRef = useRef(onError);
   const unsupportedNotifiedRef = useRef(false);
   const handledTerminalRef = useRef(new Set<string>());
+  const logs = useRef<CheckLog[]>([]);
 
   const activeStakeKey = stakes
     .filter((s) => s.status === "active" && s.type === "screen-time")
@@ -46,15 +71,12 @@ export function useStakeChecker({
     .sort()
     .join("|");
 
-  // keep the latest inputs in refs
   useEffect(() => {
     stakesRef.current = stakes;
   }, [stakes]);
-
   useEffect(() => {
     clerkIdsRef.current = clerkId ? [clerkId] : [];
   }, [clerkId]);
-
   useEffect(() => {
     onCompleteRef.current = onComplete;
     onFailRef.current = onFail;
@@ -75,26 +97,80 @@ export function useStakeChecker({
     setChecking(true);
     setError(null);
 
+    const activeScreenTimeStakes = currentStakes.filter(
+      (s) => s.status === "active" && s.type === "screen-time",
+    );
+
+    log(
+      logs,
+      "info",
+      `Running check for ${activeScreenTimeStakes.length} active screen-time stake(s)`,
+    );
+
     try {
       const checkResults = await runStakeChecks(currentStakes, currentClerkIds);
       setResults(checkResults);
 
-      const unsupportedResults = checkResults.filter(
-        (result) => result.action === "unsupported",
+      const now = new Date().toISOString();
+      setLastCheckedAt(now);
+      log(
+        logs,
+        "success",
+        `Check complete at ${now} — ${checkResults.length} result(s)`,
       );
 
-      if (unsupportedResults.length > 0) {
-        const message = "screen-time stakes are android only.";
-        setError(message);
-
-        if (!unsupportedNotifiedRef.current) {
-          unsupportedNotifiedRef.current = true;
-          onUnsupportedRef.current?.(message);
+      // log each result
+      for (const result of checkResults) {
+        switch (result.action) {
+          case "pass":
+            log(
+              logs,
+              "success",
+              `Stake ${result.stakeId} — day passed (${result.totalMs ? Math.round(result.totalMs / 60000) + "min" : "n/a"})`,
+            );
+            break;
+          case "warn":
+            log(
+              logs,
+              "warn",
+              `Stake ${result.stakeId} — over limit today (${result.message})`,
+            );
+            break;
+          case "complete":
+            log(logs, "success", `Stake ${result.stakeId} — COMPLETED 🎉`);
+            break;
+          case "fail":
+            log(
+              logs,
+              "error",
+              `Stake ${result.stakeId} — failed: ${result.message}`,
+            );
+            break;
+          case "skip":
+            log(
+              logs,
+              "info",
+              `Stake ${result.stakeId} — skipped: ${result.message}`,
+            );
+            break;
+          case "unsupported":
+            log(logs, "warn", `Stake ${result.stakeId} — unsupported platform`);
+            break;
         }
-      } else {
+      }
+
+      // handle unsupported — notify once per session
+      const unsupportedResults = checkResults.filter(
+        (r) => r.action === "unsupported",
+      );
+      if (unsupportedResults.length > 0 && !unsupportedNotifiedRef.current) {
+        unsupportedNotifiedRef.current = true;
+        onUnsupportedRef.current?.("Screen-time stakes are Android only.");
+      } else if (unsupportedResults.length === 0) {
         unsupportedNotifiedRef.current = false;
       }
 
+      // dispatch terminal callbacks — deduplicated
       for (const result of checkResults) {
         const terminalKey = `${result.stakeId}:${result.action}:${result.message ?? ""}`;
 
@@ -102,11 +178,17 @@ export function useStakeChecker({
           case "complete":
             if (handledTerminalRef.current.has(terminalKey)) break;
             handledTerminalRef.current.add(terminalKey);
+            log(
+              logs,
+              "info",
+              `Dispatching onComplete for stake ${result.stakeId}`,
+            );
             onCompleteRef.current?.(result.stakeId);
             break;
           case "fail":
             if (handledTerminalRef.current.has(terminalKey)) break;
             handledTerminalRef.current.add(terminalKey);
+            log(logs, "info", `Dispatching onFail for stake ${result.stakeId}`);
             onFailRef.current?.(result.stakeId, result.message);
             break;
           case "warn":
@@ -115,8 +197,9 @@ export function useStakeChecker({
         }
       }
     } catch (e) {
-      const message = e instanceof Error ? e.message : "stake check failed.";
+      const message = e instanceof Error ? e.message : "Stake check failed.";
       setError(message);
+      log(logs, "error", `Check threw: ${message}`);
       onErrorRef.current?.(message);
     } finally {
       checkingRef.current = false;
@@ -124,9 +207,10 @@ export function useStakeChecker({
     }
   }, []);
 
-  // check when active screen-time stakes change
+  // run when active screen-time stakes change
   useEffect(() => {
     if (activeStakeKey && clerkId) {
+      log(logs, "info", "Active stakes changed — triggering check");
       void runCheck();
     }
   }, [runCheck, activeStakeKey, clerkId]);
@@ -134,7 +218,10 @@ export function useStakeChecker({
   // recheck on foreground
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") void runCheck();
+      if (state === "active") {
+        log(logs, "info", "App foregrounded — triggering check");
+        void runCheck();
+      }
     });
     return () => sub.remove();
   }, [runCheck]);
@@ -144,12 +231,25 @@ export function useStakeChecker({
     if (Platform.OS !== "android") return;
     if (!activeStakeKey || !clerkId) return;
 
+    log(
+      logs,
+      "info",
+      `Starting poll interval (${CHECK_INTERVAL_MS / 60000}min)`,
+    );
     const interval = setInterval(() => {
+      log(logs, "info", "Poll interval fired — triggering check");
       void runCheck();
     }, CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
   }, [runCheck, clerkId, activeStakeKey]);
 
-  return { results, checking, error, runCheck };
+  return {
+    results,
+    checking,
+    error,
+    lastCheckedAt,
+    logs: logs.current,
+    runCheck,
+  };
 }
