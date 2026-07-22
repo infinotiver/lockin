@@ -3,26 +3,25 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useSignUp } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
+
 import { FocusedInput } from "@/components/FocusedInput";
 import { AuthScreenWrapper } from "@/components/auth/AuthScreenWrapper";
 import { AuthTitle } from "@/components/auth/AuthTitle";
 import { AuthFooterText } from "@/components/auth/AuthFooterText";
 import { Button } from "@/components/ui/Button";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
-import commonTheme from "@/constants/theme";
 
 type Role = "individual" | "teen";
 
-const ROLES: { value: Role; label: string; description: string }[] = [
+const ROLES: { value: Role; label: string }[] = [
   {
     value: "individual",
     label: "Individual",
-    description: "Set goals, stake money, build habits solo or with family.",
   },
   {
     value: "teen",
     label: "Teen",
-    description: "Join a family, complete quests, earn your allowance.",
   },
 ];
 
@@ -68,7 +67,7 @@ const SignUp = () => {
         emailAddress: email.trim(),
         password,
         firstName: name.trim(),
-        unsafeMetadata: { role }, // stored in publicMetadata via Clerk webhook or backend
+        unsafeMetadata: { role },
       });
       await signUp.prepareEmailAddressVerification();
       router.push({
@@ -88,86 +87,62 @@ const SignUp = () => {
 
   return (
     <AuthScreenWrapper>
-      <AuthTitle>Create account</AuthTitle>
+      <View style={styles.headerContainer}>
+        <AuthTitle>Get Started</AuthTitle>
+        <Text style={{ color: colors.textMuted }}>
+          Create a account on LockIn
+        </Text>
+      </View>
 
       <FocusedInput
         placeholder="First name"
         autoCapitalize="words"
         onChangeText={setName}
-        selectionColor={colors.selected}
       />
+
       <FocusedInput
         placeholder="Email"
         keyboardType="email-address"
         autoCapitalize="none"
         onChangeText={setEmail}
-        selectionColor={colors.selected}
       />
+
       <FocusedInput
         placeholder="Password"
         secureTextEntry
         autoCapitalize="none"
         onChangeText={setPassword}
-        selectionColor={colors.selected}
       />
 
-      {/* Role selector */}
       <View style={styles.roleGroup}>
         {ROLES.map((r) => {
           const isSelected = role === r.value;
+
           return (
             <Pressable
               key={r.value}
               onPress={() => setRole(r.value)}
-              accessibilityRole={"radio"}
+              accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`${r.label}. ${r.description}`}
               style={[
                 styles.roleCard,
                 {
                   backgroundColor: isSelected
-                    ? colors.surface1
-                    : colors.background,
+                    ? colors.primary
+                    : colors.surface1,
                   borderColor: isSelected ? colors.primary : colors.border,
                 },
               ]}
             >
-              <View style={styles.roleTop}>
-                <View
-                  style={[
-                    styles.roleRadio,
-                    {
-                      borderColor: isSelected ? colors.primary : colors.border,
-                    },
-                  ]}
-                >
-                  {isSelected && (
-                    <View
-                      style={[
-                        styles.roleRadioDot,
-                        { backgroundColor: colors.primary },
-                      ]}
-                    />
-                  )}
-                </View>
-                <Text
-                  style={[
-                    styles.roleLabel,
-                    {
-                      color: colors.text,
-                      fontFamily: isSelected
-                        ? commonTheme.font.bold
-                        : commonTheme.font.body,
-                    },
-                  ]}
-                >
-                  {r.label}
-                </Text>
-              </View>
               <Text
-                style={[styles.roleDescription, { color: colors.textMuted }]}
+                style={[
+                  {
+                    color: isSelected ? colors.onPrimary : colors.text,
+                    fontFamily: commonTheme.font.semibold,
+                  },
+                ]}
               >
-                {r.description}
+                {r.label}
               </Text>
             </Pressable>
           );
@@ -180,12 +155,11 @@ const SignUp = () => {
         onPress={handleSignUp}
         variant="primary"
         size="lg"
-        label="Create account"
+        label="Join LockIn"
         loadingLabel="Creating account..."
         loading={loading}
         disabled={!isLoaded}
         fullWidth
-        monospace
       />
 
       <AuthFooterText
@@ -200,39 +174,23 @@ const SignUp = () => {
 export default SignUp;
 
 const styles = StyleSheet.create({
-  roleGroup: {
+  headerContainer: {
+    marginBottom: commonTheme.space.md,
     gap: commonTheme.space.sm,
+  },
+  roleGroup: {
+    flexDirection: "row",
+    gap: commonTheme.space.sm,
+    marginVertical: commonTheme.space.md,
   },
   roleCard: {
-    borderWidth: 1,
-    borderRadius: commonTheme.rounded.lg,
-    padding: commonTheme.space.md,
-    gap: commonTheme.space.xs,
-  },
-  roleTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: commonTheme.space.sm,
-  },
-  roleRadio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
+    flex: 1,
+    display: "flex",
     justifyContent: "center",
     alignItems: "center",
-  },
-  roleRadioDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  roleLabel: {
-    fontSize: 15,
-  },
-  roleDescription: {
-    fontSize: 13,
-    lineHeight: 18,
-    paddingLeft: 18 + commonTheme.space.sm,
+    borderWidth: 1,
+    borderRadius: commonTheme.rounded.xl,
+    padding: commonTheme.space.md,
+    gap: commonTheme.space.xs,
   },
 });

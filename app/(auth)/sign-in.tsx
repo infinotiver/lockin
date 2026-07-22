@@ -8,7 +8,8 @@ import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { Button } from "@/components/ui/Button";
 import { useColors } from "@/hooks/useColors";
 import { FocusedInput } from "@/components/FocusedInput";
-
+import { Text, View } from "react-native";
+import commonTheme from "@/constants/theme";
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -72,8 +73,12 @@ const SignIn = () => {
 
   return (
     <AuthScreenWrapper>
-      <AuthTitle>Sign In</AuthTitle>
-
+      <View style={{ gap: commonTheme.space.sm }}>
+        <AuthTitle>Welcome back!</AuthTitle>
+        <Text style={{ color: colors.textMuted }}>
+          Get ready to LockIn again
+        </Text>
+      </View>
       <FocusedInput
         placeholder="Email"
         keyboardType="email-address"
@@ -101,7 +106,6 @@ const SignIn = () => {
         loading={loading}
         disabled={!isLoaded}
         fullWidth
-        monospace
       />
 
       <AuthFooterText

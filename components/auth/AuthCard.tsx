@@ -6,9 +6,9 @@ export const AuthCard = ({ children }: { children: React.ReactNode }) => {
   const colors = useColors();
   return (
     <LinearGradient
-      colors={[colors.surface1, colors.surface3]}
+      colors={[colors.surface2, colors.surface3]}
       start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      end={{ x: 1, y: 0.6 }}
       style={{
         width: "100%",
         maxWidth: 440,
