@@ -123,8 +123,24 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           </Text>
         )}
 
-        <View style={[styles.rowBetween, { marginTop: commonTheme.space.sm }]}>
-          <View style={styles.statusBadge}>
+        <View
+          style={[
+            styles.rowBetween,
+            {
+              paddingTop: commonTheme.space.sm,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: colors.surface3,
+                padding: commonTheme.space.sm,
+                borderRadius: commonTheme.rounded.full,
+              },
+            ]}
+          >
             <Feather name={statusUI.icon} size={14} color={statusUI.color} />
             <Text style={[styles.statusText, { color: statusUI.color }]}>
               {statusUI.text}
