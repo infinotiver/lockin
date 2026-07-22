@@ -2,7 +2,6 @@ import { createClerkClient } from "@clerk/backend";
 import { verifyAuth, unauthorized, forbidden } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { validStatuses } from "@/types/stakes";
-import { useGlobalSearchParams, useLocalSearchParams } from "expo-router";
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
 async function verifyQuestAccess(clerkId: string, questId: string) {
@@ -42,7 +41,11 @@ export async function GET(
   return Response.json({ quest: access.quest });
 }
 
-export async function PATCH(request: Request, { id }: { id: string }) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  const { id } = params;
   const clerkId = await verifyAuth(request);
 
   if (!clerkId) return unauthorized();
@@ -64,7 +67,8 @@ export async function PATCH(request: Request, { id }: { id: string }) {
     .select()
     .single();
 
-  if (error || !data) return Response.json({ error: "Quest not found" }, { status: 404 });
+  if (error || !data)
+    return Response.json({ error: "Quest not found" }, { status: 404 });
   return Response.json({ quest: data });
 }
 
