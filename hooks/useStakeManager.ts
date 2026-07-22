@@ -54,20 +54,22 @@ export function useStakeManager({
       setChecking(false);
     }
   }, [stakes, user?.id, onComplete, onFail, onUnsupported]);
+  const runCheckRef = useRef(runCheck);
+  runCheckRef.current = runCheck;
 
   useEffect(() => {
-    runCheck();
-
-    const interval = setInterval(runCheck, CHECK_INTERVAL_MS);
-    const sub = AppState.addEventListener("change", (state) => {
-      if (state === "active") runCheck();
+    runCheckRef.current();
+    const interval = setInterval(
+      () => runCheckRef.current(),
+      CHECK_INTERVAL_MS,
+    );
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s === "active") runCheckRef.current();
     });
-
     return () => {
       clearInterval(interval);
       sub.remove();
     };
-  }, [runCheck]);
-
+  }, []); // empty deps - interval never resets so only one runCheck obj runs
   return { checking, runCheck };
 }
