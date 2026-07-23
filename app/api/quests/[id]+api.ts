@@ -2,6 +2,7 @@ import { createClerkClient } from "@clerk/backend";
 import { verifyAuth, unauthorized, forbidden } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { validStatuses } from "@/types/stakes";
+
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
 async function verifyQuestAccess(clerkId: string, questId: string) {
@@ -31,7 +32,6 @@ export async function GET(
   request: Request,
   { params }: { params: { id: string } },
 ) {
-  const { id } = params;
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
@@ -47,17 +47,37 @@ export async function PATCH(
 ) {
   const { id } = params;
   const clerkId = await verifyAuth(request);
-
   if (!clerkId) return unauthorized();
 
-  const { status } = await request.json();
-  if (!validStatuses.includes(status)) {
+  let status: string;
+  try {
+    const body = await request.json();
+    status = body?.status;
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  if (!validStatuses.includes(status as any)) {
     return Response.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  // verify the quest belongs to this user's family
-  const user = await clerk.users.getUser(clerkId);
-  const familyId = user.publicMetadata?.familyId;
+  let familyId: string | undefined;
+  try {
+    const user = await clerk.users.getUser(clerkId);
+    familyId = user.publicMetadata?.familyId as string | undefined;
+  } catch {
+    return Response.json(
+      { error: "Authentication service unavailable" },
+      { status: 502 },
+    );
+  }
+
+  if (!familyId) {
+    return Response.json(
+      { error: "User is not assigned to a family" },
+      { status: 400 },
+    );
+  }
 
   const { data, error } = await supabase
     .from("quests")
@@ -67,8 +87,10 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error || !data)
+  if (error || !data) {
     return Response.json({ error: "Quest not found" }, { status: 404 });
+  }
+
   return Response.json({ quest: data });
 }
 
@@ -89,12 +111,13 @@ export async function DELETE(
       { status: 502 },
     );
   }
+
   if (user.publicMetadata?.role !== "individual") return forbidden();
 
   const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
 
-  const { error } = await supabase.from("quests").delete().eq("id", params.id);
+  const { error } = await supabase.from("quests").delete().eq("id", id);
 
   if (error) {
     return Response.json({ error: "Failed to delete quest" }, { status: 500 });
