@@ -10,6 +10,7 @@ type StatusUI = { text: string; icon: GlyphName; color: string };
 
 const formatDuration = (ms: number): string => {
   if (!ms) return "0m";
+
   const totalMinutes = Math.floor(ms / 60000);
   const hours = Math.floor(totalMinutes / 60);
   const mins = totalMinutes % 60;
@@ -21,23 +22,44 @@ const formatDuration = (ms: number): string => {
 
 const formatDate = (isoDate?: string | null) => {
   if (!isoDate) return null;
+
   const d = new Date(isoDate);
+
   return isNaN(d.getTime())
     ? null
-    : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    : d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
 };
 
 const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
   const map: Record<string, StatusUI> = {
-    active: { text: "In progress", icon: "clock", color: colors.primary },
-    pending: { text: "In review", icon: "eye", color: colors.textMuted },
+    active: {
+      text: "In progress",
+      icon: "clock",
+      color: colors.primary,
+    },
+    pending: {
+      text: "In review",
+      icon: "eye",
+      color: colors.textMuted,
+    },
     completed: {
       text: "Won",
       icon: "check-circle",
       color: colors.success || colors.primary,
     },
-    failed: { text: "Failed", icon: "x-circle", color: colors.destructive },
-    rejected: { text: "Rejected", icon: "slash", color: colors.destructive },
+    failed: {
+      text: "Failed",
+      icon: "x-circle",
+      color: colors.destructive,
+    },
+    rejected: {
+      text: "Rejected",
+      icon: "slash",
+      color: colors.destructive,
+    },
   };
 
   return (
@@ -50,14 +72,13 @@ const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
 };
 
 const getRuleDescription = (stake: Stake): string | null => {
-  const isScreenTime =
-    stake.rule?.type === "screen_time_limit" ||
-    (typeof stake.description === "object" &&
-      stake.description?.type === "screen_time_limit");
+  const rule =
+    stake.rule ??
+    (typeof stake.description === "object" ? stake.description : undefined);
 
-  if (isScreenTime && stake.rule) {
-    const duration = formatDuration(stake.rule.limitMs || 0);
-    const scope = stake.rule.scope || "app";
+  if (rule?.type === "screen_time_limit") {
+    const duration = formatDuration(rule.limitMs || 0);
+    const scope = rule.scope || "app";
     return `${duration} daily limit on ${scope}`;
   }
 
@@ -76,7 +97,9 @@ export default function StakeCard({ stake }: { stake: Stake }) {
       onPress={() => {
         router.push({
           pathname: "/stake/[id]",
-          params: { id: String(stake.id) },
+          params: {
+            id: String(stake.id),
+          },
         });
       }}
     >
@@ -96,27 +119,48 @@ export default function StakeCard({ stake }: { stake: Stake }) {
               <Text
                 style={[
                   commonTheme.text.caption,
-                  { color: colors.textMuted, marginBottom: 2 },
+                  {
+                    color: colors.textMuted,
+                    marginBottom: 2,
+                  },
                 ]}
               >
                 {stake.type.toUpperCase()}
               </Text>
             )}
+
             <Text
-              style={[commonTheme.text.sectionTitle, { color: colors.text }]}
+              style={[
+                commonTheme.text.sectionTitle,
+                {
+                  color: colors.text,
+                },
+              ]}
             >
               {stake.title}
             </Text>
           </View>
 
-          <Text style={[commonTheme.text.amountLarge, { color: colors.text }]}>
+          <Text
+            style={[
+              commonTheme.text.amountLarge,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
             ₹{stake.reward}
           </Text>
         </View>
 
         {ruleText && (
           <Text
-            style={[styles.description, { color: colors.textMuted }]}
+            style={[
+              styles.description,
+              {
+                color: colors.textMuted,
+              },
+            ]}
             numberOfLines={1}
           >
             {ruleText}
@@ -142,14 +186,27 @@ export default function StakeCard({ stake }: { stake: Stake }) {
             ]}
           >
             <Feather name={statusUI.icon} size={14} color={statusUI.color} />
-            <Text style={[styles.statusText, { color: statusUI.color }]}>
+
+            <Text
+              style={[
+                styles.statusText,
+                {
+                  color: statusUI.color,
+                },
+              ]}
+            >
               {statusUI.text}
             </Text>
           </View>
 
           {dueDate && (
             <Text
-              style={[commonTheme.text.caption, { color: colors.textMuted }]}
+              style={[
+                commonTheme.text.caption,
+                {
+                  color: colors.textMuted,
+                },
+              ]}
             >
               Due {dueDate}
             </Text>

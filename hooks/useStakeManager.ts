@@ -38,7 +38,7 @@ export function useStakeManager({
       if (hasUnsupported && onUnsupported) onUnsupported();
 
       for (const result of results) {
-        const terminalKey = `${result.stakeId}:${result.action}`;
+        const terminalKey = `${result.stakeId}:${result.action} - ${result.message}`;
         if (handledRef.current.has(terminalKey)) continue;
 
         if (result.action === "complete") {
