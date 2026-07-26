@@ -1,4 +1,4 @@
-package com.anonymous.lockin
+package com.infinotiver.lockin
 
 import android.app.AppOpsManager
 import android.app.usage.UsageEvents

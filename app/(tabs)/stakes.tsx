@@ -341,7 +341,7 @@ export default function StakesScreen() {
           variant: "ghost",
           onPress: () => {
             setWarnDialog({ visible: false, message: "" });
-            router.push("/(tabs)/records");
+            router.push("/(tabs)/stakes");
           },
         }}
         onDismiss={() => setWarnDialog({ visible: false, message: "" })}

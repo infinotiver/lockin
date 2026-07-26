@@ -1,4 +1,3 @@
-// lib/stakeEvaluator.ts
 import { Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { logger } from "./logger";
@@ -76,9 +75,11 @@ async function evaluateScreenTime(
         await markDay(stake.id, clerkIds, dayTotalMs, targetDate);
         logger.log(`${targetDate}: saved to stake_days`);
       } catch {
-        dayTotalMs = 0;
-        await markDay(stake.id, clerkIds, dayTotalMs, targetDate);
-        logger.warn(`${targetDate}: usage fetch failed, writing 0ms`);
+        logger.warn(
+          `${targetDate}: usage fetch failed; leaving day unrecorded for retry`,
+        );
+        cursor.setDate(cursor.getDate() + 1);
+        continue;
       }
     }
     if (dayTotalMs > limitMs) {

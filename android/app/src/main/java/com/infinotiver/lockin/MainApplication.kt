@@ -1,4 +1,4 @@
-package com.anonymous.lockin
+package com.infinotiver.lockin
 
 import android.app.Application
 import android.content.res.Configuration
