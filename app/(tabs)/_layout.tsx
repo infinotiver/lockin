@@ -17,9 +17,6 @@ function NativeTabLayout() {
       <NativeTabs.Trigger name="stakes">
         <Icon sf={{ default: "trophy", selected: "trophy.fill" }} />
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="records">
-        <Icon sf={{ default: "calendar", selected: "calendar.fill" }} />
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
       </NativeTabs.Trigger>
@@ -89,15 +86,7 @@ function ClassicTabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="records"
-        options={{
-          tabBarLabel: "Reports",
-          tabBarIcon: ({ color, focused }) => (
-            <Feather name="pie-chart" size={24} color={color} />
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="settings"
         options={{

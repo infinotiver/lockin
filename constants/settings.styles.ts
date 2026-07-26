@@ -18,10 +18,6 @@ export const styles = StyleSheet.create({
     padding: commonTheme.space.md,
     borderRadius: 16,
     marginBottom: commonTheme.space.xl,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
     elevation: 2,
   },
   avatar: {
@@ -68,10 +64,6 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: commonTheme.space.lg,
     overflow: "hidden", // Ensures the rows respect the border radius
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
     elevation: 1,
   },
 

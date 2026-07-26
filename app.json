@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.lockin"
+      "package": "com.infinotiver.lockin"
     },
     "web": {
       "bundler": "metro",

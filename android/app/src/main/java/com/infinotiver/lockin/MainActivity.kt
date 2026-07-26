@@ -1,4 +1,4 @@
-package com.anonymous.lockin
+package com.infinotiver.lockin
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

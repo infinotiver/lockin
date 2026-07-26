@@ -22,8 +22,7 @@ import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { mapStake } from "@/lib/mapStake";
-import { useStakeChecker } from "@/hooks/useStakeChecker";
-import { canCreateStake } from "@/lib/stakeChecker";
+import { useStakeManager } from "@/hooks/useStakeManager"; // Updated import
 
 type UITabKey = "active" | "pending" | "completed";
 
@@ -159,13 +158,14 @@ export default function StakesScreen() {
     }, [fetchStakes]),
   );
 
-  useStakeChecker({
+  // Updated hook configuration
+  useStakeManager({
     stakes,
     onComplete: (id) => {
       void finalizeStake(id, "completed");
     },
     onFail: (id, message) => {
-      const isPermission = message?.toLowerCase().includes("usage access");
+      const isPermission = message?.toLowerCase().includes("permission");
       if (isPermission) {
         setInfoDialog({
           visible: true,
@@ -183,27 +183,8 @@ export default function StakesScreen() {
           "You missed your goal. The stake has been marked as failed.",
       });
     },
-    onWarn: (_id, message) => {
-      setWarnDialog({
-        visible: true,
-        message: message ?? "You've exceeded today's screen time limit.",
-      });
-    },
-    onUnsupported: (_message) => {
+    onUnsupported: () => {
       // already handled by the one-time platform warning on mount
-    },
-    onError: (message) => {
-      // only surface checker errors if there are active screen-time stakes
-      const hasActiveScreenTime = stakes.some(
-        (s) => s.status === "active" && s.type === "screen-time",
-      );
-      if (hasActiveScreenTime) {
-        setWarnDialog({
-          visible: true,
-          message:
-            message ?? "Could not run stake check. Will retry next time.",
-        });
-      }
     },
   });
 
@@ -234,11 +215,16 @@ export default function StakesScreen() {
         : doneStakes;
 
   const handleFABPress = () => {
-    const { allowed, reason } = canCreateStake(stakes, "screen-time");
-    if (!allowed) {
+    // Inline logic replaces `canCreateStake`
+    const hasActiveScreenTime = activeStakes.some(
+      (s) => s.type === "screen-time",
+    );
+
+    if (hasActiveScreenTime) {
       setBlockDialog({
         visible: true,
-        message: reason ?? "You already have an active stake.",
+        message:
+          "You already have an active screen-time stake. Complete it before creating another.",
       });
       return;
     }
@@ -355,7 +341,7 @@ export default function StakesScreen() {
           variant: "ghost",
           onPress: () => {
             setWarnDialog({ visible: false, message: "" });
-            router.push("/(tabs)/records");
+            router.push("/(tabs)/stakes");
           },
         }}
         onDismiss={() => setWarnDialog({ visible: false, message: "" })}
