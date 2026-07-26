@@ -12,6 +12,7 @@ import commonTheme from "@/constants/theme";
 import { Button } from "@/components/ui/Button";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { useAuth } from "@clerk/clerk-expo";
+import { formatDate, formatDuration } from "@/lib/timeParser";
 
 interface StakeDay {
   id: string;
@@ -66,22 +67,6 @@ export default function StakeDetails() {
     fetchStakeDays();
   }, [fetchStakeDays]);
 
-  const formatDuration = (ms: number) => {
-    const totalMinutes = Math.floor(ms / (1000 * 60));
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    if (hours === 0) return `${minutes}m`;
-    return `${hours}h ${minutes}m`;
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
 
   const renderHeader = () => (
     <View

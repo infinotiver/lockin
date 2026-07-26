@@ -81,14 +81,18 @@ export async function PATCH(
 
   const { data, error } = await supabase
     .from("quests")
-    .update({ status })
+    .select("*")
     .eq("id", id)
-    .eq("family_id", familyId)
-    .select()
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
-    return Response.json({ error: "Quest not found" }, { status: 404 });
+  if (error) {
+    console.error(error);
+
+    return Response.json({ error: "Failed to load quest." }, { status: 500 });
+  }
+
+  if (!data) {
+    return Response.json({ error: "Quest not found." }, { status: 404 });
   }
 
   return Response.json({ quest: data });

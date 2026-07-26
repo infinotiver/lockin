@@ -4,34 +4,11 @@ import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { Stake, StakeStatus } from "@/types/stakes";
 import { router } from "expo-router";
-
+import { formatDate, formatDuration } from "@/lib/timeParser";
 type GlyphName = keyof typeof Feather.glyphMap;
 type StatusUI = { text: string; icon: GlyphName; color: string };
 
-const formatDuration = (ms: number): string => {
-  if (!ms) return "0m";
 
-  const totalMinutes = Math.floor(ms / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const mins = totalMinutes % 60;
-
-  if (hours > 0 && mins > 0) return `${hours}h ${mins}m`;
-  if (hours > 0) return `${hours}h`;
-  return `${mins}m`;
-};
-
-const formatDate = (isoDate?: string | null) => {
-  if (!isoDate) return null;
-
-  const d = new Date(isoDate);
-
-  return isNaN(d.getTime())
-    ? null
-    : d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-};
 
 const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
   const map: Record<string, StatusUI> = {
