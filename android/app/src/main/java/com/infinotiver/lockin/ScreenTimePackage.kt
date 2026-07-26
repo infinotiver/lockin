@@ -1,4 +1,4 @@
-package com.anonymous.lockin
+package com.infinotiver.lockin
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

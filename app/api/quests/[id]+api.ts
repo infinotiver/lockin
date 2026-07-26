@@ -5,7 +5,7 @@ import { validStatuses } from "@/types/stakes";
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
-async function verifyQuestAccess(clerkId: string, questId: string) {
+export async function verifyQuestAccess(clerkId: string, questId: string) {
   const { data: quest, error: questError } = await supabase
     .from("quests")
     .select("*")
