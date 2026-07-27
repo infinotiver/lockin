@@ -103,7 +103,11 @@ export default function StakesScreen() {
   }, []);
 
   const finalizeStake = useCallback(
-    async (stakeId: string, status: "completed" | "failed") => {
+    async (
+      stakeId: string,
+      status: "completed" | "failed",
+      failMessage?: string,
+    ) => {
       const key = `${stakeId}:${status}`;
       if (finalizingRef.current.has(key)) return;
       finalizingRef.current.add(key);
@@ -131,12 +135,23 @@ export default function StakesScreen() {
 
         await fetchStakes();
 
+        // The dialog is only shown here, once the status update has actually
+        // succeeded server-side. This makes finalizeStake the single source
+        // of truth for both success and error dialogs, so callers no longer
+        // race it by setting their own dialog right after firing the call.
         if (status === "completed") {
           setInfoDialog({
             visible: true,
             title: "Stake complete",
             message:
               "You hit your goal. The reward has been marked as yours (WIP).",
+          });
+        } else {
+          setWarnDialog({
+            visible: true,
+            message:
+              failMessage ??
+              "You missed your goal. The stake has been marked as failed.",
           });
         }
       } catch (e) {
@@ -145,6 +160,7 @@ export default function StakesScreen() {
           message:
             e instanceof Error ? e.message : "Failed to update stake status.",
         });
+        throw e;
       } finally {
         finalizingRef.current.delete(key);
       }
@@ -158,30 +174,23 @@ export default function StakesScreen() {
     }, [fetchStakes]),
   );
 
-  // Updated hook configuration
   useStakeManager({
     stakes,
-    onComplete: (id) => {
-      void finalizeStake(id, "completed");
+    onComplete: async (id) => {
+      await finalizeStake(id, "completed");
     },
-    onFail: (id, message) => {
+    onFail: async (id, message) => {
       const isPermission = message?.toLowerCase().includes("permission");
       if (isPermission) {
         setInfoDialog({
           visible: true,
           title: "Permission required",
           message:
-            "Usage access was revoked. Re-enable it in Settings → Permissions to keep your stake active.",
+            "Usage access was revoked. Re-enable it in Settings to keep your stake active.",
         });
         return;
       }
-      void finalizeStake(id, "failed");
-      setWarnDialog({
-        visible: true,
-        message:
-          message ??
-          "You missed your goal. The stake has been marked as failed.",
-      });
+      await finalizeStake(id, "failed", message);
     },
     onUnsupported: () => {
       // already handled by the one-time platform warning on mount

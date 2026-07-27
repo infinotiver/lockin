@@ -4,13 +4,14 @@ import { AppState } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { runStakeChecks } from "@/lib/stakeEvaluator";
 import type { Stake, CheckAction } from "@/types/stakes";
+import { logger } from "@/lib/logger";
 
 const CHECK_INTERVAL_MS = 15 * 60 * 1000;
 
 type Options = {
   stakes: Stake[];
-  onComplete?: (stakeId: string) => void;
-  onFail?: (stakeId: string, message?: string) => void;
+  onComplete?: (stakeId: string) => Promise<void> | void;
+  onFail?: (stakeId: string, message?: string) => Promise<void> | void;
   onUnsupported?: () => void;
 };
 
@@ -24,6 +25,7 @@ export function useStakeManager({
   const [checking, setChecking] = useState(false);
   const checkingRef = useRef(false);
   const handledRef = useRef(new Set<string>());
+  const isMountedRef = useRef(true);
 
   const runCheck = useCallback(async () => {
     if (!user?.id || stakes.length === 0 || checkingRef.current) return;
@@ -38,27 +40,38 @@ export function useStakeManager({
       if (hasUnsupported && onUnsupported) onUnsupported();
 
       for (const result of results) {
-        const terminalKey = `${result.stakeId}:${result.action} - ${result.message}`;
+        const terminalKey = `${result.stakeId}:${result.action}:${result.reason ?? "none"}`;
         if (handledRef.current.has(terminalKey)) continue;
 
-        if (result.action === "complete") {
-          handledRef.current.add(terminalKey);
-          onComplete?.(result.stakeId);
-        } else if (result.action === "fail") {
-          handledRef.current.add(terminalKey);
-          onFail?.(result.stakeId, result.message);
+        try {
+          if (result.action === "complete") {
+            await onComplete?.(result.stakeId);
+     
+            handledRef.current.add(terminalKey);
+          } else if (result.action === "fail") {
+            await onFail?.(result.stakeId, result.message);
+    
+            if (result.reason !== "permission_revoked") {
+              handledRef.current.add(terminalKey);
+            }
+          }
+        } catch (e) {
+          logger.warn(`Failed to finalize ${terminalKey}:`, e);
         }
       }
     } finally {
       checkingRef.current = false;
-      setChecking(false);
+      if (isMountedRef.current) setChecking(false);
     }
   }, [stakes, user?.id, onComplete, onFail, onUnsupported]);
+
   const runCheckRef = useRef(runCheck);
   runCheckRef.current = runCheck;
 
   useEffect(() => {
+    isMountedRef.current = true;
     runCheckRef.current();
+
     const interval = setInterval(
       () => runCheckRef.current(),
       CHECK_INTERVAL_MS,
@@ -66,10 +79,13 @@ export function useStakeManager({
     const sub = AppState.addEventListener("change", (s) => {
       if (s === "active") runCheckRef.current();
     });
+
     return () => {
+      isMountedRef.current = false;
       clearInterval(interval);
       sub.remove();
     };
-  }, []); // empty deps - interval never resets so only one runCheck obj runs
+  }, []);
+
   return { checking, runCheck };
 }

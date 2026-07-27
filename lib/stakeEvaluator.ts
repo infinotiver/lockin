@@ -6,7 +6,12 @@ import {
   getUsageForRange,
   hasUsageAccess,
 } from "@/lib/screenTime";
-import type { Stake, CheckAction, CheckResult } from "@/types/stakes";
+import type {
+  Stake,
+  CheckAction,
+  CheckResult,
+  CheckReason,
+} from "@/types/stakes";
 
 export const localDateKey = (d: Date = new Date()) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -32,7 +37,12 @@ async function markDay(
 async function evaluateScreenTime(
   stake: Stake,
   clerkIds: string[],
-): Promise<{ stakeId: string; action: CheckAction; message?: string }> {
+): Promise<{
+  stakeId: string;
+  action: CheckAction;
+  reason?: CheckReason;
+  message?: string;
+}> {
   const limitMs = stake.rule?.limitMs ?? Infinity;
   const todayStr = localDateKey();
   const expiresAt = stake.expires_at ? new Date(stake.expires_at) : null;
@@ -105,6 +115,7 @@ async function evaluateScreenTime(
     return {
       stakeId: stake.id,
       action: "skip",
+      reason: "fetch_failed",
       message: "Failed to fetch today's usage",
     };
   }
@@ -117,9 +128,12 @@ async function evaluateScreenTime(
     failedDate = todayStr;
   }
   if (failedDate) {
+    // Historical-day and today's-limit failures are the same underlying
+    // cause (limit_exceeded); only the display message differs by date.
     return {
       stakeId: stake.id,
       action: "fail",
+      reason: "limit_exceeded",
       message:
         failedDate === todayStr
           ? "Over screen time limit today"
@@ -132,6 +146,7 @@ async function evaluateScreenTime(
     return {
       stakeId: stake.id,
       action: "complete",
+      reason: "expired",
       message: "Stake completed successfully",
     };
   }
@@ -162,6 +177,7 @@ export async function runStakeChecks(
     return activeStakes.map((s) => ({
       stakeId: s.id,
       action: "fail" as CheckAction,
+      reason: "permission_revoked" as CheckReason,
       message: "Permission revoked",
     }));
   }
