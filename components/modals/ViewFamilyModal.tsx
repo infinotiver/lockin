@@ -137,8 +137,8 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
                   >
                     <Text style={{ color: colors.text }}>
                       {isCurrentUser
-                        ? `${user?.firstName || "You (Active Context)"}`
-                        : `User (${member.clerk_id.substring(0, 6)}...)`}
+                        ? `${user?.firstName || "(You)"}`
+                        : `User (${member.clerk_id.substring(0, 12)}...)`}
                     </Text>
                     <Text style={{ color: colors.textMuted }}>
                       {member.role}

@@ -18,11 +18,12 @@ import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
 import type { Stake } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
-import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
-import { mapStake } from "@/lib/mapStake";
-import { useStakeManager } from "@/hooks/useStakeManager"; // Updated import
+import { RefreshControl } from "react-native";
+import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
+import { CreateStakeSheet } from "@/components/modals/CreateStakeSheet";
+import type { CreateStakeSheetRef } from "@/components/modals/CreateStakeSheet";
 
 type UITabKey = "active" | "pending" | "completed";
 
@@ -40,27 +41,42 @@ export default function StakesScreen() {
   getTokenRef.current = getToken;
 
   const [activeTab, setActiveTab] = useState<UITabKey>("active");
-  const [showCreate, setShowCreate] = useState(false);
-  const [stakes, setStakes] = useState<Stake[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState("");
+  const createSheetRef = useRef<CreateStakeSheetRef>(null);
+  const {
+    stakes,
+    loading,
+    fetchError,
+    fetchStakes,
+    warnDialog,
+    setWarnDialog,
+    infoDialog,
+    setInfoDialog,
+  } = useStakeManagerContext();
 
-  const fetchingRef = useRef(false);
-  const finalizingRef = useRef(new Set<string>());
+  const [refreshing, setRefreshing] = useState(false);
+
+  /**
+   * Runs the pull-to-refresh request and always releases the native spinner.
+   *
+   * @returns A promise that resolves when the shared fetch operation settles.
+   */
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true);
+    try {
+      await fetchStakes();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchStakes]);
   const platformWarnShown = useRef(false);
 
   const [blockDialog, setBlockDialog] = useState({
     visible: false,
     message: "",
   });
-  const [warnDialog, setWarnDialog] = useState({ visible: false, message: "" });
-  const [infoDialog, setInfoDialog] = useState({
-    visible: false,
-    title: "",
-    message: "",
-  });
 
-  // show platform warning once per session on non-Android
+  // This warning is local to the list route, but the ref prevents development
+  // re-renders from repeatedly interrupting the user with the same limitation.
   useEffect(() => {
     if (Platform.OS !== "android" && !platformWarnShown.current) {
       platformWarnShown.current = true;
@@ -73,129 +89,11 @@ export default function StakesScreen() {
     }
   }, []);
 
-  const fetchStakes = useCallback(async () => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    setLoading(true);
-    setFetchError("");
-
-    try {
-      const token = await getTokenRef.current();
-      if (!token) throw new Error("Missing auth token.");
-
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to fetch stakes.");
-      }
-
-      const body = await res.json();
-      setStakes((body.quests || []).map((q: any) => mapStake(q)));
-    } catch (e) {
-      setFetchError(e instanceof Error ? e.message : "Failed to fetch stakes.");
-    } finally {
-      fetchingRef.current = false;
-      setLoading(false);
-    }
-  }, []);
-
-  const finalizeStake = useCallback(
-    async (
-      stakeId: string,
-      status: "completed" | "failed",
-      failMessage?: string,
-    ) => {
-      const key = `${stakeId}:${status}`;
-      if (finalizingRef.current.has(key)) return;
-      finalizingRef.current.add(key);
-
-      try {
-        const token = await getTokenRef.current();
-        if (!token) throw new Error("Missing auth token.");
-
-        const res = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/quests/${stakeId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ status }),
-          },
-        );
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.error ?? "Failed to update stake.");
-        }
-
-        await fetchStakes();
-
-        // The dialog is only shown here, once the status update has actually
-        // succeeded server-side. This makes finalizeStake the single source
-        // of truth for both success and error dialogs, so callers no longer
-        // race it by setting their own dialog right after firing the call.
-        if (status === "completed") {
-          setInfoDialog({
-            visible: true,
-            title: "Stake complete",
-            message:
-              "You hit your goal. The reward has been marked as yours (WIP).",
-          });
-        } else {
-          setWarnDialog({
-            visible: true,
-            message:
-              failMessage ??
-              "You missed your goal. The stake has been marked as failed.",
-          });
-        }
-      } catch (e) {
-        setWarnDialog({
-          visible: true,
-          message:
-            e instanceof Error ? e.message : "Failed to update stake status.",
-        });
-        throw e;
-      } finally {
-        finalizingRef.current.delete(key);
-      }
-    },
-    [fetchStakes],
-  );
-
   useFocusEffect(
     useCallback(() => {
       void fetchStakes();
     }, [fetchStakes]),
   );
-
-  useStakeManager({
-    stakes,
-    onComplete: async (id) => {
-      await finalizeStake(id, "completed");
-    },
-    onFail: async (id, message) => {
-      const isPermission = message?.toLowerCase().includes("permission");
-      if (isPermission) {
-        setInfoDialog({
-          visible: true,
-          title: "Permission required",
-          message:
-            "Usage access was revoked. Re-enable it in Settings to keep your stake active.",
-        });
-        return;
-      }
-      await finalizeStake(id, "failed", message);
-    },
-    onUnsupported: () => {
-      // already handled by the one-time platform warning on mount
-    },
-  });
 
   const activeStakes = stakes.filter((s) => s.status === "active");
   const pendingStakes = stakes.filter((s) => s.status === "pending");
@@ -223,8 +121,13 @@ export default function StakesScreen() {
         ? pendingStakes
         : doneStakes;
 
-  const handleFABPress = () => {
-    // Inline logic replaces `canCreateStake`
+  /**
+   * Opens the creation sheet only when it cannot create a second active
+   * screen-time evaluator for the same user.
+   *
+   * @returns Nothing; the blocking case is communicated through `blockDialog`.
+   */
+  const handleFABPress = (): void => {
     const hasActiveScreenTime = activeStakes.some(
       (s) => s.type === "screen-time",
     );
@@ -237,7 +140,7 @@ export default function StakesScreen() {
       });
       return;
     }
-    setShowCreate(true);
+    createSheetRef.current?.present();
   };
 
   return (
@@ -262,14 +165,10 @@ export default function StakesScreen() {
         </Pressable>
       </View>
 
-      {/* Fetch error — inline, dismissable */}
+      {/* The provider owns retry/error state, so this screen only renders it. */}
       {!!fetchError && (
         <View style={styles.errorWrapper}>
-          <ErrorHandler
-            error={fetchError}
-            type="text"
-            onClear={() => setFetchError("")}
-          />
+          <ErrorHandler error={fetchError} type="text" onClear={() => {}} />
         </View>
       )}
 
@@ -287,6 +186,15 @@ export default function StakesScreen() {
           { paddingBottom: commonTheme.space["2xl"] },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.textMuted}
+            progressBackgroundColor={colors.surface3}
+            colors={[colors.primary]}
+          />
+        }
       >
         {loading && stakes.length === 0 ? (
           <View style={styles.center}>
@@ -310,11 +218,7 @@ export default function StakesScreen() {
         )}
       </ScrollView>
 
-      <CreateStakeModal
-        visible={showCreate}
-        onClose={() => setShowCreate(false)}
-        onCreated={fetchStakes}
-      />
+      <CreateStakeSheet ref={createSheetRef} onCreated={fetchStakes} />
 
       {/* Block: can't create another stake */}
       <ConfirmDialog

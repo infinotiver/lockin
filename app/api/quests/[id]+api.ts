@@ -5,6 +5,15 @@ import { validStatuses } from "@/types/stakes";
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 
+/**
+ * Confirms that a Clerk user belongs to the family that owns a quest.
+ *
+ * @param clerkId - Authenticated Clerk user identifier.
+ * @param questId - Quest identifier supplied by the dynamic route.
+ * @returns The quest and matching membership, or `null` when either is absent.
+ * @throws The underlying Supabase error when either lookup fails, allowing the
+ * route runtime to report an infrastructure failure instead of a false 403.
+ */
 export async function verifyQuestAccess(clerkId: string, questId: string) {
   const { data: quest, error: questError } = await supabase
     .from("quests")
@@ -28,24 +37,34 @@ export async function verifyQuestAccess(clerkId: string, questId: string) {
   return { quest, membership };
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+/**
+ * Returns a quest only to a member of its owning family.
+ *
+ * @param request - Request carrying the Clerk bearer token.
+ * @param context - Expo Router dynamic-route params; `id` identifies the quest.
+ * @returns A JSON response containing the quest, or 401/403 for denied access.
+ * @throws Propagates Supabase access-check failures.
+ */
+export async function GET(request: Request, { id }: Record<string, string>) {
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
-  const access = await verifyQuestAccess(clerkId, params.id);
+  const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
 
   return Response.json({ quest: access.quest });
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
-  const { id } = params;
+/**
+ * Validates a requested status and loads its target quest.
+ *
+ * @param request - Request carrying authentication and a JSON `{ status }` body.
+ * @param context - Expo Router dynamic-route params; `id` identifies the quest.
+ * @returns A quest JSON response or a documented 400, 401, 404, 500, or 502 error.
+ * @throws Propagates unexpected authentication or database failures not handled
+ * locally by the route.
+ */
+export async function PATCH(request: Request, { id }: Record<string, string>) {
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
@@ -98,11 +117,15 @@ export async function PATCH(
   return Response.json({ quest: data });
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
-  const { id } = params;
+/**
+ * Deletes a quest only when the caller has the individual role and family access.
+ *
+ * @param request - Request carrying the Clerk bearer token.
+ * @param context - Expo Router dynamic-route params; `id` identifies the quest.
+ * @returns `{ success: true }`, or 401/403/500 when deletion is not permitted.
+ * @throws Propagates Supabase errors from the ownership check.
+ */
+export async function DELETE(request: Request, { id }: Record<string, string>) {
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 

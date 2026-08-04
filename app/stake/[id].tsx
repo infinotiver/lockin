@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { useAuth } from "@clerk/clerk-expo";
 import { formatDate, formatDuration } from "@/lib/timeParser";
+import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
 
 interface StakeDay {
   id: string;
@@ -35,6 +36,7 @@ export default function StakeDetails() {
   const [records, setRecords] = useState<StakeDay[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const { runCheck, checking } = useStakeManagerContext();
 
   const fetchStakeDays = useCallback(async () => {
     if (!id || typeof id !== "string" || id === "undefined") {
@@ -66,7 +68,18 @@ export default function StakeDetails() {
   useEffect(() => {
     fetchStakeDays();
   }, [fetchStakeDays]);
-
+  /**
+   * Refreshes persisted daily records and runs a fresh device evaluation together.
+   *
+   * @returns A promise that settles only after both independent operations finish.
+   * @throws Propagates unexpected evaluator failures from `runCheck`; record-fetch
+   * failures are handled by `fetchStakeDays` and rendered inline.
+   */
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    // Neither request depends on the other. Running them concurrently shortens the
+    // wait while still ensuring the button remains busy until both are finished.
+    await Promise.all([fetchStakeDays(), runCheck()]);
+  }, [fetchStakeDays, runCheck]);
 
   const renderHeader = () => (
     <View
@@ -175,12 +188,12 @@ export default function StakeDetails() {
         </View>
         <View style={styles.buttonContainer}>
           <Button
-            onPress={fetchStakeDays}
+            onPress={handleRefresh}
             variant="secondary"
             size="sm"
             label="Refresh"
             loadingLabel="Loading..."
-            loading={loading}
+            loading={loading || checking}
             monospace
           />
         </View>

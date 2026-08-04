@@ -42,7 +42,7 @@ export function SplitTabs<T extends string>({
         style={[
           styles.tab,
           scrollable && styles.tabScrollable,
-          isActive && { backgroundColor: colors.text },
+          isActive && { backgroundColor: colors.primary },
         ]}
         onPress={() => onTabChange(tab.key)}
         activeOpacity={0.75}
@@ -86,17 +86,16 @@ export function SplitTabs<T extends string>({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    borderRadius: commonTheme.rounded.lg,
+    borderRadius: commonTheme.rounded.full,
     padding: commonTheme.space.xs,
   },
   tab: {
     flex: 1,
     paddingVertical: commonTheme.space.sm,
     alignItems: "center",
-    borderRadius: commonTheme.rounded.md,
+    borderRadius: commonTheme.rounded.full,
   },
   tabText: {
-    fontSize: 13,
     fontFamily: commonTheme.font.medium,
   },
   tabTextActive: {

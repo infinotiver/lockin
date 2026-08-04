@@ -11,7 +11,9 @@
       "supportsTablet": true
     },
     "android": {
-      "permissions": ["android.permission.PACKAGE_USAGE_STATS"],
+      "permissions": [
+        "android.permission.PACKAGE_USAGE_STATS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +40,8 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

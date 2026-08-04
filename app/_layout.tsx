@@ -23,7 +23,9 @@ import {
   PixelifySans_600SemiBold,
   PixelifySans_700Bold,
 } from "@expo-google-fonts/pixelify-sans";
-
+import { StakeManagerProvider } from "@/contexts/StakeManagerContext";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
@@ -58,7 +60,13 @@ export default function RootLayout() {
       publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
       tokenCache={tokenCache}
     >
-      <RootLayoutNav />
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <BottomSheetModalProvider>
+          <StakeManagerProvider>
+            <RootLayoutNav />
+          </StakeManagerProvider>
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
     </ClerkProvider>
   );
 }
