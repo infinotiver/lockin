@@ -3,17 +3,18 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
+  RefreshControl,
+  FlatList,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-import { Button } from "@/components/ui/Button";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { useAuth } from "@clerk/clerk-expo";
 import { formatDate, formatDuration } from "@/lib/timeParser";
 import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
+import { ColorSpace } from "react-native-reanimated";
 
 interface StakeDay {
   id: string;
@@ -29,6 +30,7 @@ export default function StakeDetails() {
   const colors = useColors();
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
+
   useEffect(() => {
     getTokenRef.current = getToken;
   }, [getToken]);
@@ -36,7 +38,8 @@ export default function StakeDetails() {
   const [records, setRecords] = useState<StakeDay[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const { runCheck, checking } = useStakeManagerContext();
+  const { runCheck } = useStakeManagerContext();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
 
   const fetchStakeDays = useCallback(async () => {
     if (!id || typeof id !== "string" || id === "undefined") {
@@ -68,17 +71,15 @@ export default function StakeDetails() {
   useEffect(() => {
     fetchStakeDays();
   }, [fetchStakeDays]);
-  /**
-   * Refreshes persisted daily records and runs a fresh device evaluation together.
-   *
-   * @returns A promise that settles only after both independent operations finish.
-   * @throws Propagates unexpected evaluator failures from `runCheck`; record-fetch
-   * failures are handled by `fetchStakeDays` and rendered inline.
-   */
-  const handleRefresh = useCallback(async (): Promise<void> => {
-    // Neither request depends on the other. Running them concurrently shortens the
-    // wait while still ensuring the button remains busy until both are finished.
-    await Promise.all([fetchStakeDays(), runCheck()]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Fetch records and run device check concurrently
+      await Promise.all([fetchStakeDays(), runCheck()]);
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchStakeDays, runCheck]);
 
   const renderHeader = () => (
@@ -186,17 +187,6 @@ export default function StakeDetails() {
             Screen time tracked per day
           </Text>
         </View>
-        <View style={styles.buttonContainer}>
-          <Button
-            onPress={handleRefresh}
-            variant="secondary"
-            size="sm"
-            label="Refresh"
-            loadingLabel="Loading..."
-            loading={loading || checking}
-            monospace
-          />
-        </View>
       </View>
 
       <ErrorHandler error={error} type="text" onClear={() => setError("")} />
@@ -212,6 +202,15 @@ export default function StakeDetails() {
           ListHeaderComponent={renderHeader}
           renderItem={renderItem}
           contentContainerStyle={{ gap: commonTheme.space.xs }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.textMuted}
+              progressBackgroundColor={colors.surface3}
+              colors={[colors.primary]}
+            />
+          }
           ListEmptyComponent={
             <View
               style={[
@@ -233,13 +232,11 @@ export default function StakeDetails() {
 }
 
 const styles = StyleSheet.create({
-  buttonContainer: {
-    minWidth: 100,
-  },
   tableRow: {
     paddingVertical: commonTheme.space.md,
     paddingHorizontal: commonTheme.space.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    borderRadius: commonTheme.rounded.sm,
   },
   tableHeader: {
     borderTopWidth: StyleSheet.hairlineWidth,
