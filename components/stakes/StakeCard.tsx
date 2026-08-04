@@ -4,11 +4,9 @@ import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { Stake, StakeStatus } from "@/types/stakes";
 import { router } from "expo-router";
-import { formatDate, formatDuration } from "@/lib/timeParser";
+import { formatDateTime, formatDuration } from "@/lib/timeParser";
 type GlyphName = keyof typeof Feather.glyphMap;
 type StatusUI = { text: string; icon: GlyphName; color: string };
-
-
 
 const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
   const map: Record<string, StatusUI> = {
@@ -66,7 +64,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
   const colors = useColors();
   const statusUI = getStatusUI(stake.status, colors);
 
-  const dueDate = formatDate(stake.expires_at);
+  const dueDateTime = formatDateTime(stake.expires_at);
   const ruleText = getRuleDescription(stake);
 
   return (
@@ -176,7 +174,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
             </Text>
           </View>
 
-          {dueDate && (
+          {dueDateTime && (
             <Text
               style={[
                 commonTheme.text.caption,
@@ -185,7 +183,7 @@ export default function StakeCard({ stake }: { stake: Stake }) {
                 },
               ]}
             >
-              Due {dueDate}
+              Due {dueDateTime}
             </Text>
           )}
         </View>
@@ -203,23 +201,22 @@ const styles = StyleSheet.create({
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   textColumn: {
     flex: 1,
     paddingRight: commonTheme.space.md,
   },
   description: {
-    fontSize: 14,
+    fontSize: commonTheme.fontSize.lg,
     lineHeight: 20,
   },
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: commonTheme.space.xs,
   },
   statusText: {
-    fontSize: 13,
     fontFamily: commonTheme.font.medium,
   },
 });

@@ -56,11 +56,11 @@ export async function GET(request: Request, { id }: Record<string, string>) {
 }
 
 /**
- * Validates a requested status and loads its target quest.
+ * Validates and persists a requested status for a family-owned quest.
  *
  * @param request - Request carrying authentication and a JSON `{ status }` body.
  * @param context - Expo Router dynamic-route params; `id` identifies the quest.
- * @returns A quest JSON response or a documented 400, 401, 404, 500, or 502 error.
+ * @returns The updated quest, or a documented 400, 401, 403, or 500 error.
  * @throws Propagates unexpected authentication or database failures not handled
  * locally by the route.
  */
@@ -80,38 +80,23 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
     return Response.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  let familyId: string | undefined;
-  try {
-    const user = await clerk.users.getUser(clerkId);
-    familyId = user.publicMetadata?.familyId as string | undefined;
-  } catch {
-    return Response.json(
-      { error: "Authentication service unavailable" },
-      { status: 502 },
-    );
-  }
-
-  if (!familyId) {
-    return Response.json(
-      { error: "User is not assigned to a family" },
-      { status: 400 },
-    );
-  }
+  const access = await verifyQuestAccess(clerkId, id);
+  if (!access) return forbidden();
 
   const { data, error } = await supabase
     .from("quests")
-    .select("*")
+    .update({ status })
     .eq("id", id)
-    .maybeSingle();
+    // Keep the family predicate on the mutation so authorization and update
+    // still target the same record if membership changes concurrently.
+    .eq("family_id", access.quest.family_id)
+    .select("*")
+    .single();
 
   if (error) {
     console.error(error);
 
-    return Response.json({ error: "Failed to load quest." }, { status: 500 });
-  }
-
-  if (!data) {
-    return Response.json({ error: "Quest not found." }, { status: 404 });
+    return Response.json({ error: "Failed to update quest." }, { status: 500 });
   }
 
   return Response.json({ quest: data });
