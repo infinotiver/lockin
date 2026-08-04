@@ -12,7 +12,7 @@ import { Feather } from "@expo/vector-icons";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@clerk/clerk-expo";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
 import type { Stake } from "@/types/stakes";
@@ -36,7 +36,6 @@ const EMPTY_MESSAGES: Record<UITabKey, string> = {
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
-  const router = useRouter();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
 
@@ -47,8 +46,6 @@ export default function StakesScreen() {
     loading,
     fetchError,
     fetchStakes,
-    warnDialog,
-    setWarnDialog,
     infoDialog,
     setInfoDialog,
   } = useStakeManagerContext();
@@ -240,48 +237,6 @@ export default function StakesScreen() {
         onDismiss={() => setBlockDialog({ visible: false, message: "" })}
       />
 
-      {/* Warn: over limit or stake failed */}
-      <ConfirmDialog
-        visible={warnDialog.visible}
-        title="Heads up"
-        message={warnDialog.message}
-        primary={{
-          label: "Dismiss",
-          onPress: () => setWarnDialog({ visible: false, message: "" }),
-        }}
-        secondary={{
-          label: "View records",
-          variant: "ghost",
-          onPress: () => {
-            setWarnDialog({ visible: false, message: "" });
-            router.push("/(tabs)/stakes");
-          },
-        }}
-        onDismiss={() => setWarnDialog({ visible: false, message: "" })}
-      />
-
-      {/* Info: platform notice, completion, permission */}
-      <ConfirmDialog
-        visible={infoDialog.visible}
-        title={infoDialog.title}
-        message={infoDialog.message}
-        primary={{
-          label: "Got it",
-          onPress: () =>
-            setInfoDialog({ visible: false, title: "", message: "" }),
-        }}
-        secondary={{
-          label: "Settings",
-          variant: "ghost",
-          onPress: () => {
-            setInfoDialog({ visible: false, title: "", message: "" });
-            router.push("/(tabs)/settings");
-          },
-        }}
-        onDismiss={() =>
-          setInfoDialog({ visible: false, title: "", message: "" })
-        }
-      />
     </SafeAreaView>
   );
 }

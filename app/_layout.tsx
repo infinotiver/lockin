@@ -23,7 +23,10 @@ import {
   PixelifySans_600SemiBold,
   PixelifySans_700Bold,
 } from "@expo-google-fonts/pixelify-sans";
-import { StakeManagerProvider } from "@/contexts/StakeManagerContext";
+import {
+  StakeManagerDialogs,
+  StakeManagerProvider,
+} from "@/contexts/StakeManagerContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 export { ErrorBoundary } from "expo-router";
@@ -165,14 +168,15 @@ function RootLayoutNav() {
   }, [isSignedIn, isLoaded, segments, publicRole, onboarded]); // <-- Bound strictly to primitive values
 
   return (
-    <Stack
+    <>
+      <Stack
       screenOptions={{
         // headerShown: false,
         contentStyle: {
           backgroundColor: colors.background,
         },
       }}
-    >
+      >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen
         name="(onboarding)/individual"
@@ -192,6 +196,8 @@ function RootLayoutNav() {
           headerTintColor: colors.text,
         }}
       />
-    </Stack>
+      </Stack>
+      <StakeManagerDialogs />
+    </>
   );
 }

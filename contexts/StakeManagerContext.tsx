@@ -10,6 +10,8 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useStakeManager } from "@/hooks/useStakeManager";
 import { mapStake } from "@/lib/mapStake";
 import type { Stake } from "@/types/stakes";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { useRouter } from "expo-router";
 
 /** A dismissible warning whose text is safe to show directly to the user. */
 type DialogState = { visible: boolean; message: string };
@@ -145,9 +147,16 @@ export function StakeManagerProvider({
           },
         );
 
+        const body = await res.json().catch(() => null);
         if (!res.ok) {
-          const body = await res.json().catch(() => null);
           throw new Error(body?.error ?? "Failed to update stake.");
+        }
+
+        const persistedStatus = body?.quest?.status;
+        if (persistedStatus !== status) {
+          throw new Error(
+            `Stake update was acknowledged but returned status "${persistedStatus ?? "missing"}" instead of "${status}".`,
+          );
         }
 
         await fetchStakes();
@@ -240,4 +249,56 @@ export function useStakeManagerContext(): Ctx {
       "useStakeManagerContext must be used within StakeManagerProvider",
     );
   return ctx;
+}
+
+
+export function StakeManagerDialogs() {
+  const router = useRouter();
+  const { warnDialog, setWarnDialog, infoDialog, setInfoDialog } =
+    useStakeManagerContext();
+
+  return (
+    <>
+      <ConfirmDialog
+        visible={warnDialog.visible}
+        title="Heads up"
+        message={warnDialog.message}
+        primary={{
+          label: "Dismiss",
+          onPress: () => setWarnDialog({ visible: false, message: "" }),
+        }}
+        secondary={{
+          label: "View records",
+          variant: "ghost",
+          onPress: () => {
+            setWarnDialog({ visible: false, message: "" });
+            router.push("/(tabs)/stakes");
+          },
+        }}
+        onDismiss={() => setWarnDialog({ visible: false, message: "" })}
+      />
+
+      <ConfirmDialog
+        visible={infoDialog.visible}
+        title={infoDialog.title}
+        message={infoDialog.message}
+        primary={{
+          label: "Got it",
+          onPress: () =>
+            setInfoDialog({ visible: false, title: "", message: "" }),
+        }}
+        secondary={{
+          label: "Settings",
+          variant: "ghost",
+          onPress: () => {
+            setInfoDialog({ visible: false, title: "", message: "" });
+            router.push("/(tabs)/settings");
+          },
+        }}
+        onDismiss={() =>
+          setInfoDialog({ visible: false, title: "", message: "" })
+        }
+      />
+    </>
+  );
 }

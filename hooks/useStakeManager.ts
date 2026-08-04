@@ -7,6 +7,7 @@ import type { Stake, CheckAction } from "@/types/stakes";
 import { logger } from "@/lib/logger";
 
 const CHECK_INTERVAL_MS = 15 * 60 * 1000;
+const MAX_TIMEOUT_MS = 2_147_483_647;
 
 type Options = {
   stakes: Stake[];
@@ -86,6 +87,29 @@ export function useStakeManager({
       sub.remove();
     };
   }, []);
+
+  useEffect(() => {
+    const nextExpiryMs = stakes
+      .filter((stake) => stake.status === "active" && stake.type === "screen-time")
+      .map((stake) =>
+        stake.expires_at ? new Date(stake.expires_at).getTime() : Number.NaN,
+      )
+      .filter(Number.isFinite)
+      .sort((left, right) => left - right)[0];
+
+    if (nextExpiryMs === undefined) return;
+
+    // The regular interval can be almost 15 minutes late. Scheduling the nearest
+    // deadline separately lets an active app finalize a stake as soon as its
+    // evaluation window closes; `checkingRef` handles timer/interval overlap.
+    const delayMs = Math.min(
+      Math.max(0, nextExpiryMs - Date.now()) + 250,
+      MAX_TIMEOUT_MS,
+    );
+    const timeout = setTimeout(() => runCheckRef.current(), delayMs);
+
+    return () => clearTimeout(timeout);
+  }, [stakes]);
 
   return { checking, runCheck };
 }
