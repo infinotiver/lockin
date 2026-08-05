@@ -12,10 +12,10 @@ export type StakeStatus = (typeof validStatuses)[number];
 
 export type QuestType =
   | "screen-time"
-  | "photo-verify"
-  | "health"
-  | "peer-verify"
-  | "integration";
+  // | "photo-verify"
+  // | "health"
+  // | "peer-verify"
+  // | "integration";
 
 export type CheckAction =
   | "pass"

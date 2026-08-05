@@ -16,11 +16,10 @@ import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { msToHoursAndMinutes } from "@/lib/screenTime";
 import { mapStake } from "@/lib/mapStake";
-import { getStatusUI } from "@/components/stakes/StakeCard";
 import { runStakeChecks } from "@/lib/stakeEvaluator";
 import { formatDate, formatDateTime } from "@/lib/timeParser";
 import type { Stake, DayRecord } from "@/types/stakes";
-import { logger } from "@/lib/logger";
+import { StatusChip } from "@/components/stakes/StatusChip";
 
 function daysLeft(expiresAt: string | null) {
   if (!expiresAt) return "—";
@@ -110,7 +109,6 @@ export default function StakeDetailScreen() {
       </View>
     );
 
-  const statusUI = getStatusUI(stake.status, colors);
   const limitMs = stake.rule?.limitMs;
 
   const details = [
@@ -140,18 +138,9 @@ export default function StakeDetailScreen() {
         }
       >
         <View style={styles.row}>
-          <View style={[styles.pill, { backgroundColor: colors.surface2 }]}>
-            <Feather
-              name={statusUI.icon as any}
-              size={12}
-              color={statusUI.color}
-            />
-            <Text style={[styles.pillText, { color: statusUI.color }]}>
-              {statusUI.text}
-            </Text>
-          </View>
+          <StatusChip status={stake.status} />
           <Text style={[styles.typeTag, { color: colors.textMuted }]}>
-            {stake.type}
+            {stake.type.toUpperCase()}
           </Text>
         </View>
 
@@ -180,7 +169,6 @@ export default function StakeDetailScreen() {
                   styles.fill,
                   {
                     width: `${stake.progressPercent ?? 0}%` as any,
-                    backgroundColor: statusUI.color,
                   },
                 ]}
               />
