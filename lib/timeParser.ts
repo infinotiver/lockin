@@ -1,3 +1,20 @@
+/**
+ * Normalizes ISO date strings that lack time components and validates the result.
+ *
+ * @param isoDate - An ISO 8601 date string, with or without time components.
+ * @returns A Date object if the input is valid, or null if missing/invalid.
+ */
+export const parseISODate = (isoDate?: string | null): Date | null => {
+  if (!isoDate) return null;
+
+  const value = /^\d{4}-\d{2}-\d{2}$/.test(isoDate)
+    ? `${isoDate}T00:00:00`
+    : isoDate;
+
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
 export const formatDuration = (ms: number): string => {
   if (!ms) return "0m";
 
@@ -11,37 +28,24 @@ export const formatDuration = (ms: number): string => {
 };
 
 export const formatDate = (isoDate?: string | null) => {
-  if (!isoDate) return null;
-
-  const value = /^\d{4}-\d{2}-\d{2}$/.test(isoDate)
-    ? `${isoDate}T00:00:00`
-    : isoDate;
-
-  const d = new Date(value);
-
-  return isNaN(d.getTime())
-    ? null
-    : d.toLocaleDateString("en-US", {
+  const d = parseISODate(isoDate);
+  return d
+    ? d.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-      });
+      })
+    : null;
 };
 
 /** Formats a deadline in the device's local time zone so users see its exact cutoff. */
 export const formatDateTime = (isoDate?: string | null) => {
-  if (!isoDate) return null;
-
-  const value = /^\d{4}-\d{2}-\d{2}$/.test(isoDate)
-    ? `${isoDate}T00:00:00`
-    : isoDate;
-  const date = new Date(value);
-
-  return Number.isNaN(date.getTime())
-    ? null
-    : date.toLocaleString("en-US", {
+  const d = parseISODate(isoDate);
+  return d
+    ? d.toLocaleString("en-US", {
         month: "short",
         day: "numeric",
         hour: "numeric",
         minute: "2-digit",
-      });
+      })
+    : null;
 };

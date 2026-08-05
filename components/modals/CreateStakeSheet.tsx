@@ -104,6 +104,7 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
   const [reward, setReward] = useState("");
   const [type, setType] = useState<QuestType>("screen-time");
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [limitSeconds, setLimitSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -116,6 +117,7 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
     setReward("");
     setType("screen-time");
     setExpiresAt(null);
+    setSelectedPreset(null);
     setShowDatePicker(false);
     setLimitSeconds(0);
     setError("");
@@ -225,7 +227,10 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
           mode: "date",
           minimumDate: new Date(),
           onChange: (_event: any, date?: Date) => {
-            if (date) setExpiresAt(date);
+            if (date) {
+              setExpiresAt(date);
+              setSelectedPreset(null);
+            }
           },
         });
       });
@@ -397,14 +402,15 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
           </Text>
           <View style={styles.pillRow}>
             {DURATION_PRESETS.map((p) => {
-              const target = new Date(Date.now() + p.days * 86400000);
-              const isSelected =
-                expiresAt &&
-                Math.abs(expiresAt.getTime() - target.getTime()) < 60000;
+              const isSelected = selectedPreset === p.label;
               return (
                 <Pressable
                   key={p.label}
-                  onPress={() => setExpiresAt(target)}
+                  onPress={() => {
+                    const target = new Date(Date.now() + p.days * 86400000);
+                    setExpiresAt(target);
+                    setSelectedPreset(p.label);
+                  }}
                   style={[
                     styles.pill,
                     {
@@ -429,13 +435,7 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
               style={[styles.pill, { backgroundColor: colors.text }]}
             >
               <Text style={{ color: colors.surface1 }}>
-                {expiresAt &&
-                !DURATION_PRESETS.some(
-                  (p) =>
-                    Math.abs(
-                      expiresAt.getTime() - (Date.now() + p.days * 86400000),
-                    ) < 60000,
-                )
+                {selectedPreset === null && expiresAt
                   ? expiresAt.toLocaleDateString()
                   : "Custom"}
               </Text>
@@ -450,7 +450,10 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
                 value={expiresAt ?? new Date()}
                 minimumDate={new Date()}
                 onChange={(_: any, date?: Date) => {
-                  if (date) setExpiresAt(date);
+                  if (date) {
+                    setExpiresAt(date);
+                    setSelectedPreset(null);
+                  }
                 }}
               />
               <Button

@@ -62,8 +62,9 @@ export function StakeManagerProvider({
   const [stakes, setStakes] = useState<Stake[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState("");
-  const fetchingRef = useRef(false);
+  const fetchingRef = useRef<Promise<void> | null>(null);
   const finalizingRef = useRef(new Set<string>());
+  const permissionDialogShownRef = useRef(false);
 
   const [warnDialog, setWarnDialog] = useState<DialogState>({
     visible: false,
@@ -84,28 +85,33 @@ export function StakeManagerProvider({
   const fetchStakes = useCallback(async (): Promise<void> => {
     // Focus events and pull-to-refresh can overlap; only one response should be
     // allowed to control the shared loading and error state at a time.
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    setLoading(true);
-    setFetchError("");
-    try {
-      const token = await getTokenRef.current();
-      if (!token) throw new Error("Missing auth token.");
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to fetch stakes.");
+    if (fetchingRef.current) return fetchingRef.current;
+
+    const promise = (async () => {
+      setLoading(true);
+      setFetchError("");
+      try {
+        const token = await getTokenRef.current();
+        if (!token) throw new Error("Missing auth token.");
+        const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error ?? "Failed to fetch stakes.");
+        }
+        const body = await res.json();
+        setStakes((body.quests || []).map((q: any) => mapStake(q)));
+      } catch (e) {
+        setFetchError(e instanceof Error ? e.message : "Failed to fetch stakes.");
+      } finally {
+        fetchingRef.current = null;
+        setLoading(false);
       }
-      const body = await res.json();
-      setStakes((body.quests || []).map((q: any) => mapStake(q)));
-    } catch (e) {
-      setFetchError(e instanceof Error ? e.message : "Failed to fetch stakes.");
-    } finally {
-      fetchingRef.current = false;
-      setLoading(false);
-    }
+    })();
+
+    fetchingRef.current = promise;
+    return promise;
   }, []);
 
   /**
@@ -200,18 +206,24 @@ export function StakeManagerProvider({
     onFail: async (id, message) => {
       const isPermission = message?.toLowerCase().includes("permission");
       if (isPermission) {
-        setInfoDialog({
-          visible: true,
-          title: "Permission required",
-          message:
-            "Usage access was revoked. Re-enable it in Settings → Permissions to keep your stake active.",
-        });
+        if (!permissionDialogShownRef.current) {
+          permissionDialogShownRef.current = true;
+          setInfoDialog({
+            visible: true,
+            title: "Permission required",
+            message:
+              "Usage access was revoked. Re-enable it in Settings → Permissions to keep your stake active.",
+          });
+        }
         return;
       }
       await finalizeStake(id, "failed", message);
     },
     onUnsupported: () => {
       // handled by the one-time platform warning currently in StakesScreen;
+    },
+    onPermissionRestored: () => {
+      permissionDialogShownRef.current = false;
     },
   });
 

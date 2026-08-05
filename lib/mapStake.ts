@@ -1,5 +1,6 @@
 import type { Stake, QuestType, StakeRule } from "@/types/stakes";
 import { localDateKey } from "@/lib/stakeEvaluator";
+import { parseISODate } from "@/lib/timeParser";
 
 function isStakeRule(value: unknown): value is StakeRule {
   return (
@@ -55,7 +56,8 @@ function countLocalDaysInclusive(
 
 export function mapStake(q: any): Stake {
   const now = new Date();
-  const expiresMs = q.expires_at ? new Date(q.expires_at).getTime() : null;
+  const expiresDate = parseISODate(q.expires_at);
+  const expiresMs = expiresDate?.getTime() ?? null;
 
   const daysTotal = expiresMs
     ? countLocalDaysInclusive(q.created_at, q.expires_at)

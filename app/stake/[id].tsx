@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
@@ -17,13 +17,15 @@ import commonTheme from "@/constants/theme";
 import { msToHoursAndMinutes } from "@/lib/screenTime";
 import { mapStake } from "@/lib/mapStake";
 import { runStakeChecks } from "@/lib/stakeEvaluator";
-import { formatDate, formatDateTime } from "@/lib/timeParser";
+import { formatDate, formatDateTime, parseISODate } from "@/lib/timeParser";
 import type { Stake, DayRecord } from "@/types/stakes";
 import { StatusChip } from "@/components/stakes/StatusChip";
 
 function daysLeft(expiresAt: string | null) {
   if (!expiresAt) return "—";
-  const remainingMs = new Date(expiresAt).getTime() - Date.now();
+  const expiresDate = parseISODate(expiresAt);
+  if (!expiresDate) return "—";
+  const remainingMs = expiresDate.getTime() - Date.now();
   if (remainingMs < 0) return "Expired";
   const diff = Math.ceil(remainingMs / 86400000);
   if (diff === 0) return "Last day";
@@ -41,11 +43,15 @@ export default function StakeDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [daysError, setDaysError] = useState("");
+  const requestSeqRef = useRef(0);
 
   async function load(isRefresh = false) {
     if (!id) return;
+    const currentSeq = ++requestSeqRef.current;
     isRefresh ? setRefreshing(true) : setLoading(true);
     setError("");
+    setDaysError("");
 
     try {
       if (isRefresh && stake && Platform.OS === "android" && user?.id) {
@@ -61,13 +67,19 @@ export default function StakeDetailScreen() {
       const qRes = await fetch(`${base}/api/quests/${id}`, { headers });
       if (!qRes.ok) throw new Error(`Failed to load stake (${qRes.status})`);
       const { quest } = await qRes.json();
+
+      if (currentSeq !== requestSeqRef.current) return;
       setStake(mapStake(quest));
 
       const dRes = await fetch(`${base}/api/days/${id}`, {
         headers,
       });
-      if (dRes.ok) {
+      if (!dRes.ok) {
+        if (currentSeq !== requestSeqRef.current) return;
+        setDaysError(`Failed to load daily records (${dRes.status})`);
+      } else {
         const { data } = await dRes.json();
+        if (currentSeq !== requestSeqRef.current) return;
         setDays(
           [...(data ?? [])].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -75,10 +87,13 @@ export default function StakeDetailScreen() {
         );
       }
     } catch (e: any) {
+      if (currentSeq !== requestSeqRef.current) return;
       setError(e.message ?? "Failed to load.");
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (currentSeq === requestSeqRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }
 
@@ -213,7 +228,11 @@ export default function StakeDetailScreen() {
           DAILY RECORDS
         </Text>
 
-        {days.length === 0 ? (
+        {daysError ? (
+          <Text style={[styles.empty, { color: colors.destructive }]}>
+            {daysError}
+          </Text>
+        ) : days.length === 0 ? (
           <Text style={[styles.empty, { color: colors.textMuted }]}>
             No records yet — appears after each daily check.
           </Text>

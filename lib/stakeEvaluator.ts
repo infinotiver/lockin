@@ -2,6 +2,7 @@ import { Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { logger } from "./logger";
 import { getUsageForRange, hasUsageAccess } from "@/lib/screenTime";
+import { parseISODate } from "@/lib/timeParser";
 import type {
   Stake,
   CheckAction,
@@ -58,11 +59,11 @@ async function evaluateScreenTime(
 ): Promise<CheckResult> {
   const limitMs = stake.rule?.limitMs ?? Infinity;
   const now = new Date();
-  const stakeStart = new Date(stake.created_at);
-  const expiresAt = stake.expires_at ? new Date(stake.expires_at) : null;
+  const stakeStart = parseISODate(stake.created_at);
+  const expiresAt = parseISODate(stake.expires_at);
   const isExpired = Boolean(expiresAt && expiresAt.getTime() <= now.getTime());
 
-  if (Number.isNaN(stakeStart.getTime())) {
+  if (!stakeStart) {
     return {
       stakeId: stake.id,
       action: "skip",

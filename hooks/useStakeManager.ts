@@ -14,6 +14,7 @@ type Options = {
   onComplete?: (stakeId: string) => Promise<void> | void;
   onFail?: (stakeId: string, message?: string) => Promise<void> | void;
   onUnsupported?: () => void;
+  onPermissionRestored?: () => void;
 };
 
 export function useStakeManager({
@@ -21,12 +22,14 @@ export function useStakeManager({
   onComplete,
   onFail,
   onUnsupported,
+  onPermissionRestored,
 }: Options) {
   const { user } = useUser();
   const [checking, setChecking] = useState(false);
   const checkingRef = useRef(false);
   const handledRef = useRef(new Set<string>());
   const isMountedRef = useRef(true);
+  const hadPermissionIssueRef = useRef(false);
 
   const runCheck = useCallback(async () => {
     if (!user?.id || stakes.length === 0 || checkingRef.current) return;
@@ -40,6 +43,17 @@ export function useStakeManager({
       const hasUnsupported = results.some((r) => r.action === "unsupported");
       if (hasUnsupported && onUnsupported) onUnsupported();
 
+      const hasPermissionRevoked = results.some(
+        (r) => r.action === "fail" && r.reason === "permission_revoked",
+      );
+
+      if (hasPermissionRevoked) {
+        hadPermissionIssueRef.current = true;
+      } else if (hadPermissionIssueRef.current) {
+        hadPermissionIssueRef.current = false;
+        onPermissionRestored?.();
+      }
+
       for (const result of results) {
         const terminalKey = `${result.stakeId}:${result.action}:${result.reason ?? "none"}`;
         if (handledRef.current.has(terminalKey)) continue;
@@ -47,11 +61,11 @@ export function useStakeManager({
         try {
           if (result.action === "complete") {
             await onComplete?.(result.stakeId);
-     
+
             handledRef.current.add(terminalKey);
           } else if (result.action === "fail") {
             await onFail?.(result.stakeId, result.message);
-    
+
             if (result.reason !== "permission_revoked") {
               handledRef.current.add(terminalKey);
             }
@@ -64,7 +78,7 @@ export function useStakeManager({
       checkingRef.current = false;
       if (isMountedRef.current) setChecking(false);
     }
-  }, [stakes, user?.id, onComplete, onFail, onUnsupported]);
+  }, [stakes, user?.id, onComplete, onFail, onUnsupported, onPermissionRestored]);
 
   const runCheckRef = useRef(runCheck);
   runCheckRef.current = runCheck;
