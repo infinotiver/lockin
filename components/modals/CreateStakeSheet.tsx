@@ -48,9 +48,9 @@ type StakeRule = ScreenTimeRule | null;
 
 const QUEST_TYPES: { label: string; value: QuestType }[] = [
   { label: "Screen Time", value: "screen-time" },
-  { label: "Photo", value: "photo-verify" },
-  { label: "Health", value: "health" },
-  { label: "Integration", value: "integration" },
+  // { label: "Photo", value: "photo-verify" },
+  // { label: "Health", value: "health" },
+  // { label: "Integration", value: "integration" },
 ];
 
 const DURATION_PRESETS = [

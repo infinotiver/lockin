@@ -23,10 +23,9 @@ import { StatusChip } from "@/components/stakes/StatusChip";
 
 function daysLeft(expiresAt: string | null) {
   if (!expiresAt) return "—";
-  const diff = Math.ceil(
-    (new Date(expiresAt).getTime() - Date.now()) / 86400000,
-  );
-  if (diff < 0) return "Expired";
+  const remainingMs = new Date(expiresAt).getTime() - Date.now();
+  if (remainingMs < 0) return "Expired";
+  const diff = Math.ceil(remainingMs / 86400000);
   if (diff === 0) return "Last day";
   return `${diff}d left`;
 }

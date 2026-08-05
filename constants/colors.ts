@@ -51,7 +51,7 @@ const light: ThemeColors = {
   onDestructive: "#FFFFFF",
 
   errorColor: "#E54D2E",
-  success: "#22C55E",
+  success: "#166534",
   warning: "#D97706",
 
   border: "#D8D8D8",

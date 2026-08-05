@@ -90,7 +90,7 @@ const SignUp = () => {
       <View style={styles.headerContainer}>
         <AuthTitle>Get Started</AuthTitle>
         <Text style={{ color: colors.textMuted }}>
-          Create a account on LockIn
+          Create an account on LockIn
         </Text>
       </View>
 
