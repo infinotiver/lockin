@@ -8,7 +8,7 @@ import { formatDateTime, formatDuration } from "@/lib/timeParser";
 type GlyphName = keyof typeof Feather.glyphMap;
 type StatusUI = { text: string; icon: GlyphName; color: string };
 
-const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
+export const getStatusUI = (status: StakeStatus, colors: any): StatusUI => {
   const map: Record<string, StatusUI> = {
     active: {
       text: "In progress",

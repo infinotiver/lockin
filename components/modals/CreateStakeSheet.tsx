@@ -426,9 +426,9 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
             })}
             <Pressable
               onPress={openDeadlinePicker}
-              style={[styles.pill, { backgroundColor: colors.surface1 }]}
+              style={[styles.pill, { backgroundColor: colors.text }]}
             >
-              <Text style={{ color: colors.text }}>
+              <Text style={{ color: colors.surface1 }}>
                 {expiresAt &&
                 !DURATION_PRESETS.some(
                   (p) =>

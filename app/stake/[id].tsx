@@ -1,255 +1,356 @@
-import { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
+  ScrollView,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
-  FlatList,
+  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-import { ErrorHandler } from "@/components/ui/ErrorHandler";
-import { useAuth } from "@clerk/clerk-expo";
-import { formatDate, formatDuration } from "@/lib/timeParser";
-import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
-import { ColorSpace } from "react-native-reanimated";
+import { msToHoursAndMinutes } from "@/lib/screenTime";
+import { mapStake } from "@/lib/mapStake";
+import { getStatusUI } from "@/components/stakes/StakeCard";
+import { runStakeChecks } from "@/lib/stakeEvaluator";
+import { formatDate, formatDateTime } from "@/lib/timeParser";
+import type { Stake, DayRecord } from "@/types/stakes";
+import { logger } from "@/lib/logger";
 
-interface StakeDay {
-  id: string;
-  stake_id: string;
-  clerk_ids: string[];
-  date: string;
-  checked_at: string;
-  total_ms: number;
+function daysLeft(expiresAt: string | null) {
+  if (!expiresAt) return "—";
+  const diff = Math.ceil(
+    (new Date(expiresAt).getTime() - Date.now()) / 86400000,
+  );
+  if (diff < 0) return "Expired";
+  if (diff === 0) return "Last day";
+  return `${diff}d left`;
 }
 
-export default function StakeDetails() {
+export default function StakeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const colors = useColors();
   const { getToken } = useAuth();
-  const getTokenRef = useRef(getToken);
+  const { user } = useUser();
 
-  useEffect(() => {
-    getTokenRef.current = getToken;
-  }, [getToken]);
+  const [stake, setStake] = useState<Stake | null>(null);
+  const [days, setDays] = useState<DayRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
 
-  const [records, setRecords] = useState<StakeDay[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>("");
-  const { runCheck } = useStakeManagerContext();
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-
-  const fetchStakeDays = useCallback(async () => {
-    if (!id || typeof id !== "string" || id === "undefined") {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+  async function load(isRefresh = false) {
+    if (!id) return;
+    isRefresh ? setRefreshing(true) : setLoading(true);
     setError("");
+
     try {
-      const token = await getTokenRef.current();
-      const response = await fetch(`/api/days/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch records.");
+      if (isRefresh && stake && Platform.OS === "android" && user?.id) {
+        await runStakeChecks([stake], [user.id]).catch(() => {});
       }
 
-      setRecords(result.data || []);
+      const token = await getToken();
+      if (!token) throw new Error("Not authenticated");
+
+      const base = process.env.EXPO_PUBLIC_API_URL;
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const qRes = await fetch(`${base}/api/quests/${id}`, { headers });
+      if (!qRes.ok) throw new Error(`Failed to load stake (${qRes.status})`);
+      const { quest } = await qRes.json();
+      setStake(mapStake(quest));
+
+      const dRes = await fetch(`${base}/api/days/${id}`, {
+        headers,
+      });
+      if (dRes.ok) {
+        const { data } = await dRes.json();
+        setDays(
+          [...(data ?? [])].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+          ),
+        );
+      }
     } catch (e: any) {
-      setError(e.message || "Something went wrong while fetching records.");
+      setError(e.message ?? "Failed to load.");
     } finally {
       setLoading(false);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    fetchStakeDays();
-  }, [fetchStakeDays]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      // Fetch records and run device check concurrently
-      await Promise.all([fetchStakeDays(), runCheck()]);
-    } finally {
       setRefreshing(false);
     }
-  }, [fetchStakeDays, runCheck]);
+  }
 
-  const renderHeader = () => (
-    <View
-      style={[
-        commonTheme.layout.rowBetween,
-        styles.tableRow,
-        styles.tableHeader,
-        { backgroundColor: colors.surface1, borderColor: colors.border },
-      ]}
-    >
-      <Text
-        style={[
-          commonTheme.text.bodyStrong,
-          styles.cellDate,
-          { color: colors.text },
-        ]}
-      >
-        Date
-      </Text>
-      <Text
-        style={[
-          commonTheme.text.bodyStrong,
-          styles.cellTime,
-          { color: colors.text },
-        ]}
-      >
-        Screen Time
-      </Text>
-      <Text
-        style={[
-          commonTheme.text.bodyStrong,
-          styles.cellChecked,
-          { color: colors.text },
-        ]}
-      >
-        Last Updated
-      </Text>
-    </View>
-  );
+  useEffect(() => {
+    load();
+  }, [id]);
 
-  const renderItem = ({ item }: { item: StakeDay }) => (
-    <View
-      style={[
-        commonTheme.layout.rowBetween,
-        styles.tableRow,
-        { borderColor: colors.border },
-      ]}
-    >
-      <Text
-        style={[commonTheme.text.body, styles.cellDate, { color: colors.text }]}
-      >
-        {formatDate(item.date)}
-      </Text>
-      <Text
-        style={[
-          commonTheme.text.bodyStrong,
-          styles.cellTime,
-          { color: colors.primary },
-        ]}
-      >
-        {formatDuration(item.total_ms)}
-      </Text>
-      <Text
-        style={[
-          commonTheme.text.body,
-          styles.cellChecked,
-          { color: colors.textMuted },
-        ]}
-      >
-        {new Date(item.checked_at).toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </Text>
-    </View>
-  );
+  if (loading)
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.textMuted} />
+      </View>
+    );
+
+  if (error || !stake)
+    return (
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <Text style={[{ color: colors.destructive, fontSize: 14 }]}>
+          {error || "Stake not found"}
+        </Text>
+        <Text
+          onPress={() => load()}
+          style={[{ color: colors.textMuted, fontSize: 13 }]}
+        >
+          Tap to retry
+        </Text>
+      </View>
+    );
+
+  const statusUI = getStatusUI(stake.status, colors);
+  const limitMs = stake.rule?.limitMs;
+
+  const details = [
+    { label: "Started", value: formatDateTime(stake.created_at) },
+    {
+      label: "Ends",
+      value: stake.expires_at ? formatDateTime(stake.expires_at) : "—",
+    },
+    { label: "Limit", value: limitMs ? msToHoursAndMinutes(limitMs) : "—" },
+    { label: "Reward", value: `₹${stake.reward}` },
+  ];
 
   return (
-    <View
-      style={[
-        commonTheme.layout.flex,
-        {
-          padding: commonTheme.space.lg,
-          backgroundColor: colors.background,
-        },
-      ]}
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["bottom"]}
     >
-      <View
-        style={[
-          commonTheme.layout.rowBetween,
-          { marginBottom: commonTheme.space.lg },
-        ]}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => load(true)}
+            tintColor={colors.textMuted}
+          />
+        }
       >
-        <View>
-          <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
-            Daily Records
-          </Text>
-          <Text
-            style={[
-              commonTheme.text.caption,
-              { color: colors.textMuted, marginTop: commonTheme.space.xs },
-            ]}
-          >
-            Screen time tracked per day
-          </Text>
-        </View>
-      </View>
-
-      <ErrorHandler error={error} type="text" onClear={() => setError("")} />
-
-      {loading && records.length === 0 ? (
-        <View style={[commonTheme.layout.flex, commonTheme.layout.center]}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <FlatList
-          data={records}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={renderHeader}
-          renderItem={renderItem}
-          contentContainerStyle={{ gap: commonTheme.space.xs }}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.textMuted}
-              progressBackgroundColor={colors.surface3}
-              colors={[colors.primary]}
+        <View style={styles.row}>
+          <View style={[styles.pill, { backgroundColor: colors.surface2 }]}>
+            <Feather
+              name={statusUI.icon as any}
+              size={12}
+              color={statusUI.color}
             />
-          }
-          ListEmptyComponent={
-            <View
-              style={[
-                commonTheme.layout.center,
-                { paddingVertical: commonTheme.space.xl },
-              ]}
-            >
-              <Text
-                style={[commonTheme.text.body, { color: colors.textMuted }]}
-              >
-                No screen time recorded for this stake yet.
+            <Text style={[styles.pillText, { color: statusUI.color }]}>
+              {statusUI.text}
+            </Text>
+          </View>
+          <Text style={[styles.typeTag, { color: colors.textMuted }]}>
+            {stake.type}
+          </Text>
+        </View>
+
+        <Text
+          style={[
+            styles.title,
+            { color: colors.text, fontFamily: commonTheme.font.bold },
+          ]}
+        >
+          {stake.title}
+        </Text>
+        <Text
+          style={[
+            styles.reward,
+            { color: colors.primary, fontFamily: commonTheme.font.bold },
+          ]}
+        >
+          ₹{stake.reward}
+        </Text>
+
+        {(stake.daysTotal ?? 0) > 0 && (
+          <View style={{ gap: commonTheme.space.sm }}>
+            <View style={[styles.track, { backgroundColor: colors.surface2 }]}>
+              <View
+                style={[
+                  styles.fill,
+                  {
+                    width: `${stake.progressPercent ?? 0}%` as any,
+                    backgroundColor: statusUI.color,
+                  },
+                ]}
+              />
+            </View>
+            <View style={styles.row}>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>
+                Day {(stake.daysTotal ?? 0) - (stake.daysLeft ?? 0)} of{" "}
+                {stake.daysTotal}
+              </Text>
+              <Text style={[styles.meta, { color: colors.textMuted }]}>
+                {daysLeft(stake.expires_at)}
               </Text>
             </View>
-          }
-        />
-      )}
-    </View>
+          </View>
+        )}
+
+        <View style={[styles.card, { backgroundColor: colors.surface2 }]}>
+          {details.map(({ label, value }, i) => (
+            <View key={label}>
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>
+                  {label}
+                </Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    { color: colors.text, fontFamily: commonTheme.font.medium },
+                  ]}
+                >
+                  {value}
+                </Text>
+              </View>
+              {i < details.length - 1 && (
+                <View
+                  style={[styles.sep, { backgroundColor: colors.surface2 }]}
+                />
+              )}
+            </View>
+          ))}
+        </View>
+
+        <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+          DAILY RECORDS
+        </Text>
+
+        {days.length === 0 ? (
+          <Text style={[styles.empty, { color: colors.textMuted }]}>
+            No records yet — appears after each daily check.
+          </Text>
+        ) : (
+          <View style={[styles.card, { backgroundColor: colors.surface2 }]}>
+            {days.map((record, i) => {
+              const passed =
+                limitMs !== undefined ? record.total_ms <= limitMs : null;
+              const accent =
+                passed === null ? colors.text : passed ? "#34d399" : "#f87171";
+              return (
+                <View key={record.date}>
+                  <View style={styles.dayRow}>
+                    <View>
+                      <Text
+                        style={[
+                          styles.dayDate,
+                          {
+                            color: colors.text,
+                            fontFamily: commonTheme.font.medium,
+                          },
+                        ]}
+                      >
+                        {formatDate(record.date)}
+                      </Text>
+                      {passed !== null && (
+                        <Text style={[styles.dayBadge, { color: accent }]}>
+                          {passed ? "Under limit" : "Over limit"}
+                        </Text>
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.dayTime,
+                        { color: accent, fontFamily: commonTheme.font.bold },
+                      ]}
+                    >
+                      {msToHoursAndMinutes(record.total_ms)}
+                    </Text>
+                  </View>
+                  {i < days.length - 1 && (
+                    <View
+                      style={[
+                        styles.sep,
+                        {
+                          backgroundColor: colors.surface2,
+                          marginLeft: commonTheme.space.lg,
+                        },
+                      ]}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  tableRow: {
+  container: { flex: 1 },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: commonTheme.space.md,
+  },
+  scroll: {
+    paddingHorizontal: commonTheme.space.lg,
+    paddingTop: commonTheme.space.md,
+    paddingBottom: commonTheme.space["2xl"],
+    gap: commonTheme.space.lg,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: commonTheme.space.xs,
+    paddingHorizontal: commonTheme.space.md,
+    paddingVertical: commonTheme.space.xs,
+    borderRadius: commonTheme.rounded.full,
+  },
+  pillText: { fontSize: 12, fontFamily: commonTheme.font.medium },
+  typeTag: { fontSize: 12, textTransform: "capitalize" },
+  title: { fontSize: 22, lineHeight: 28 },
+  reward: { fontSize: 30 },
+  track: { height: 5, borderRadius: 3, overflow: "hidden" },
+  fill: { height: "100%", borderRadius: 3 },
+  meta: { fontSize: 12 },
+  card: { borderRadius: commonTheme.rounded.lg, overflow: "hidden" },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: commonTheme.space.lg,
     paddingVertical: commonTheme.space.md,
-    paddingHorizontal: commonTheme.space.sm,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderRadius: commonTheme.rounded.sm,
   },
-  tableHeader: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: 1,
+  detailLabel: { fontSize: 14 },
+  detailValue: { fontSize: 14 },
+  sep: { height: StyleSheet.hairlineWidth },
+  sectionLabel: {
+    fontSize: 11,
+    letterSpacing: 0.7,
+    fontFamily: commonTheme.font.medium,
   },
-  cellDate: {
-    flex: 2,
+  dayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: commonTheme.space.lg,
+    paddingVertical: commonTheme.space.md,
   },
-  cellTime: {
-    flex: 1.5,
-  },
-  cellChecked: {
-    flex: 1.5,
-    textAlign: "right",
+  dayDate: { fontSize: 14 },
+  dayBadge: { fontSize: 11, marginTop: 2 },
+  dayTime: { fontSize: 16 },
+  empty: {
+    fontSize: 13,
+    textAlign: "center",
+    paddingVertical: commonTheme.space.xl,
   },
 });
