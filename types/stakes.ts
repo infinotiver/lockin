@@ -12,10 +12,10 @@ export type StakeStatus = (typeof validStatuses)[number];
 
 export type QuestType =
   | "screen-time"
-  | "photo-verify"
-  | "health"
-  | "peer-verify"
-  | "integration";
+  // | "photo-verify"
+  // | "health"
+  // | "peer-verify"
+  // | "integration";
 
 export type CheckAction =
   | "pass"
@@ -24,9 +24,21 @@ export type CheckAction =
   | "fail"
   | "skip"
   | "unsupported";
+
+// Add codes for each check reason (for stability purposes)
+// This is separate from `message` (which is free-form/date-bearing display
+// text) so consumers can dedupe or branch on cause without string-matching
+// on user-facing text that can legitimately vary between check cycles.
+export type CheckReason =
+  | "permission_revoked"
+  | "limit_exceeded"
+  | "expired"
+  | "fetch_failed";
+
 export type CheckResult = {
   stakeId: string;
   action: CheckAction;
+  reason?: CheckReason;
   message?: string;
   totalMs?: number;
 };

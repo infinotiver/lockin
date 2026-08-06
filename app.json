@@ -14,9 +14,9 @@
       "permissions": ["android.permission.PACKAGE_USAGE_STATS"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/lockin_new_foreground.png",
+        "backgroundImage": "./assets/images/lockin_new_background.png",
+        "monochromeImage": "./assets/images/lockin_new_monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.infinotiver.lockin"
@@ -24,7 +24,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.ico"
     },
     "plugins": [
       "./plugins/withScreenTime",
@@ -38,7 +38,10 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker",
+      "expo-sharing",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

@@ -27,55 +27,79 @@ export type ThemeColors = {
 export type ThemeMode = "light" | "dark";
 
 const light: ThemeColors = {
-  background: "#F2F0EA",
-  surface1: "#F7F5EE",
-  surface2: "#ECEAE3",
-  surface3: "#E5E2D9",
-  text: "#1A1A1A",
-  textMuted: "#888888",
-  primary: "#1A1A1A",
+  background: "#F9F9F9",
+
+  surface1: "#FCFCFC", // card
+  surface2: "#F7F7F7", // sidebar
+  surface3: "#EFEFEF", // muted
+
+  text: "#202020",
+  textMuted: "#646464",
+
+  primary: "#644A40",
   onPrimary: "#FFFFFF",
-  accent: "#FB923C",
-  onAccent: "#1A1A1A",
-  secondary: "#F7F5EE",
-  onSecondary: "#1A1A1A",
-  muted: "#ECEAE3",
-  destructive: "#EF4444",
+
+  accent: "#E8E8E8",
+  onAccent: "#202020",
+
+  secondary: "#FFDFB5",
+  onSecondary: "#582D1D",
+
+  muted: "#EFEFEF",
+
+  destructive: "#E54D2E",
   onDestructive: "#FFFFFF",
-  errorColor: "#BF3939",
-  success: "#16A34A",
+
+  errorColor: "#E54D2E",
+  success: "#166534",
   warning: "#D97706",
-  border: "#E5E2D9",
-  focusBorder: "#1A1A1A",
-  input: "#E5E2D9",
-  tint: "#1A1A1A",
-  selected: "#3cded333",
+
+  border: "#D8D8D8",
+  focusBorder: "#644A40",
+
+  input: "#D8D8D8",
+
+  tint: "#644A40",
+
+  selected: "#644A4020",
 };
 
 const dark: ThemeColors = {
-  background: "#000000",
-  surface1: "#0A0A0A",
-  surface2: "#1A1A1A",
-  surface3: "#222222",
-  text: "#FFFFFF",
-  textMuted: "#888888",
-  primary: "#FFFFFF",
-  onPrimary: "#000000",
-  accent: "#FB923C",
-  onAccent: "#fff",
-  secondary: "#0A0A0A",
-  onSecondary: "#FFFFFF",
+  background: "#111111",
+
+  surface1: "#191919", // card
+  surface2: "#222222", // muted
+  surface3: "#2A2A2A", // accent
+
+  text: "#EEEEEE",
+  textMuted: "#B4B4B4",
+
+  primary: "#FFE0C2",
+  onPrimary: "#081A1B",
+
+  accent: "#2A2A2A",
+  onAccent: "#EEEEEE",
+
+  secondary: "#393028",
+  onSecondary: "#FFE0C2",
+
   muted: "#222222",
-  destructive: "#EF4444",
+
+  destructive: "#E54D2E",
   onDestructive: "#FFFFFF",
-  errorColor: "#C73E3E",
-  success: "#16A34A",
-  warning: "#D97706",
-  border: "#1A1A1A",
-  focusBorder: "#F2F2F2",
-  input: "#1A1A1A",
-  tint: "#FFFFFF",
-  selected: "#4e62ff",
+
+  errorColor: "#E54D2E",
+  success: "#22C55E",
+  warning: "#F59E0B",
+
+  border: "#201E18",
+  focusBorder: "#FFE0C2",
+
+  input: "#484848",
+
+  tint: "#FFE0C2",
+
+  selected: "#FFE0C226",
 };
 
 export const COLOR_THEMES: Record<ThemeMode, ThemeColors> = {

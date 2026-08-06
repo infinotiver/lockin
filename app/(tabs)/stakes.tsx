@@ -12,17 +12,18 @@ import { Feather } from "@expo/vector-icons";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@clerk/clerk-expo";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
 import type { Stake } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
-import { CreateStakeModal } from "@/components/modals/CreateStakeModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
-import { mapStake } from "@/lib/mapStake";
-import { useStakeManager } from "@/hooks/useStakeManager"; // Updated import
+import { RefreshControl } from "react-native";
+import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
+import { CreateStakeSheet } from "@/components/modals/CreateStakeSheet";
+import type { CreateStakeSheetRef } from "@/components/modals/CreateStakeSheet";
 
 type UITabKey = "active" | "pending" | "completed";
 
@@ -35,32 +36,44 @@ const EMPTY_MESSAGES: Record<UITabKey, string> = {
 export default function StakesScreen() {
   const colors = useColors();
   const { getToken } = useAuth();
-  const router = useRouter();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
 
   const [activeTab, setActiveTab] = useState<UITabKey>("active");
-  const [showCreate, setShowCreate] = useState(false);
-  const [stakes, setStakes] = useState<Stake[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchError, setFetchError] = useState("");
+  const createSheetRef = useRef<CreateStakeSheetRef>(null);
+  const {
+    stakes,
+    loading,
+    fetchError,
+    fetchStakes,
+    infoDialog,
+    setInfoDialog,
+  } = useStakeManagerContext();
 
-  const fetchingRef = useRef(false);
-  const finalizingRef = useRef(new Set<string>());
+  const [refreshing, setRefreshing] = useState(false);
+
+  /**
+   * Runs the pull-to-refresh request and always releases the native spinner.
+   *
+   * @returns A promise that resolves when the shared fetch operation settles.
+   */
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true);
+    try {
+      await fetchStakes();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchStakes]);
   const platformWarnShown = useRef(false);
 
   const [blockDialog, setBlockDialog] = useState({
     visible: false,
     message: "",
   });
-  const [warnDialog, setWarnDialog] = useState({ visible: false, message: "" });
-  const [infoDialog, setInfoDialog] = useState({
-    visible: false,
-    title: "",
-    message: "",
-  });
 
-  // show platform warning once per session on non-Android
+  // This warning is local to the list route, but the ref prevents development
+  // re-renders from repeatedly interrupting the user with the same limitation.
   useEffect(() => {
     if (Platform.OS !== "android" && !platformWarnShown.current) {
       platformWarnShown.current = true;
@@ -73,120 +86,11 @@ export default function StakesScreen() {
     }
   }, []);
 
-  const fetchStakes = useCallback(async () => {
-    if (fetchingRef.current) return;
-    fetchingRef.current = true;
-    setLoading(true);
-    setFetchError("");
-
-    try {
-      const token = await getTokenRef.current();
-      if (!token) throw new Error("Missing auth token.");
-
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/quests`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to fetch stakes.");
-      }
-
-      const body = await res.json();
-      setStakes((body.quests || []).map((q: any) => mapStake(q)));
-    } catch (e) {
-      setFetchError(e instanceof Error ? e.message : "Failed to fetch stakes.");
-    } finally {
-      fetchingRef.current = false;
-      setLoading(false);
-    }
-  }, []);
-
-  const finalizeStake = useCallback(
-    async (stakeId: string, status: "completed" | "failed") => {
-      const key = `${stakeId}:${status}`;
-      if (finalizingRef.current.has(key)) return;
-      finalizingRef.current.add(key);
-
-      try {
-        const token = await getTokenRef.current();
-        if (!token) throw new Error("Missing auth token.");
-
-        const res = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/quests/${stakeId}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ status }),
-          },
-        );
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          throw new Error(body?.error ?? "Failed to update stake.");
-        }
-
-        await fetchStakes();
-
-        if (status === "completed") {
-          setInfoDialog({
-            visible: true,
-            title: "Stake complete",
-            message:
-              "You hit your goal. The reward has been marked as yours (WIP).",
-          });
-        }
-      } catch (e) {
-        setWarnDialog({
-          visible: true,
-          message:
-            e instanceof Error ? e.message : "Failed to update stake status.",
-        });
-      } finally {
-        finalizingRef.current.delete(key);
-      }
-    },
-    [fetchStakes],
-  );
-
   useFocusEffect(
     useCallback(() => {
       void fetchStakes();
     }, [fetchStakes]),
   );
-
-  // Updated hook configuration
-  useStakeManager({
-    stakes,
-    onComplete: (id) => {
-      void finalizeStake(id, "completed");
-    },
-    onFail: (id, message) => {
-      const isPermission = message?.toLowerCase().includes("permission");
-      if (isPermission) {
-        setInfoDialog({
-          visible: true,
-          title: "Permission required",
-          message:
-            "Usage access was revoked. Re-enable it in Settings → Permissions to keep your stake active.",
-        });
-        return;
-      }
-      void finalizeStake(id, "failed");
-      setWarnDialog({
-        visible: true,
-        message:
-          message ??
-          "You missed your goal. The stake has been marked as failed.",
-      });
-    },
-    onUnsupported: () => {
-      // already handled by the one-time platform warning on mount
-    },
-  });
 
   const activeStakes = stakes.filter((s) => s.status === "active");
   const pendingStakes = stakes.filter((s) => s.status === "pending");
@@ -214,8 +118,13 @@ export default function StakesScreen() {
         ? pendingStakes
         : doneStakes;
 
-  const handleFABPress = () => {
-    // Inline logic replaces `canCreateStake`
+  /**
+   * Opens the creation sheet only when it cannot create a second active
+   * screen-time evaluator for the same user.
+   *
+   * @returns Nothing; the blocking case is communicated through `blockDialog`.
+   */
+  const handleFABPress = (): void => {
     const hasActiveScreenTime = activeStakes.some(
       (s) => s.type === "screen-time",
     );
@@ -228,7 +137,7 @@ export default function StakesScreen() {
       });
       return;
     }
-    setShowCreate(true);
+    createSheetRef.current?.present();
   };
 
   return (
@@ -253,14 +162,10 @@ export default function StakesScreen() {
         </Pressable>
       </View>
 
-      {/* Fetch error — inline, dismissable */}
+      {/* The provider owns retry/error state, so this screen only renders it. */}
       {!!fetchError && (
         <View style={styles.errorWrapper}>
-          <ErrorHandler
-            error={fetchError}
-            type="text"
-            onClear={() => setFetchError("")}
-          />
+          <ErrorHandler error={fetchError} type="text" onClear={() => {}} />
         </View>
       )}
 
@@ -278,6 +183,15 @@ export default function StakesScreen() {
           { paddingBottom: commonTheme.space["2xl"] },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.textMuted}
+            progressBackgroundColor={colors.surface3}
+            colors={[colors.primary]}
+          />
+        }
       >
         {loading && stakes.length === 0 ? (
           <View style={styles.center}>
@@ -301,11 +215,7 @@ export default function StakesScreen() {
         )}
       </ScrollView>
 
-      <CreateStakeModal
-        visible={showCreate}
-        onClose={() => setShowCreate(false)}
-        onCreated={fetchStakes}
-      />
+      <CreateStakeSheet ref={createSheetRef} onCreated={fetchStakes} />
 
       {/* Block: can't create another stake */}
       <ConfirmDialog
@@ -327,48 +237,6 @@ export default function StakesScreen() {
         onDismiss={() => setBlockDialog({ visible: false, message: "" })}
       />
 
-      {/* Warn: over limit or stake failed */}
-      <ConfirmDialog
-        visible={warnDialog.visible}
-        title="Heads up"
-        message={warnDialog.message}
-        primary={{
-          label: "Dismiss",
-          onPress: () => setWarnDialog({ visible: false, message: "" }),
-        }}
-        secondary={{
-          label: "View records",
-          variant: "ghost",
-          onPress: () => {
-            setWarnDialog({ visible: false, message: "" });
-            router.push("/(tabs)/stakes");
-          },
-        }}
-        onDismiss={() => setWarnDialog({ visible: false, message: "" })}
-      />
-
-      {/* Info: platform notice, completion, permission */}
-      <ConfirmDialog
-        visible={infoDialog.visible}
-        title={infoDialog.title}
-        message={infoDialog.message}
-        primary={{
-          label: "Got it",
-          onPress: () =>
-            setInfoDialog({ visible: false, title: "", message: "" }),
-        }}
-        secondary={{
-          label: "Settings",
-          variant: "ghost",
-          onPress: () => {
-            setInfoDialog({ visible: false, title: "", message: "" });
-            router.push("/(tabs)/settings");
-          },
-        }}
-        onDismiss={() =>
-          setInfoDialog({ visible: false, title: "", message: "" })
-        }
-      />
     </SafeAreaView>
   );
 }

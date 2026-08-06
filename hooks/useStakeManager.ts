@@ -4,14 +4,17 @@ import { AppState } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { runStakeChecks } from "@/lib/stakeEvaluator";
 import type { Stake, CheckAction } from "@/types/stakes";
+import { logger } from "@/lib/logger";
 
 const CHECK_INTERVAL_MS = 15 * 60 * 1000;
+const MAX_TIMEOUT_MS = 2_147_483_647;
 
 type Options = {
   stakes: Stake[];
-  onComplete?: (stakeId: string) => void;
-  onFail?: (stakeId: string, message?: string) => void;
+  onComplete?: (stakeId: string) => Promise<void> | void;
+  onFail?: (stakeId: string, message?: string) => Promise<void> | void;
   onUnsupported?: () => void;
+  onPermissionRestored?: () => void;
 };
 
 export function useStakeManager({
@@ -19,11 +22,14 @@ export function useStakeManager({
   onComplete,
   onFail,
   onUnsupported,
+  onPermissionRestored,
 }: Options) {
   const { user } = useUser();
   const [checking, setChecking] = useState(false);
   const checkingRef = useRef(false);
   const handledRef = useRef(new Set<string>());
+  const isMountedRef = useRef(true);
+  const hadPermissionIssueRef = useRef(false);
 
   const runCheck = useCallback(async () => {
     if (!user?.id || stakes.length === 0 || checkingRef.current) return;
@@ -37,28 +43,50 @@ export function useStakeManager({
       const hasUnsupported = results.some((r) => r.action === "unsupported");
       if (hasUnsupported && onUnsupported) onUnsupported();
 
+      const hasPermissionRevoked = results.some(
+        (r) => r.action === "fail" && r.reason === "permission_revoked",
+      );
+
+      if (hasPermissionRevoked) {
+        hadPermissionIssueRef.current = true;
+      } else if (hadPermissionIssueRef.current) {
+        hadPermissionIssueRef.current = false;
+        onPermissionRestored?.();
+      }
+
       for (const result of results) {
-        const terminalKey = `${result.stakeId}:${result.action} - ${result.message}`;
+        const terminalKey = `${result.stakeId}:${result.action}:${result.reason ?? "none"}`;
         if (handledRef.current.has(terminalKey)) continue;
 
-        if (result.action === "complete") {
-          handledRef.current.add(terminalKey);
-          onComplete?.(result.stakeId);
-        } else if (result.action === "fail") {
-          handledRef.current.add(terminalKey);
-          onFail?.(result.stakeId, result.message);
+        try {
+          if (result.action === "complete") {
+            await onComplete?.(result.stakeId);
+
+            handledRef.current.add(terminalKey);
+          } else if (result.action === "fail") {
+            await onFail?.(result.stakeId, result.message);
+
+            if (result.reason !== "permission_revoked") {
+              handledRef.current.add(terminalKey);
+            }
+          }
+        } catch (e) {
+          logger.warn(`Failed to finalize ${terminalKey}:`, e);
         }
       }
     } finally {
       checkingRef.current = false;
-      setChecking(false);
+      if (isMountedRef.current) setChecking(false);
     }
-  }, [stakes, user?.id, onComplete, onFail, onUnsupported]);
+  }, [stakes, user?.id, onComplete, onFail, onUnsupported, onPermissionRestored]);
+
   const runCheckRef = useRef(runCheck);
   runCheckRef.current = runCheck;
 
   useEffect(() => {
+    isMountedRef.current = true;
     runCheckRef.current();
+
     const interval = setInterval(
       () => runCheckRef.current(),
       CHECK_INTERVAL_MS,
@@ -66,10 +94,36 @@ export function useStakeManager({
     const sub = AppState.addEventListener("change", (s) => {
       if (s === "active") runCheckRef.current();
     });
+
     return () => {
+      isMountedRef.current = false;
       clearInterval(interval);
       sub.remove();
     };
-  }, []); // empty deps - interval never resets so only one runCheck obj runs
+  }, []);
+
+  useEffect(() => {
+    const nextExpiryMs = stakes
+      .filter((stake) => stake.status === "active" && stake.type === "screen-time")
+      .map((stake) =>
+        stake.expires_at ? new Date(stake.expires_at).getTime() : Number.NaN,
+      )
+      .filter(Number.isFinite)
+      .sort((left, right) => left - right)[0];
+
+    if (nextExpiryMs === undefined) return;
+
+    // The regular interval can be almost 15 minutes late. Scheduling the nearest
+    // deadline separately lets an active app finalize a stake as soon as its
+    // evaluation window closes; `checkingRef` handles timer/interval overlap.
+    const delayMs = Math.min(
+      Math.max(0, nextExpiryMs - Date.now()) + 250,
+      MAX_TIMEOUT_MS,
+    );
+    const timeout = setTimeout(() => runCheckRef.current(), delayMs);
+
+    return () => clearTimeout(timeout);
+  }, [stakes]);
+
   return { checking, runCheck };
 }

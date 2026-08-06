@@ -1,4 +1,3 @@
-// components/auth/AuthScreenWrapper.tsx
 import { View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "./AuthCard";
