@@ -181,7 +181,7 @@ export default function SettingsScreen() {
           <StatCard value={stakesCount} label="Stakes" colors={colors} />
           <StatCard value={completedCount} label="Completed" colors={colors} />
           {/* TODO: fetch real stakes*/}
-          <StatCard value="1" label="Streak" colors={colors} />
+          {/* <StatCard value="1" label="Streak" colors={colors} /> */}
         </View>
 
         {/* Family Options */}

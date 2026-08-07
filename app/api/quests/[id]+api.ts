@@ -65,6 +65,7 @@ export async function GET(request: Request, { id }: Record<string, string>) {
  * locally by the route.
  */
 export async function PATCH(request: Request, { id }: Record<string, string>) {
+ 
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
@@ -97,6 +98,28 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
     console.error(error);
 
     return Response.json({ error: "Failed to update quest." }, { status: 500 });
+  }
+
+  if (status === "failed") {
+    // one row per failed stake
+    // unique constraint on stake_id - no prob if we call this more than once for same failure
+
+    const { error: settlementError } = await supabase
+      .from("settlements")
+      .upsert(
+        {
+          stake_id: data.id,
+          user_id: clerkId,
+          family_id: data.family_id,
+          amount: data.reward,
+        },
+        { onConflict: "stake_id", ignoreDuplicates: true },
+      );
+    if (settlementError) {
+      // log but don't fail the whole request — quest status is the source of
+      // truth; a missing settlement row here is recoverable via reconciliation
+      console.error("Failed to create settlement:", settlementError);
+    }
   }
 
   return Response.json({ quest: data });
