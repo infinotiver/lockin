@@ -110,7 +110,7 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
         {
           stake_id: data.id,
           user_id: clerkId,
-          family_id: data.family_id,
+          family_id: access.quest.family_id,
           amount: data.reward,
         },
         { onConflict: "stake_id", ignoreDuplicates: true },

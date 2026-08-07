@@ -4,16 +4,11 @@ import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import type { Settlement } from "@/hooks/useSettlements";
 
-const CHARITY_DONATION_URL = "https://your-charity-link-here"; // swap per stake/charity later
+const CHARITY_DONATION_URL = "https://infinotiver.is-a.dev/"; // currently only const and redirects to my website.
 
-type Settlement = {
-  id: string;
-  amount: number;
-  created_at: string;
-  status: "pending" | "settled";
-};
-
+// TODO: let user set their own chairty from some kind of predefined list and stuff
 export function SettlementCard({
   settlement,
   onMarkSettled,
@@ -22,7 +17,7 @@ export function SettlementCard({
   onMarkSettled: (id: string, note?: string) => Promise<void>;
 }) {
   const colors = useColors();
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(settlement.note ?? "");
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -66,7 +61,7 @@ export function SettlementCard({
       </Text>
 
       <Button
-        variant="secondary"
+        variant="primary"
         onPress={() => Linking.openURL(CHARITY_DONATION_URL)}
         style={styles.payButton}
       >
@@ -84,14 +79,14 @@ export function SettlementCard({
         ]}
       />
 
-      <Button variant="primary" onPress={() => setConfirmVisible(true)}>
+      <Button variant="secondary" onPress={() => setConfirmVisible(true)}>
         Mark as settled
       </Button>
 
       <ConfirmDialog
         visible={confirmVisible}
         title="Mark as settled?"
-        message="This confirms you've made the payment yourself. LockIn can't verify it."
+        message="This confirms you've made the payment yourself. LockIn can't verify it at the moment."
         primary={{
           label: "Confirm",
           onPress: handleConfirm,
