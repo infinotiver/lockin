@@ -1,22 +1,25 @@
+<div align="center">
+  <img src="assets\images\icon.png" alt="LockIn logo" width="120" />
+
 # LockIn
 
-Put your money where your goals are.
+  **Put your money where your goals are.**
 
-LockIn is a commitment app for people who want to actually follow through. Set a goal, stake some money on it, and prove it with real data. Hit your goal — keep the money. Miss it — it goes to charity. No excuses, no loopholes.
+  LockIn is a commitment app for people who want to actually follow through. Set a goal, stake some money on it and build habits.
 
-Built for the generation that knows willpower alone isn't enough.
+  ![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 
-Android only (for now).
+</div>
 
 ---
 
 ## What is a stake?
 
-A **stake** is a goal with skin in the game.
+A **stake** is a goal.
 
-You pick a habit you want to build or break — screen time, coding, anything — set a time period, and lock in an amount of money. The app tracks your progress automatically. If you follow through, you get your money back. If you don't, it goes to a cause you care about (or one you don't — extra motivation).
+You pick a habit you want to build or break — screen time, coding, anything — set a time period, and lock in an amount of money (currently, only android devices and screen-time stakes are supported). The app tracks your progress automatically. If you follow through, you get your money back. If you don't, it goes to a cause you care about (or one you don't — extra motivation).
 
-For families, parents can create stakes for teens as part of an allowance system. But LockIn works just as well solo.
+For families, parents can create stakes for teens as part of an allowance system. But LockIn works just as well solo. (work in progress)
 
 ---
 
@@ -25,19 +28,11 @@ For families, parents can create stakes for teens as part of an allowance system
 - [Expo](https://expo.dev) (React Native)
 - [Clerk](https://clerk.com) — auth
 - [Supabase](https://supabase.com) — database
-- Kotlin native module — Android screen time via `UsageStatsManager`
-- WorkManager — background sync
+- Kotlin native modules — android screen-time 
 
 ---
 
 ## Getting started
-
-### Prerequisites
-
-- Node 20+
-- pnpm
-- Android device or emulator
-- EAS CLI (`npm i -g eas-cli`)
 
 ### Install
 
@@ -82,10 +77,39 @@ The app requires **Usage Access** (`PACKAGE_USAGE_STATS`) to read screen time da
 
 ---
 
-## Status
+## Using the App
 
-Active development. Supabase integration and payment flows are in progress.
+1. Sign in or create an account
+2. Grant Usage Access permission — LockIn needs this to track your screen time automatically. (If you skip it, you can find the same guide anytime under **Settings → Screen time access** in the app.)
+3. Create your first stake 
+4. Be loyal to your goal (hopefully)
+## Roadmap
 
+### ✅ Implemented
+
+- [x] Auth & onboarding (Clerk), with silent family auto-creation for individual users
+- [x] Role promotion flow after email verification
+- [x] Stake creation & tracking — raw `total_ms` persisted per day, pass/fail derived at runtime
+- [x] Android screen time tracking via Kotlin native module 
+- [x] Stake evaluator with correct fail/fetch-error/pass priority ordering across days
+- [x] Settlements v1 (manual/honor system)
+- [x] State-based `ConfirmDialog` (replacing `Alert.alert()`, for web compatibility)
+- [x] Pull-to-refresh with dedicated `refreshing` state
+
+### 🚧 In progress / known gaps
+
+- [ ] Fix db schema type mismatches
+- [ ] Make quests shareable or assignable to family members
+
+### 🔭 Planned
+
+- [ ] More flexible stake rules
+- [ ] Real automatic payments 
+- [ ] More stake types and goal templates to choose from
+- [ ] Group/family stakes
+- [ ] iOS support
+
+---
 ## Contributors
 LockIn was made possible because of these cool people!
 
