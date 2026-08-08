@@ -114,7 +114,6 @@ const text = StyleSheet.create({
   amountLarge: {
     fontSize: fontSize["9xl"],
     fontFamily: font.monoBold,
-    lineHeight: 52,
   },
   error: {
     fontSize: fontSize.md,
@@ -142,10 +141,9 @@ const layout = StyleSheet.create({
     gap: space.md,
   },
   card: {
-    gap: space.lg,
+    gap: space.md,
     borderRadius: rounded.lg,
     padding: space.lg,
-    borderWidth: 1,
   },
   section: {
     borderRadius: rounded.xl,

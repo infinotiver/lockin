@@ -283,7 +283,9 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
       <BottomSheetScrollView
         contentContainerStyle={[
           styles.sheetContent,
-          { paddingBottom: commonTheme.space.xl + insets.bottom },
+          {
+            paddingBottom: commonTheme.space.xl + insets.bottom,
+          },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
