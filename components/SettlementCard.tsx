@@ -45,12 +45,7 @@ export function SettlementCard({
   if (settlement.status === "settled") {
     return (
       <View style={[styles.card, { backgroundColor: colors.surface2 }]}>
-        <Button
-          variant="secondary"
-          onPress={() => {}}
-          disabled
-          style={styles.settledButton}
-        >
+        <Button variant="ghost" onPress={() => {}} disabled>
           Settled
         </Button>
       </View>
@@ -134,8 +129,5 @@ const styles = StyleSheet.create({
     borderRadius: commonTheme.rounded.md,
     padding: commonTheme.space.sm,
     fontSize: commonTheme.fontSize.md,
-  },
-  settledButton: {
-    paddingVertical: commonTheme.space.lg, // taller than the default button — "big" per your ask
   },
 });

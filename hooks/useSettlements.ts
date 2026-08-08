@@ -28,15 +28,21 @@ export function useSettlements() {
     // marks a pending settlement record as settled
     async (settlementId: string, note?: string) => {
       const token = await getToken();
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/settlements/${settlementId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/settlements/${settlementId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "settled", note }),
         },
-        body: JSON.stringify({ note }),
-      });
-      if (!res.ok) throw new Error("Failed to mark settlement as settled");
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to mark settlement as settled");
+      }
       // optimistic removal — settled items drop out of the pending list
       setSettlements((prev) => prev.filter((s) => s.id !== settlementId));
     },

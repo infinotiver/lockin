@@ -7,10 +7,7 @@ const clerk = createClerkClient({
 });
 
 // PATCH /api/settlements/[id] — update settlement status
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } },
-) {
+export async function PATCH(request: Request, { id }: Record<string, string>) {
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
@@ -28,7 +25,7 @@ export async function PATCH(
   const { data: settlement, error: fetchError } = await supabase
     .from("settlements")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (fetchError || !settlement) {
@@ -37,21 +34,25 @@ export async function PATCH(
 
   const isOwner = settlement.user_id === requester.id;
 
-  // TODO: allow an authorized family member to  also update settlement
+  // TODO: allow an authorized family member to also update settlement
   if (!isOwner) return forbidden();
 
   const body = await request.json();
-  const { status } = body;
+  const { status, note } = body;
 
   const allowedStatuses = ["pending", "settled"];
   if (!allowedStatuses.includes(status)) {
     return Response.json({ error: "Invalid status" }, { status: 400 });
   }
 
+  const update: Record<string, unknown> = { status };
+  if (note !== undefined) update.note = note;
+  if (status === "settled") update.settled_at = new Date().toISOString();
+
   const { data, error } = await supabase
     .from("settlements")
-    .update({ status })
-    .eq("id", params.id)
+    .update(update)
+    .eq("id", id)
     .select()
     .single();
 
