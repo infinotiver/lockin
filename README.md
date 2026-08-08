@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets\images\icon.png" alt="LockIn logo" width="120" />
 
-  # LockIn
+# LockIn
 
   **Put your money where your goals are.**
 
@@ -98,7 +98,7 @@ The app requires **Usage Access** (`PACKAGE_USAGE_STATS`) to read screen time da
 
 ### 🚧 In progress / known gaps
 
-- [ ] Fix db schema type mismatchs
+- [ ] Fix db schema type mismatches
 - [ ] Make quests shareable or assignable to family members
 
 ### 🔭 Planned

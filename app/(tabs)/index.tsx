@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useCallback } from "react";
 import {
   View,
   Text,
@@ -22,15 +22,12 @@ const HomeScreen = () => {
   const colors = useColors();
   const router = useRouter();
   const { user } = useUser();
-  const { settlements, totalDue, fetchPending } = useSettlements();
-
-  const fetchPendingRef = useRef(fetchPending);
-  fetchPendingRef.current = fetchPending;
+  const { settlements, totalDue, fetchPending, error, isInitialLoad } = useSettlements();
 
   useFocusEffect(
     useCallback(() => {
-      fetchPendingRef.current();
-    }, []),
+      fetchPending();
+    }, [fetchPending]),
   );
 
   const hasDue = settlements.length > 0;
@@ -61,9 +58,13 @@ const HomeScreen = () => {
           </Text>
 
           <Text style={[styles.dueSubtext, { color: colors.textMuted }]}>
-            {hasDue
-              ? `${settlements.length} failed stake${settlements.length > 1 ? "s" : ""} pending settlement`
-              : "You're all caught up on settlements"}
+            {isInitialLoad
+              ? "Loading settlements..."
+              : error
+                ? `Error: ${error}`
+                : hasDue
+                  ? `${settlements.length} failed stake${settlements.length > 1 ? "s" : ""} pending settlement`
+                  : "You're all caught up on settlements"}
           </Text>
 
           {hasDue && (

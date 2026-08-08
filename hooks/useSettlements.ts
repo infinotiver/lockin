@@ -7,21 +7,34 @@ export function useSettlements() {
   const { getToken, userId } = useAuth();
   const [settlements, setSettlements] = useState<Settlement[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const fetchPending = useCallback(async () => {
     // Fetch pending settlements for user by specifying the optional status param
     if (!userId) return; // no response if user not logged (safeguard)
     setLoading(true);
-    const token = await getToken();
-    const res = await fetch(
-      `${process.env.EXPO_PUBLIC_API_URL}/api/settlements?status=pending`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    );
-    const { settlements } = await res.json();
-    setSettlements(settlements);
-    setLoading(false);
+    setError(null);
+    try {
+      const token = await getToken();
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/settlements?status=pending`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      if (!res.ok) {
+        throw new Error(`Failed to fetch settlements: ${res.status}`);
+      }
+      const { settlements } = await res.json();
+      setSettlements(Array.isArray(settlements) ? settlements : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch settlements");
+      setSettlements([]); // Safely retain an array on error
+    } finally {
+      setLoading(false);
+      setIsInitialLoad(false);
+    }
   }, [userId, getToken]);
 
   const markSettled = useCallback(
@@ -71,6 +84,8 @@ export function useSettlements() {
     settlements,
     totalDue,
     loading,
+    error,
+    isInitialLoad,
     fetchPending,
     fetchForStake,
     markSettled,
