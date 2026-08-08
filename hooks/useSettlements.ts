@@ -14,7 +14,7 @@ export function useSettlements() {
     setLoading(true);
     const token = await getToken();
     const res = await fetch(
-      `/api/settlements?userId=${userId}&status=pending`,
+      `/api/settlements?status=pending`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
