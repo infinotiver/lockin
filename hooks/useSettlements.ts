@@ -14,7 +14,7 @@ export function useSettlements() {
     setLoading(true);
     const token = await getToken();
     const res = await fetch(
-      `/api/settlements?status=pending`,
+      `${process.env.EXPO_PUBLIC_API_URL}/api/settlements?status=pending`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -28,7 +28,7 @@ export function useSettlements() {
     // marks a pending settlement record as settled
     async (settlementId: string, note?: string) => {
       const token = await getToken();
-      const res = await fetch(`/api/settlements/${settlementId}`, {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/settlements/${settlementId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -50,7 +50,7 @@ export function useSettlements() {
       if (!userId) return null;
       const token = await getToken();
       const res = await fetch(
-        `/api/settlements?userId=${userId}&stakeId=${stakeId}`,
+        `${process.env.EXPO_PUBLIC_API_URL}/api/settlements?userId=${userId}&stakeId=${stakeId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

@@ -65,7 +65,6 @@ export async function GET(request: Request, { id }: Record<string, string>) {
  * locally by the route.
  */
 export async function PATCH(request: Request, { id }: Record<string, string>) {
- 
   const clerkId = await verifyAuth(request);
   if (!clerkId) return unauthorized();
 
@@ -83,44 +82,20 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
 
   const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
-
   const { data, error } = await supabase
     .from("quests")
     .update({ status })
     .eq("id", id)
-    // Keep the family predicate on the mutation so authorization and update
-    // still target the same record if membership changes concurrently.
     .eq("family_id", access.quest.family_id)
     .select("*")
     .single();
 
   if (error) {
     console.error(error);
-
     return Response.json({ error: "Failed to update quest." }, { status: 500 });
   }
 
-  if (status === "failed") {
-    // one row per failed stake
-    // unique constraint on stake_id - no prob if we call this more than once for same failure
-
-    const { error: settlementError } = await supabase
-      .from("settlements")
-      .upsert(
-        {
-          stake_id: data.id,
-          user_id: clerkId,
-          family_id: access.quest.family_id,
-          amount: data.reward,
-        },
-        { onConflict: "stake_id", ignoreDuplicates: true },
-      );
-    if (settlementError) {
-      // log but don't fail the whole request — quest status is the source of
-      // truth; a missing settlement row here is recoverable via reconciliation
-      console.error("Failed to create settlement:", settlementError);
-    }
-  }
+  // Settlement creation is handled atomically by the quest_failed_settlement in supabase
 
   return Response.json({ quest: data });
 }

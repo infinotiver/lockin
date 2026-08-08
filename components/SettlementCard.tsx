@@ -20,15 +20,26 @@ export function SettlementCard({
   const [note, setNote] = useState(settlement.note ?? "");
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleConfirm = async () => {
     setSubmitting(true);
+    setError(null);
     try {
       await onMarkSettled(settlement.id, note || undefined);
       setConfirmVisible(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to mark as settled",
+      );
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleCancel = () => {
+    setConfirmVisible(false);
+    setError(null);
   };
 
   if (settlement.status === "settled") {
@@ -87,6 +98,7 @@ export function SettlementCard({
         visible={confirmVisible}
         title="Mark as settled?"
         message="This confirms you've made the payment yourself. LockIn can't verify it at the moment."
+        error={error ?? undefined}
         primary={{
           label: "Confirm",
           onPress: handleConfirm,
@@ -94,9 +106,9 @@ export function SettlementCard({
         }}
         secondary={{
           label: "Cancel",
-          onPress: () => setConfirmVisible(false),
+          onPress: handleCancel,
         }}
-        onDismiss={() => setConfirmVisible(false)}
+        onDismiss={handleCancel}
       />
     </View>
   );
