@@ -82,10 +82,35 @@ The app requires **Usage Access** (`PACKAGE_USAGE_STATS`) to read screen time da
 
 ---
 
-## Status
+---
 
-Active development. Supabase integration and payment flows are in progress.
+## Roadmap
 
+### ✅ Implemented
+
+- [x] Auth & onboarding (Clerk), with silent family auto-creation for individual users
+- [x] Role promotion flow after email verification
+- [x] Stake creation & tracking — raw `total_ms` persisted per day, pass/fail derived at runtime
+- [x] Android screen time tracking via Kotlin native module 
+- [x] Stake evaluator with correct fail/fetch-error/pass priority ordering across days
+- [x] Settlements v1 (manual/honor system)
+- [x] State-based `ConfirmDialog` (replacing `Alert.alert()`, for web compatibility)
+- [x] Pull-to-refresh with dedicated `refreshing` state
+
+### 🚧 In progress / known gaps
+
+- [ ] Fix db schema type mismatchs
+- [ ] Make quests shareable or assignable to family members
+
+### 🔭 Planned
+
+- [ ] More flexible stake rules
+- [ ] Real automatic payments 
+- [ ] More stake types and goal templates to choose from
+- [ ] Group/family stakes
+- [ ] iOS support
+
+---
 ## Contributors
 LockIn was made possible because of these cool people!
 
