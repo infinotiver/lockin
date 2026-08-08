@@ -10,11 +10,11 @@ type DialogAction = {
   loading?: boolean;
   disabled?: boolean;
 };
-
 type ConfirmDialogProps = {
   visible: boolean;
   title: string;
   message?: string;
+  error?: string;
   primary: DialogAction;
   secondary: DialogAction;
   onDismiss?: () => void;
@@ -24,6 +24,7 @@ export function ConfirmDialog({
   visible,
   title,
   message,
+  error,
   primary,
   secondary,
   onDismiss,
@@ -58,6 +59,12 @@ export function ConfirmDialog({
             </Text>
           )}
 
+          {!!error && (
+            <Text style={[styles.message, { color: colors.errorColor }]}>
+              {error}
+            </Text>
+          )}
+
           <View style={styles.actions}>
             <Button
               variant={secondary.variant ?? "secondary"}
@@ -83,7 +90,6 @@ export function ConfirmDialog({
     </Modal>
   );
 }
-
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,

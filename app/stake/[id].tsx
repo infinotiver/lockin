@@ -11,7 +11,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState, useRef } from "react";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { msToHoursAndMinutes } from "@/lib/screenTime";
@@ -20,7 +19,9 @@ import { runStakeChecks } from "@/lib/stakeEvaluator";
 import { formatDate, formatDateTime, parseISODate } from "@/lib/timeParser";
 import type { Stake, DayRecord } from "@/types/stakes";
 import { StatusChip } from "@/components/stakes/StatusChip";
-
+import { useSettlements } from "@/hooks/useSettlements";
+import type { Settlement } from "@/hooks/useSettlements";
+import { SettlementCard } from "@/components/SettlementCard";
 function daysLeft(expiresAt: string | null) {
   if (!expiresAt) return "—";
   const expiresDate = parseISODate(expiresAt);
@@ -46,6 +47,8 @@ export default function StakeDetailScreen() {
   const [daysError, setDaysError] = useState("");
   const requestSeqRef = useRef(0);
 
+  const [settlement, setSettlement] = useState<Settlement | null>(null);
+  const { fetchForStake, markSettled } = useSettlements();
   async function load(isRefresh = false) {
     if (!id) return;
     const currentSeq = ++requestSeqRef.current;
@@ -70,6 +73,11 @@ export default function StakeDetailScreen() {
 
       if (currentSeq !== requestSeqRef.current) return;
       setStake(mapStake(quest));
+
+      if (quest.status === "failed") {
+        const s = await fetchForStake(id).catch(() => null);
+        if (currentSeq === requestSeqRef.current) setSettlement(s);
+      }
 
       const dRes = await fetch(`${base}/api/days/${id}`, {
         headers,
@@ -148,6 +156,8 @@ export default function StakeDetailScreen() {
             refreshing={refreshing}
             onRefresh={() => load(true)}
             tintColor={colors.textMuted}
+            progressBackgroundColor={colors.surface3}
+            colors={[colors.primary]}
           />
         }
       >
@@ -223,7 +233,22 @@ export default function StakeDetailScreen() {
             </View>
           ))}
         </View>
-
+        {stake.status === "failed" && settlement && (
+          <>
+            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+              SETTLEMENT
+            </Text>
+            <SettlementCard
+              settlement={settlement}
+              onMarkSettled={async (id, note) => {
+                await markSettled(id, note);
+                setSettlement((prev) =>
+                  prev ? { ...prev, status: "settled" } : prev,
+                );
+              }}
+            />
+          </>
+        )}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
           DAILY RECORDS
         </Text>

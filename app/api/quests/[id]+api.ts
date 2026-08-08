@@ -82,22 +82,20 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
 
   const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
-
   const { data, error } = await supabase
     .from("quests")
     .update({ status })
     .eq("id", id)
-    // Keep the family predicate on the mutation so authorization and update
-    // still target the same record if membership changes concurrently.
     .eq("family_id", access.quest.family_id)
     .select("*")
     .single();
 
   if (error) {
     console.error(error);
-
     return Response.json({ error: "Failed to update quest." }, { status: 500 });
   }
+
+  // Settlement creation is handled atomically by the quest_failed_settlement in supabase
 
   return Response.json({ quest: data });
 }
