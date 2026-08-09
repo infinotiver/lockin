@@ -24,7 +24,7 @@ export const ErrorHandler = ({
           visible={!!error}
           title="An Error Occurred"
           message={error}
-          onClose={() => onClear && onClear()}
+          onDismiss={() => onClear && onClear()}
         />
       );
 

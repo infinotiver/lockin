@@ -1,6 +1,7 @@
-import { ConfigPlugin, withAndroidManifest } from "@expo/config-plugins";
+// plugins/withScreenTime.js
+const { withAndroidManifest } = require("@expo/config-plugins");
 
-const withScreenTimePermission: ConfigPlugin = (config) => {
+const withScreenTimePermission = (config) => {
   return withAndroidManifest(config, (config) => {
     const manifest = config.modResults.manifest;
 
@@ -20,13 +21,13 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
     }
 
     // patch the startup provider
-    const application = manifest.application?.[0] as any;
+    const application = manifest.application?.[0];
     if (application) {
       if (!application.provider) application.provider = [];
 
       // reuse the existing provider if present
       let provider = application.provider.find(
-        (p: any) =>
+        (p) =>
           p.$["android:name"] === "androidx.startup.InitializationProvider",
       );
 
@@ -48,8 +49,7 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
       if (!provider["meta-data"]) provider["meta-data"] = [];
 
       const hasMetaData = provider["meta-data"].some(
-        (m: any) =>
-          m.$["android:name"] === "androidx.work.WorkManagerInitializer",
+        (m) => m.$["android:name"] === "androidx.work.WorkManagerInitializer",
       );
 
       if (!hasMetaData) {
@@ -66,4 +66,4 @@ const withScreenTimePermission: ConfigPlugin = (config) => {
   });
 };
 
-export default withScreenTimePermission;
+module.exports = withScreenTimePermission;
