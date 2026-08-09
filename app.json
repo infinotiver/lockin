@@ -8,10 +8,16 @@
     "scheme": "lockin",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
-      "permissions": ["android.permission.PACKAGE_USAGE_STATS"],
+      "permissions": [
+        "android.permission.PACKAGE_USAGE_STATS",
+        "android.permission.PACKAGE_USAGE_STATS"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/lockin_new_foreground.png",
@@ -19,7 +25,8 @@
         "monochromeImage": "./assets/images/lockin_new_monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.infinotiver.lockin"
+      "package": "com.infinotiver.lockin",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -60,6 +67,9 @@
         "projectId": "f02f8232-d487-43df-8610-bf34274fad26"
       }
     },
-    "owner": "infinotiver"
+    "owner": "infinotiver",
+    "updates": {
+      "url": "https://u.expo.dev/f02f8232-d487-43df-8610-bf34274fad26"
+    }
   }
 }
