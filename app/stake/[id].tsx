@@ -133,14 +133,13 @@ export default function StakeDetailScreen() {
 
   const limitMs = stake.rule?.limitMs;
 
-  const details = [
-    { label: "Started", value: formatDateTime(stake.created_at) },
+  const stats = [
+    { label: "Started", value: formatDate(stake.created_at) },
     {
       label: "Ends",
-      value: stake.expires_at ? formatDateTime(stake.expires_at) : "—",
+      value: stake.expires_at ? formatDate(stake.expires_at) : "—",
     },
     { label: "Limit", value: limitMs ? msToHoursAndMinutes(limitMs) : "—" },
-    { label: "Reward", value: `₹${stake.reward}` },
   ];
 
   return (
@@ -209,27 +208,20 @@ export default function StakeDetailScreen() {
           </View>
         )}
 
-        <View style={[styles.card, { backgroundColor: colors.surface2 }]}>
-          {details.map(({ label, value }, i) => (
-            <View key={label}>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textMuted }]}>
-                  {label}
-                </Text>
-                <Text
-                  style={[
-                    styles.detailValue,
-                    { color: colors.text, fontFamily: commonTheme.font.medium },
-                  ]}
-                >
-                  {value}
-                </Text>
-              </View>
-              {i < details.length - 1 && (
-                <View
-                  style={[styles.sep, { backgroundColor: colors.surface2 }]}
-                />
-              )}
+        <View style={styles.statsRow}>
+          {stats.map(({ label, value }) => (
+            <View key={label} style={styles.statItem}>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>
+                {label}
+              </Text>
+              <Text
+                style={[
+                  styles.statValue,
+                  { color: colors.text, fontFamily: commonTheme.font.medium },
+                ]}
+              >
+                {value}
+              </Text>
             </View>
           ))}
         </View>
@@ -354,15 +346,19 @@ const styles = StyleSheet.create({
   fill: { height: "100%", borderRadius: 3 },
   meta: { fontSize: 12 },
   card: { borderRadius: commonTheme.rounded.lg, overflow: "hidden" },
-  detailRow: {
+  statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: commonTheme.space.lg,
-    paddingVertical: commonTheme.space.md,
   },
-  detailLabel: { fontSize: 14 },
-  detailValue: { fontSize: 14 },
+  statItem: {
+    gap: 2,
+  },
+  statLabel: {
+    fontSize: 11,
+  },
+  statValue: {
+    fontSize: 14,
+  },
   sep: { height: StyleSheet.hairlineWidth },
   sectionLabel: {
     fontSize: 11,

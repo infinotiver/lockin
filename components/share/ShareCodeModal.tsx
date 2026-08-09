@@ -72,7 +72,7 @@ const ShareCodeModal = ({
   };
 
   return (
-    <BaseModal visible={visible} onClose={onClose}>
+    <BaseModal visible={visible} onDismiss={onClose}>
       <AuthTitle>{title}</AuthTitle>
 
       {!!subtitle && (
@@ -92,8 +92,7 @@ const ShareCodeModal = ({
         style={{
           backgroundColor: colors.surface2,
           borderRadius: rounded.xl,
-          borderWidth: 1,
-          borderColor: colors.border,
+
           gap: space.sm,
         }}
       >
@@ -131,12 +130,12 @@ const ShareCodeModal = ({
             <Ionicons
               name={copied ? "checkmark" : "copy-outline"}
               size={20}
-              color={copied ? colors.accent : colors.textMuted}
+              color={copied ? colors.primary : colors.textMuted}
             />
 
             <Text
               style={{
-                color: copied ? colors.accent : colors.textMuted,
+                color: copied ? colors.primary : colors.textMuted,
                 fontSize: fontSize.sm,
                 fontFamily: font.medium,
               }}

@@ -1,88 +1,148 @@
-import { Modal, View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
-import { Button } from "./Button";
+import { Button, ButtonVariant } from "@/components/ui/Button";
 
-export interface BaseModalProps {
+type ModalAction = {
+  label: string;
+  variant?: ButtonVariant;
+  onPress: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+};
+
+type BaseModalProps = {
   visible: boolean;
   title?: string;
   message?: string;
-  onClose: () => void;
+  // 0 actions = content-only modal (children render their own buttons, or it's purely informational).
+  // Last action defaults to "primary", the rest to "secondary" unless overridden.
+  actions?: ModalAction[];
+  // Backdrop tap + hardware back close the modal. Set false to force a choice via `actions`.
+  dismissable?: boolean;
+  // Wraps children in a capped-height ScrollView — for forms/long content that might overflow.
+  scrollable?: boolean;
+  onDismiss: () => void;
   children?: React.ReactNode;
-}
+};
 
-export const BaseModal = ({
+export function BaseModal({
   visible,
   title,
   message,
-  onClose,
+  actions,
+  dismissable = true,
+  scrollable = false,
+  onDismiss,
   children,
-}: BaseModalProps) => {
+}: BaseModalProps) {
   const colors = useColors();
+  const Body = scrollable ? ScrollView : View;
 
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={dismissable ? onDismiss : undefined}
+      statusBarTranslucent
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.modalWrapper}>
-          <View
-            style={[styles.modalContent, { backgroundColor: colors.surface2 }]}
-          >
-            {title && (
-              <Text style={[styles.title, { color: colors.text }]}>
-                {title}
-              </Text>
-            )}
-            {message && (
-              <Text style={[styles.message, { color: colors.textMuted }]}>
-                {message}
-              </Text>
-            )}
+      <Pressable
+        style={styles.backdrop}
+        onPress={dismissable ? onDismiss : undefined}
+      >
+        <Pressable
+          style={[styles.card, { backgroundColor: colors.surface2 }]}
+          onPress={(e) => e.stopPropagation()}
+        >
+          {!!title && (
+            <Text
+              style={[
+                styles.title,
+                { color: colors.text, fontFamily: commonTheme.font.bold },
+              ]}
+            >
+              {title}
+            </Text>
+          )}
 
-            {children}
+          {!!message && (
+            <Text style={[styles.message, { color: colors.textMuted }]}>
+              {message}
+            </Text>
+          )}
 
-            <View style={{ paddingTop: commonTheme.space.md }}>
-              <Button variant="secondary" onPress={onClose}>
-                <Text style={{ color: colors.onSecondary }}>Close</Text>
-              </Button>
+          {!!children && (
+            <Body style={scrollable ? styles.scrollBody : undefined}>
+              {children}
+            </Body>
+          )}
+
+          {!!actions?.length && (
+            <View style={styles.actions}>
+              {actions.map((action, i) => (
+                <Button
+                  key={action.label}
+                  variant={
+                    action.variant ??
+                    (i === actions.length - 1 ? "primary" : "secondary")
+                  }
+                  onPress={action.onPress}
+                  loading={action.loading}
+                  disabled={action.disabled}
+                  style={styles.button}
+                >
+                  {action.label}
+                </Button>
+              ))}
             </View>
-          </View>
+          )}
         </Pressable>
       </Pressable>
     </Modal>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  overlay: {
+  backdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: commonTheme.space.md,
+    padding: commonTheme.space.xl,
   },
-  modalWrapper: {
+  card: {
     width: "100%",
     maxWidth: 400,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalContent: {
-    width: "100%",
-    borderRadius: commonTheme.rounded["2xl"],
-    padding: commonTheme.space.lg,
-    elevation: 5,
+    borderRadius: commonTheme.rounded.xl,
+    padding: commonTheme.space.xl,
+    gap: commonTheme.space.md,
   },
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: commonTheme.space.sm,
+    fontSize: commonTheme.fontSize.xl,
+    textAlign: "center",
   },
   message: {
-    marginBottom: 16,
+    fontSize: commonTheme.fontSize.md,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  scrollBody: {
+    maxHeight: 400,
+  },
+  actions: {
+    flexDirection: "row",
+    gap: commonTheme.space.sm,
+    marginTop: commonTheme.space.sm,
+  },
+  button: {
+    flex: 1,
   },
 });

@@ -84,7 +84,7 @@ export function ViewFamilyModal({ visible, onClose }: ViewFamilyModalProps) {
   };
 
   return (
-    <BaseModal visible={visible} onClose={onClose} title="Family Details">
+    <BaseModal visible={visible} onDismiss={onClose} title="Family Details">
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

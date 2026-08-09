@@ -2,6 +2,7 @@ import { View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "./AuthCard";
 import commonTheme from "@/constants/theme";
+import { usePreventScreenCapture } from "expo-screen-capture";
 
 export const AuthScreenWrapper = ({
   children,
@@ -9,6 +10,7 @@ export const AuthScreenWrapper = ({
   children: React.ReactNode;
 }) => {
   const colors = useColors();
+  usePreventScreenCapture();
   return (
     <View
       style={{

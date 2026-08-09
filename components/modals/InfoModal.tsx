@@ -13,7 +13,12 @@ export const InfoModal = ({ visible, onClose }: InfoModalProps) => {
   const colors = useColors();
 
   return (
-    <BaseModal visible={visible} onClose={onClose} title="How LockIn Works">
+    <BaseModal
+      visible={visible}
+      onDismiss={onClose}
+      title="How LockIn Works"
+      actions={[{ label: "Got it", onPress: onClose }]}
+    >
       <View style={styles.stepList}>
         <Text style={{ color: colors.text }}>
           We need screen time permission to calculate your daily screen time for
@@ -40,6 +45,5 @@ const styles = StyleSheet.create({
     borderRadius: commonTheme.rounded.sm,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 2, // Minor optical push to align icon with the multi-line text
   },
 });
