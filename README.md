@@ -9,6 +9,9 @@
 
   ![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 
+
+https://github.com/user-attachments/assets/b6135005-e70a-4fcc-9482-1341d50e22fc
+
 </div>
 
 ---
@@ -23,8 +26,14 @@ For families, parents can create stakes for teens as part of an allowance system
 
 ---
 
-## Stack
 
+## Screenshots 
+| | |
+|---|---|
+| <img src="https://github.com/user-attachments/assets/d43d3bd7-ba41-49cb-9b31-ca4fd42fcb78" width="360"/> | <img src="https://github.com/user-attachments/assets/5e679334-d300-4b4c-aa23-59ecb5b020a9" width="360"/> |
+| <img width="360" src="https://github.com/user-attachments/assets/f1c5ec6d-804f-4e27-9f71-3ffc6eef9a95" /> | <img width="360" src="https://github.com/user-attachments/assets/08d68801-c967-4d36-8ff2-a83cba5584ec" />
+## Stack
+![Uploading Screenshot_20260804-223446_LockIn.jpg…]()
 - [Expo](https://expo.dev) (React Native)
 - [Clerk](https://clerk.com) — auth
 - [Supabase](https://supabase.com) — database
