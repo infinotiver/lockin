@@ -10,7 +10,12 @@ import {
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "destructive";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "neutral"
+  | "ghost"
+  | "destructive";
 export type ButtonSize = "sm" | "md" | "lg";
 
 type ButtonProps = {
@@ -51,6 +56,8 @@ const SIZE: Record<
   },
 };
 
+const PRESS_STATE_LAYER_OPACITY = "1F"; // hex alpha ≈ 12%
+
 export function Button({
   onPress,
   children,
@@ -81,11 +88,19 @@ export function Button({
       borderColor: "transparent",
       text: colors.onPrimary,
     },
+
     secondary: {
-      bg: colors.surface1,
+      bg: colors.secondaryContainer,
       border: 1,
-      borderColor: colors.border,
-      text: colors.text,
+      borderColor: colors.outlineVariant,
+      text: colors.onSecondaryContainer,
+    },
+
+    neutral: {
+      bg: colors.surfaceContainerHigh,
+      border: 0,
+      borderColor: colors.outlineVariant,
+      text: colors.onSurface,
     },
     ghost: {
       bg: "transparent",
@@ -93,14 +108,14 @@ export function Button({
       borderColor: "transparent",
       text: colors.textMuted,
     },
+
     destructive: {
-      bg: colors.destructive,
+      bg: colors.error,
       border: 0,
       borderColor: "transparent",
-      text: "#fff",
+      text: colors.onError,
     },
   };
-
   const { bg, border, borderColor, text } = variants[variant];
   const displayContent =
     loading && loadingLabel ? loadingLabel : (children ?? label);
@@ -114,47 +129,62 @@ export function Button({
         {
           height,
           paddingHorizontal: px,
-          borderRadius: commonTheme.rounded.full,
+          borderRadius: commonTheme.rounded.lg,
           borderWidth: border,
           borderColor,
           backgroundColor: bg,
           alignSelf: fullWidth ? "stretch" : "auto",
-          opacity: isDisabled ? 0.45 : pressed ? 0.8 : 1,
+
+          opacity: isDisabled ? 0.45 : 1,
         },
         style,
       ]}
     >
-      {/* Left: spinner or icon */}
-      {loading ? (
-        <ActivityIndicator size="small" color={text} />
-      ) : leftIcon ? (
-        <View>{leftIcon}</View>
-      ) : null}
+      {({ pressed }) => (
+        <>
+          {pressed && !isDisabled && (
+            <View
+              pointerEvents="none"
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: text + PRESS_STATE_LAYER_OPACITY,
+                  borderRadius: commonTheme.rounded.lg,
+                },
+              ]}
+            />
+          )}
 
-      {/* Label */}
-      {typeof displayContent === "string" ? (
-        <Text
-          style={[
-            commonTheme.text.button,
-            {
-              fontSize,
-              color: text,
-              fontFamily: monospace
-                ? commonTheme.font.monoBold
-                : commonTheme.font.bold,
-            },
-            textStyle,
-          ]}
-          numberOfLines={1}
-        >
-          {displayContent}
-        </Text>
-      ) : (
-        displayContent
+          {loading ? (
+            <ActivityIndicator size="small" color={text} />
+          ) : leftIcon ? (
+            <View>{leftIcon}</View>
+          ) : null}
+
+          {typeof displayContent === "string" ? (
+            <Text
+              style={[
+                commonTheme.text.button,
+                {
+                  fontSize,
+                  color: text,
+                  fontFamily: monospace
+                    ? commonTheme.font.monoBold
+                    : commonTheme.font.bold,
+                },
+                textStyle,
+              ]}
+              numberOfLines={1}
+            >
+              {displayContent}
+            </Text>
+          ) : (
+            displayContent
+          )}
+
+          {!loading && rightIcon ? <View>{rightIcon}</View> : null}
+        </>
       )}
-
-      {/* Right icon */}
-      {!loading && rightIcon ? <View>{rightIcon}</View> : null}
     </Pressable>
   );
 }

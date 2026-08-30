@@ -6,23 +6,24 @@ import "react-native-reanimated";
 import { ClerkProvider, useAuth, useUser } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/tokenCache";
 import { useColors } from "@/hooks/useColors";
+
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-} from "@expo-google-fonts/inter";
+  Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
+  Geist_700Bold,
+} from "@expo-google-fonts/geist";
 import {
-  JetBrainsMono_400Regular,
-  JetBrainsMono_600SemiBold,
-  JetBrainsMono_700Bold,
-} from "@expo-google-fonts/jetbrains-mono";
+  GeistMono_400Regular,
+  GeistMono_500Medium,
+  GeistMono_600SemiBold,
+  GeistMono_700Bold,
+} from "@expo-google-fonts/geist-mono";
 import {
-  PixelifySans_400Regular,
-  PixelifySans_500Medium,
-  PixelifySans_600SemiBold,
-  PixelifySans_700Bold,
-} from "@expo-google-fonts/pixelify-sans";
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from "@expo-google-fonts/space-grotesk";
 import {
   StakeManagerDialogs,
   StakeManagerProvider,
@@ -39,17 +40,17 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    JetBrainsMono_400Regular,
-    JetBrainsMono_600SemiBold,
-    JetBrainsMono_700Bold,
-    PixelifySans_400Regular,
-    PixelifySans_500Medium,
-    PixelifySans_600SemiBold,
-    PixelifySans_700Bold,
+ Geist_400Regular,
+  Geist_500Medium,
+  Geist_600SemiBold,
+  Geist_700Bold,
+  GeistMono_400Regular,
+  GeistMono_500Medium,
+  GeistMono_600SemiBold,
+  GeistMono_700Bold,
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
   });
 
   useEffect(() => {
@@ -170,32 +171,35 @@ function RootLayoutNav() {
   return (
     <>
       <Stack
-      screenOptions={{
-        // headerShown: false,
-        contentStyle: {
-          backgroundColor: colors.background,
-        },
-      }}
-      >
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="(onboarding)/individual"
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen name="(onboarding)/teen" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="stake/[id]"
-        options={{
-          title: "Stake details",
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: colors.surface3,
+        screenOptions={{
+          // headerShown: false,
+          contentStyle: {
+            backgroundColor: colors.background,
           },
-          headerTintColor: colors.text,
         }}
-      />
+      >
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="(onboarding)/individual"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="(onboarding)/teen"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="stake/[id]"
+          options={{
+            title: "Stake details",
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: colors.surface3,
+            },
+            headerTintColor: colors.text,
+          }}
+        />
       </Stack>
       <StakeManagerDialogs />
     </>

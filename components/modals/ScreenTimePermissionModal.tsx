@@ -46,7 +46,7 @@ export const ScreenTimePermissionModal = ({
   return (
     <BaseModal
       visible={visible}
-      onClose={onClose}
+      onDismiss={onClose}
       title={permissionGranted ? "You're all set" : "Allow screen time access"}
       message={
         permissionGranted

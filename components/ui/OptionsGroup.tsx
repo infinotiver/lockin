@@ -26,7 +26,7 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
       {label && (
         <Text
           style={[
-            styles.label,
+            commonTheme.text.label,
             { color: colors.textMuted, paddingTop: commonTheme.space.md },
           ]}
         >
@@ -37,8 +37,8 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
         style={[
           styles.group,
           {
-            backgroundColor: colors.surface2,
-            borderColor: colors.border,
+            backgroundColor: colors.surfaceContainer,
+            borderColor: colors.outlineVariant,
           },
         ]}
       >
@@ -50,17 +50,11 @@ export function OptionsGroup({ children, label }: OptionsGroupProps) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: commonTheme.space.sm,
-  },
-  label: {
-    fontSize: 12,
-    fontFamily: commonTheme.font.medium,
-    letterSpacing: 0.6,
-    paddingHorizontal: commonTheme.space.sm,
+    gap: commonTheme.space.lg,
   },
   group: {
     borderRadius: commonTheme.rounded.lg,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     overflow: "hidden",
   },
 });

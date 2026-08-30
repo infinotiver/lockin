@@ -7,8 +7,6 @@ export const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: commonTheme.space.md,
-    paddingTop: commonTheme.space.lg,
-    paddingBottom: commonTheme.space.xl,
   },
 
   // Profile Header Card

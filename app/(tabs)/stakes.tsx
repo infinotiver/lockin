@@ -1,35 +1,35 @@
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   Pressable,
   ActivityIndicator,
   Platform,
+  Image,
+  RefreshControl,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { Plus, SwordsIcon, TrophyIcon } from "lucide-react-native";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { useFocusEffect } from "expo-router";
 import commonTheme from "@/constants/theme";
+import { AppBar } from "@/components/ui/AppBar";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
-import type { Stake } from "@/types/stakes";
 import GlobalEmptyState from "@/components/stakes/EmptyState";
 import StakeSection from "@/components/stakes/StakeSection";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorHandler } from "@/components/ui/ErrorHandler";
-import { RefreshControl } from "react-native";
 import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
 import { CreateStakeSheet } from "@/components/modals/CreateStakeSheet";
 import type { CreateStakeSheetRef } from "@/components/modals/CreateStakeSheet";
 
-type UITabKey = "active" | "pending" | "completed";
+type UITabKey = "active" | "completed";
 
 const EMPTY_MESSAGES: Record<UITabKey, string> = {
   active: "No active stakes right now.",
-  pending: "No stakes waiting for approval.",
   completed: "Finish a goal to see it here.",
 };
 
@@ -38,9 +38,11 @@ export default function StakesScreen() {
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
+  const { user } = useUser();
 
   const [activeTab, setActiveTab] = useState<UITabKey>("active");
   const createSheetRef = useRef<CreateStakeSheetRef>(null);
+
   const {
     stakes,
     loading,
@@ -51,32 +53,34 @@ export default function StakesScreen() {
   } = useStakeManagerContext();
 
   const [refreshing, setRefreshing] = useState(false);
-
-  /**
-   * Runs the pull-to-refresh request and always releases the native spinner.
-   *
-   * @returns A promise that resolves when the shared fetch operation settles.
-   */
-  const handleRefresh = useCallback(async (): Promise<void> => {
-    setRefreshing(true);
-    try {
-      await fetchStakes();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [fetchStakes]);
-  const platformWarnShown = useRef(false);
+  const [platformWarnShown, setPlatformWarnShown] = useState(false);
 
   const [blockDialog, setBlockDialog] = useState({
     visible: false,
     message: "",
   });
 
-  // This warning is local to the list route, but the ref prevents development
-  // re-renders from repeatedly interrupting the user with the same limitation.
+  const [familyName, setFamilyName] = useState<string>("");
+  const [familyCode, setFamilyCode] = useState<string>("");
+  const [loadingFamily, setLoadingFamily] = useState<boolean>(false);
+  const [familyLoadError, setFamilyLoadError] = useState(false);
+
+  const [stakesCount, setStakesCount] = useState<number>(0);
+  const [completedCount, setCompletedCount] = useState<number>(0);
+
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true);
+
+    try {
+      await fetchStakes();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchStakes]);
+
   useEffect(() => {
-    if (Platform.OS !== "android" && !platformWarnShown.current) {
-      platformWarnShown.current = true;
+    if (Platform.OS !== "android" && !platformWarnShown) {
+      setPlatformWarnShown(true);
       setInfoDialog({
         visible: true,
         title: "Android only",
@@ -84,7 +88,7 @@ export default function StakesScreen() {
           "Screen time tracking is only available on Android. Stakes will be visible but automatic verification won't run on this device.",
       });
     }
-  }, []);
+  }, [platformWarnShown, setInfoDialog]);
 
   useFocusEffect(
     useCallback(() => {
@@ -92,8 +96,10 @@ export default function StakesScreen() {
     }, [fetchStakes]),
   );
 
-  const activeStakes = stakes.filter((s) => s.status === "active");
-  const pendingStakes = stakes.filter((s) => s.status === "pending");
+  const activeStakes = stakes.filter(
+    (s) => s.status === "active" || s.status === "pending",
+  );
+
   const doneStakes = stakes.filter(
     (s) =>
       s.status === "completed" ||
@@ -102,28 +108,20 @@ export default function StakesScreen() {
   );
 
   const tabs: TabItem<UITabKey>[] = [
-    { key: "active", label: "Active", count: activeStakes.length || undefined },
     {
-      key: "pending",
-      label: "Pending",
-      count: pendingStakes.length || undefined,
+      key: "active",
+      label: "Active",
+      count: activeStakes.length || undefined,
     },
-    { key: "completed", label: "Done", count: doneStakes.length || undefined },
+    {
+      key: "completed",
+      label: "Done",
+      count: doneStakes.length || undefined,
+    },
   ];
 
-  const visibleStakes =
-    activeTab === "active"
-      ? activeStakes
-      : activeTab === "pending"
-        ? pendingStakes
-        : doneStakes;
+  const visibleStakes = activeTab === "active" ? activeStakes : doneStakes;
 
-  /**
-   * Opens the creation sheet only when it cannot create a second active
-   * screen-time evaluator for the same user.
-   *
-   * @returns Nothing; the blocking case is communicated through `blockDialog`.
-   */
   const handleFABPress = (): void => {
     const hasActiveScreenTime = activeStakes.some(
       (s) => s.type === "screen-time",
@@ -137,87 +135,220 @@ export default function StakesScreen() {
       });
       return;
     }
+
     createSheetRef.current?.present();
   };
+
+  const initials = user?.firstName?.[0]?.toUpperCase() ?? "U";
+
+  const loadSettingsContext = async () => {
+    const familyId = user?.publicMetadata?.familyId;
+
+    if (!familyId) {
+      setFamilyName("");
+      setFamilyCode("");
+      setFamilyLoadError(false);
+      return;
+    }
+
+    setLoadingFamily(true);
+    setFamilyLoadError(false);
+
+    try {
+      const token = await getToken();
+
+      const familyRes = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/families`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (familyRes.ok) {
+        const data = await familyRes.json();
+        setFamilyName(data.family?.name || "");
+        setFamilyCode(data.family?.code || "");
+      } else {
+        setFamilyName("");
+        setFamilyCode("");
+        setFamilyLoadError(true);
+      }
+
+      const questsRes = await fetch(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/quests`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (questsRes.ok) {
+        const body = await questsRes.json();
+        const rawQuests: any[] = body.quests || [];
+
+        const activeStakes = rawQuests.filter(
+          (q) => q.status === "available" || q.status === "active",
+        );
+
+        const finishedStakes = rawQuests.filter(
+          (q) => q.status === "completed" || q.status === "approved",
+        );
+
+        setStakesCount(activeStakes.length);
+        setCompletedCount(finishedStakes.length);
+      }
+    } catch (e) {
+      console.error("[SettingsScreen] Context aggregation failed:", e);
+    } finally {
+      setLoadingFamily(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSettingsContext();
+  }, [user?.publicMetadata?.familyId]);
 
   return (
     <SafeAreaView
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
-      <View style={styles.header}>
-        <Text
-          style={[
-            commonTheme.text.pageTitle,
-            { color: colors.text, fontFamily: commonTheme.font.bold },
-          ]}
-        >
-          Stakes
-        </Text>
-        <Pressable
-          style={[styles.fab, { backgroundColor: colors.surface2 }]}
-          onPress={handleFABPress}
-        >
-          <Feather name="plus" size={22} color={colors.text} />
-        </Pressable>
-      </View>
+      <AppBar title="LockIn" />
 
-      {/* The provider owns retry/error state, so this screen only renders it. */}
-      {!!fetchError && (
-        <View style={styles.errorWrapper}>
-          <ErrorHandler error={fetchError} type="text" onClear={() => {}} />
-        </View>
-      )}
-
-      <View style={styles.tabsWrapper}>
-        <SplitTabs
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </View>
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.list,
-          { paddingBottom: commonTheme.space["2xl"] },
-        ]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.textMuted}
-            progressBackgroundColor={colors.surface3}
-            colors={[colors.primary]}
-          />
-        }
-      >
-        {loading && stakes.length === 0 ? (
-          <View style={styles.center}>
-            <ActivityIndicator size="small" color={colors.textMuted} />
-          </View>
-        ) : stakes.length === 0 ? (
-          <GlobalEmptyState />
-        ) : visibleStakes.length === 0 ? (
-          <View style={styles.center}>
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              {EMPTY_MESSAGES[activeTab]}
+      <View style={styles.profileSection}>
+        {user?.imageUrl ? (
+          <Image source={{ uri: user.imageUrl }} style={styles.avatar} />
+        ) : (
+          <View
+            style={[
+              styles.avatar,
+              commonTheme.layout.center,
+              { backgroundColor: colors.surfaceContainerHigh },
+            ]}
+          >
+            <Text style={[commonTheme.text.cardTitle, { color: colors.text }]}>
+              {initials}
             </Text>
           </View>
-        ) : (
-          <StakeSection
-            title=""
-            data={visibleStakes}
-            colors={colors}
-            emptyMessage={EMPTY_MESSAGES[activeTab]}
-          />
         )}
-      </ScrollView>
+
+        <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
+          {user?.firstName ? `Hey, ${user.firstName}` : "Welcome back"}
+        </Text>
+
+        <View style={styles.statsRow}>
+          <View
+            style={[
+              styles.statPill,
+              { backgroundColor: colors.surfaceContainerHigh },
+            ]}
+          >
+            <SwordsIcon
+              size={commonTheme.fontSize["3xl"]}
+              color={colors.primary}
+            />
+            <Text style={[commonTheme.text.bodyStrong, { color: colors.text }]}>
+              Stakes
+            </Text>
+            <Text
+              style={[commonTheme.text.bodyStrong, { color: colors.primary }]}
+            >
+              {stakesCount}
+            </Text>
+          </View>
+
+          <View
+            style={[
+              styles.statPill,
+              { backgroundColor: colors.surfaceContainerHigh },
+            ]}
+          >
+            <TrophyIcon
+              size={commonTheme.fontSize["3xl"]}
+              color={colors.primary}
+            />
+            <Text style={[commonTheme.text.bodyStrong, { color: colors.text }]}>
+              Completed
+            </Text>
+            <Text
+              style={[commonTheme.text.bodyStrong, { color: colors.primary }]}
+            >
+              {completedCount}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      <View
+        style={[styles.sheet, { backgroundColor: colors.surfaceContainerLow }]}
+      >
+        {!!fetchError && (
+          <View style={styles.errorWrapper}>
+            <ErrorHandler error={fetchError} type="text" onClear={() => {}} />
+          </View>
+        )}
+
+        <View style={styles.controlsRow}>
+          <View style={commonTheme.layout.flex}>
+            <SplitTabs
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+          </View>
+
+          <Pressable
+            style={[styles.createButton, { backgroundColor: colors.primary }]}
+            onPress={handleFABPress}
+          >
+            <Plus
+              size={commonTheme.fontSize["5xl"]}
+              color={colors.background}
+            />
+          </Pressable>
+        </View>
+
+        <ScrollView
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.textMuted}
+              progressBackgroundColor={colors.surface3}
+              colors={[colors.primary]}
+            />
+          }
+        >
+          {loading && stakes.length === 0 ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="small" color={colors.textMuted} />
+            </View>
+          ) : stakes.length === 0 ? (
+            <GlobalEmptyState />
+          ) : visibleStakes.length === 0 ? (
+            <View style={styles.center}>
+              <Text
+                style={[commonTheme.text.caption, { color: colors.textMuted }]}
+              >
+                {EMPTY_MESSAGES[activeTab]}
+              </Text>
+            </View>
+          ) : (
+            <StakeSection
+              title=""
+              data={visibleStakes}
+              colors={colors}
+              emptyMessage={EMPTY_MESSAGES[activeTab]}
+            />
+          )}
+        </ScrollView>
+      </View>
 
       <CreateStakeSheet ref={createSheetRef} onCreated={fetchStakes} />
 
-      {/* Block: can't create another stake */}
       <ConfirmDialog
         visible={blockDialog.visible}
         title="One stake at a time"
@@ -236,46 +367,78 @@ export default function StakesScreen() {
         }}
         onDismiss={() => setBlockDialog({ visible: false, message: "" })}
       />
-
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  profileSection: {
+    alignItems: "center",
+    paddingHorizontal: commonTheme.space.xl,
+    paddingBottom: commonTheme.space.xl,
+    gap: commonTheme.space.sm,
+  },
+
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: commonTheme.rounded.full,
+  },
+
+  statsRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: commonTheme.space.lg,
-    paddingTop: commonTheme.space.sm,
-    paddingBottom: commonTheme.space.md,
-  },
-  fab: {
-    width: 40,
-    height: 40,
-    borderRadius: commonTheme.rounded.full,
     justifyContent: "center",
+    gap: commonTheme.space.sm,
+    paddingTop: commonTheme.space.xs,
+  },
+
+  statPill: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    gap: commonTheme.space.sm,
+    minHeight: 40,
+    paddingHorizontal: commonTheme.space.md,
+    borderRadius: commonTheme.rounded.full,
   },
+
+  sheet: {
+    flex: 1,
+    borderTopLeftRadius: commonTheme.rounded["2xl"],
+    borderTopRightRadius: commonTheme.rounded["2xl"],
+    paddingTop: commonTheme.space.xl,
+  },
+
   errorWrapper: {
-    paddingHorizontal: commonTheme.space.lg,
-    paddingBottom: commonTheme.space.sm,
-  },
-  tabsWrapper: {
-    paddingHorizontal: commonTheme.space.lg,
+    paddingHorizontal: commonTheme.space.xl,
     paddingBottom: commonTheme.space.md,
   },
+
+  controlsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: commonTheme.space.md,
+    paddingHorizontal: commonTheme.space.xl,
+    paddingBottom: commonTheme.space.xl,
+  },
+
+  createButton: {
+    width: 44,
+    height: 44,
+    borderRadius: commonTheme.rounded.full,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   list: {
-    paddingHorizontal: commonTheme.space.lg,
+    paddingHorizontal: commonTheme.space.xl,
+    paddingBottom: commonTheme.space["2xl"],
     gap: commonTheme.space.xl,
   },
+
   center: {
     paddingTop: commonTheme.space["2xl"],
     alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    opacity: 0.4,
-    fontFamily: commonTheme.font.body,
   },
 });

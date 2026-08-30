@@ -1,16 +1,60 @@
+
 export type ThemeColors = {
+  primary: string;
+  onPrimary: string;
+  primaryContainer: string;
+  onPrimaryContainer: string;
+  secondary: string;
+  onSecondary: string;
+  secondaryContainer: string;
+  onSecondaryContainer: string;
+  tertiary: string;
+  onTertiary: string;
+  tertiaryContainer: string;
+  onTertiaryContainer: string;
+  error: string;
+  onError: string;
+  errorContainer: string;
+  onErrorContainer: string;
   background: string;
+  onBackground: string;
+  surface: string;
+  onSurface: string;
+  surfaceVariant: string;
+  onSurfaceVariant: string;
+  outline: string;
+  outlineVariant: string;
+  shadow: string;
+  scrim: string;
+  inverseSurface: string;
+  inverseOnSurface: string;
+  inversePrimary: string;
+  surfaceDim: string;
+  surfaceBright: string;
+  surfaceContainerLowest: string;
+  surfaceContainerLow: string;
+  surfaceContainer: string;
+  surfaceContainerHigh: string;
+  surfaceContainerHighest: string;
+  primaryFixed: string;
+  onPrimaryFixed: string;
+  primaryFixedDim: string;
+  onPrimaryFixedVariant: string;
+  secondaryFixed: string;
+  onSecondaryFixed: string;
+  secondaryFixedDim: string;
+  onSecondaryFixedVariant: string;
+  tertiaryFixed: string;
+  onTertiaryFixed: string;
+  tertiaryFixedDim: string;
+  onTertiaryFixedVariant: string;
   surface1: string;
   surface2: string;
   surface3: string;
   text: string;
   textMuted: string;
-  primary: string;
-  onPrimary: string;
   accent: string;
   onAccent: string;
-  secondary: string;
-  onSecondary: string;
   muted: string;
   destructive: string;
   onDestructive: string;
@@ -27,79 +71,141 @@ export type ThemeColors = {
 export type ThemeMode = "light" | "dark";
 
 const light: ThemeColors = {
-  background: "#F9F9F9",
-
-  surface1: "#FCFCFC", // card
-  surface2: "#F7F7F7", // sidebar
-  surface3: "#EFEFEF", // muted
-
-  text: "#202020",
-  textMuted: "#646464",
-
-  primary: "#644A40",
+  primary: "#BD580F",
   onPrimary: "#FFFFFF",
-
-  accent: "#E8E8E8",
-  onAccent: "#202020",
-
-  secondary: "#FFDFB5",
-  onSecondary: "#582D1D",
-
-  muted: "#EFEFEF",
-
-  destructive: "#E54D2E",
+  primaryContainer: "#F7E3D4",
+  onPrimaryContainer: "#2B1708",
+  secondary: "#3B9153",
+  onSecondary: "#FFFFFF",
+  secondaryContainer: "#DDEEE2",
+  onSecondaryContainer: "#112216",
+  tertiary: "#B71567",
+  onTertiary: "#FFFFFF",
+  tertiaryContainer: "#F6D5E6",
+  onTertiaryContainer: "#2A091A",
+  error: "#C60618",
+  onError: "#FFFFFF",
+  errorContainer: "#F9D2D6",
+  onErrorContainer: "#2D060A",
+  background: "#FAFAFA",
+  onBackground: "#18181B",
+  surface: "#FAFAFA",
+  onSurface: "#18181B",
+  surfaceVariant: "#E4E3E8",
+  onSurfaceVariant: "#484653",
+  outline: "#78728D",
+  outlineVariant: "#C9C8D0",
+  shadow: "#000000",
+  scrim: "#000000",
+  inverseSurface: "#303036",
+  inverseOnSurface: "#F2F2F3",
+  inversePrimary: "#F2C6A6",
+  surfaceDim: "#DCDCE0",
+  surfaceBright: "#FAFAFA",
+  surfaceContainerLowest: "#FFFFFF",
+  surfaceContainerLow: "#F4F4F5",
+  surfaceContainer: "#EFEFF1",
+  surfaceContainerHigh: "#EAE9EC",
+  surfaceContainerHighest: "#E4E4E7",
+  primaryFixed: "#F7E3D4",
+  onPrimaryFixed: "#2B1708",
+  primaryFixedDim: "#F2C6A6",
+  onPrimaryFixedVariant: "#894210",
+  secondaryFixed: "#DDEEE2",
+  onSecondaryFixed: "#112216",
+  secondaryFixedDim: "#B9DFC4",
+  onSecondaryFixedVariant: "#2E6B3F",
+  tertiaryFixed: "#F6D5E6",
+  onTertiaryFixed: "#2A091A",
+  tertiaryFixedDim: "#EFA9CC",
+  onTertiaryFixedVariant: "#85144D",
+  surface1: "#EFEFF1",
+  surface2: "#EAE9EC",
+  surface3: "#E4E4E7",
+  text: "#18181B",
+  textMuted: "#484653",
+  accent: "#B71567",
+  onAccent: "#FFFFFF",
+  muted: "#EFEFF1",
+  destructive: "#C60618",
   onDestructive: "#FFFFFF",
-
-  errorColor: "#E54D2E",
-  success: "#166534",
-  warning: "#D97706",
-
-  border: "#D8D8D8",
-  focusBorder: "#644A40",
-
-  input: "#D8D8D8",
-
-  tint: "#644A40",
-
-  selected: "#644A4020",
+  errorColor: "#C60618",
+  success: "#3B9153",
+  warning: "#F6D5E6",
+  border: "#C9C8D0",
+  focusBorder: "#BD580F",
+  input: "#EAE9EC",
+  tint: "#BD580F",
+  selected: "#BD580F26",
 };
 
 const dark: ThemeColors = {
-  background: "#111111",
-
-  surface1: "#191919", // card
-  surface2: "#222222", // muted
-  surface3: "#2A2A2A", // accent
-
-  text: "#EEEEEE",
-  textMuted: "#B4B4B4",
-
-  primary: "#FFE0C2",
-  onPrimary: "#081A1B",
-
-  accent: "#2A2A2A",
-  onAccent: "#EEEEEE",
-
-  secondary: "#393028",
-  onSecondary: "#FFE0C2",
-
-  muted: "#222222",
-
-  destructive: "#E54D2E",
-  onDestructive: "#FFFFFF",
-
-  errorColor: "#E54D2E",
-  success: "#22C55E",
-  warning: "#F59E0B",
-
-  border: "#201E18",
-  focusBorder: "#FFE0C2",
-
-  input: "#484848",
-
-  tint: "#FFE0C2",
-
-  selected: "#FFE0C226",
+  primary: "#F2C6A6",
+  onPrimary: "#592D0D",
+  primaryContainer: "#894210",
+  onPrimaryContainer: "#F7E3D4",
+  secondary: "#B9DFC4",
+  onSecondary: "#20462B",
+  secondaryContainer: "#2E6B3F",
+  onSecondaryContainer: "#DDEEE2",
+  tertiary: "#EFA9CC",
+  onTertiary: "#561033",
+  tertiaryContainer: "#85144D",
+  onTertiaryContainer: "#F6D5E6",
+  error: "#F6A2AA",
+  onError: "#5D0911",
+  errorContainer: "#900916",
+  onErrorContainer: "#F9D2D6",
+  background: "#0F0E10",
+  onBackground: "#E4E4E7",
+  surface: "#0F0E10",
+  onSurface: "#E4E4E7",
+  surfaceVariant: "#484653",
+  onSurfaceVariant: "#C9C8D0",
+  outline: "#938FA3",
+  outlineVariant: "#484653",
+  shadow: "#000000",
+  scrim: "#000000",
+  inverseSurface: "#E4E4E7",
+  inverseOnSurface: "#303036",
+  inversePrimary: "#BD580F",
+  surfaceDim: "#0F0E10",
+  surfaceBright: "#3A3941",
+  surfaceContainerLowest: "#0A0A0B",
+  surfaceContainerLow: "#18181B",
+  surfaceContainer: "#1D1D20",
+  surfaceContainerHigh: "#29292E",
+  surfaceContainerHighest: "#35343C",
+  primaryFixed: "#F7E3D4",
+  onPrimaryFixed: "#2B1708",
+  primaryFixedDim: "#F2C6A6",
+  onPrimaryFixedVariant: "#894210",
+  secondaryFixed: "#DDEEE2",
+  onSecondaryFixed: "#112216",
+  secondaryFixedDim: "#B9DFC4",
+  onSecondaryFixedVariant: "#2E6B3F",
+  tertiaryFixed: "#F6D5E6",
+  onTertiaryFixed: "#2A091A",
+  tertiaryFixedDim: "#EFA9CC",
+  onTertiaryFixedVariant: "#85144D",
+  surface1: "#1D1D20",
+  surface2: "#29292E",
+  surface3: "#35343C",
+  text: "#E4E4E7",
+  textMuted: "#C9C8D0",
+  accent: "#EFA9CC",
+  onAccent: "#561033",
+  muted: "#1D1D20",
+  destructive: "#F6A2AA",
+  onDestructive: "#5D0911",
+  errorColor: "#F6A2AA",
+  success: "#B9DFC4",
+  warning: "#85144D",
+  border: "#484653",
+  focusBorder: "#F2C6A6",
+  input: "#29292E",
+  tint: "#F2C6A6",
+  selected: "#F2C6A633",
 };
 
 export const COLOR_THEMES: Record<ThemeMode, ThemeColors> = {

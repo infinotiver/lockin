@@ -152,7 +152,7 @@ const ShareCodeModal = ({
         variant="primary"
         fullWidth
         leftIcon={
-          <Ionicons name="share-outline" size={16} color={colors.text} />
+          <Ionicons name="share-outline" size={16} color={colors.onPrimary} />
         }
       />
     </BaseModal>

@@ -1,63 +1,88 @@
 import { useCallback } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-  Linking,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { Receipt, HeartHandshake, ChevronRight } from "lucide-react-native";
 import { Button } from "@/components/ui/Button";
 import { useSettlements } from "@/hooks/useSettlements";
-import { OptionsGroup } from "@/components/ui/OptionsGroup";
-import { OptionsRow } from "@/components/ui/OptionsRow";
+import { AppBar } from "@/components/ui/AppBar";
 
 const HomeScreen = () => {
   const colors = useColors();
   const router = useRouter();
-  const { user } = useUser();
-  const { settlements, totalDue, fetchPending, error, isInitialLoad } = useSettlements();
+
+  const {
+    settlements,
+    totalDue,
+    fetchPending,
+    error,
+    isInitialLoad,
+    settledSettlements,
+    totalSettled,
+    fetchSettled,
+    isHistoryInitialLoad,
+    historyError,
+  } = useSettlements();
 
   useFocusEffect(
     useCallback(() => {
       fetchPending();
-    }, [fetchPending]),
+      fetchSettled();
+    }, [fetchPending, fetchSettled]),
   );
 
   const hasDue = settlements.length > 0;
+  const hasHistory = settledSettlements.length > 0;
 
   return (
     <SafeAreaView
       style={[commonTheme.layout.flex, { backgroundColor: colors.background }]}
       edges={["top"]}
     >
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
-            {user?.firstName ? `Hey, ${user.firstName}` : "Welcome back"}
-          </Text>
-        </View>
+      <AppBar title="Wallet" />
 
+      <View style={styles.heroWrapper}>
         <View
           style={[
             commonTheme.layout.card,
-            { backgroundColor: colors.surface2 },
+            commonTheme.layout.center,
+            { backgroundColor: colors.surfaceContainerHigh },
           ]}
         >
-          <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
-            At stake
-          </Text>
-          <Text style={[commonTheme.text.amountLarge, { color: colors.text }]}>
-            ₹{totalDue}
-          </Text>
+          <View
+            style={[
+              commonTheme.layout.row,
+              commonTheme.layout.center,
+              { gap: commonTheme.space.xs },
+            ]}
+          >
+            <Text
+              style={[
+                commonTheme.text.amountLarge,
+                { color: hasDue ? colors.destructive : colors.text },
+              ]}
+            >
+              ₹
+            </Text>
+            <Text
+              style={[
+                commonTheme.text.amountLarge,
+                { color: hasDue ? colors.destructive : colors.text },
+              ]}
+            >
+              {totalDue}
+            </Text>
+          </View>
 
-          <Text style={[styles.dueSubtext, { color: colors.textMuted }]}>
+          <Text
+            style={[
+              commonTheme.text.caption,
+              styles.centerText,
+              { color: colors.textMuted },
+            ]}
+          >
             {isInitialLoad
               ? "Loading settlements..."
               : error
@@ -66,95 +91,231 @@ const HomeScreen = () => {
                   ? `${settlements.length} failed stake${settlements.length > 1 ? "s" : ""} pending settlement`
                   : "You're all caught up on settlements"}
           </Text>
+        </View>
 
+        <Button variant="neutral" onPress={() => router.push("/(tabs)/stakes")}>
+          View Stakes
+        </Button>
+      </View>
+
+      <View
+        style={[styles.sheet, { backgroundColor: colors.surfaceContainerLow }]}
+      >
+        <ScrollView
+          contentContainerStyle={styles.sheetContent}
+          showsVerticalScrollIndicator={false}
+        >
           {hasDue && (
-            <View style={styles.settlementList}>
+            <View style={styles.section}>
+              <View style={commonTheme.layout.rowBetween}>
+                <View style={commonTheme.layout.row}>
+                  <Receipt
+                    size={commonTheme.fontSize["4xl"]}
+                    color={colors.text}
+                  />
+                  <Text
+                    style={[
+                      commonTheme.text.bodyStrong,
+                      styles.sectionTitle,
+                      { color: colors.text },
+                    ]}
+                  >
+                    Pending settlements
+                  </Text>
+                </View>
+                <Text
+                  style={[
+                    commonTheme.text.amount,
+                    { color: colors.destructive },
+                  ]}
+                >
+                  −₹{totalDue}
+                </Text>
+              </View>
+
               {settlements.map((s) => (
                 <Pressable
                   key={s.id}
                   onPress={() => router.push(`/stake/${s.stake_id}`)}
-                  style={[styles.settlementRow, { borderColor: colors.border }]}
+                  style={[
+                    commonTheme.layout.card,
+                    commonTheme.layout.rowBetween,
+                    { backgroundColor: colors.surfaceContainer },
+                  ]}
                 >
-                  <Text style={{ color: colors.text }}>₹{s.amount}</Text>
-                  <Text
-                    style={{
-                      color: colors.textMuted,
-                      fontSize: commonTheme.fontSize.sm,
-                    }}
-                  >
-                    Failed {new Date(s.created_at).toLocaleDateString()}
-                  </Text>
-                  <Feather
-                    name="chevron-right"
-                    size={18}
+                  <View>
+                    <Text
+                      style={[
+                        commonTheme.text.cardTitle,
+                        { color: colors.destructive },
+                      ]}
+                    >
+                      −₹{s.amount}
+                    </Text>
+                    <Text
+                      style={[
+                        commonTheme.text.caption,
+                        { color: colors.textMuted },
+                      ]}
+                    >
+                      Failed {new Date(s.created_at).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <ChevronRight
+                    size={commonTheme.fontSize["5xl"]}
                     color={colors.textMuted}
                   />
                 </Pressable>
               ))}
             </View>
           )}
-        </View>
 
-        <View style={{ marginTop: commonTheme.space.sm }}>
-          <Button
-            variant="primary"
-            onPress={() => router.push("/(tabs)/stakes")}
+          <View style={styles.section}>
+            <View style={commonTheme.layout.rowBetween}>
+              <View style={commonTheme.layout.row}>
+                <Receipt
+                  size={commonTheme.fontSize["4xl"]}
+                  color={colors.text}
+                />
+                <Text
+                  style={[
+                    commonTheme.text.bodyStrong,
+                    styles.sectionTitle,
+                    { color: colors.text },
+                  ]}
+                >
+                  Settlement history
+                </Text>
+              </View>
+              {hasHistory && (
+                <Text
+                  style={[commonTheme.text.caption, { color: colors.accent }]}
+                >
+                  ₹{totalSettled} total
+                </Text>
+              )}
+            </View>
+
+            {isHistoryInitialLoad ? (
+              <Text
+                style={[commonTheme.text.caption, { color: colors.textMuted }]}
+              >
+                Loading history...
+              </Text>
+            ) : historyError ? (
+              <Text
+                style={[
+                  commonTheme.text.caption,
+                  { color: colors.destructive },
+                ]}
+              >
+                {historyError}
+              </Text>
+            ) : !hasHistory ? (
+              <Text
+                style={[commonTheme.text.caption, { color: colors.textMuted }]}
+              >
+                No settlements yet — nothing forfeited so far.
+              </Text>
+            ) : (
+              settledSettlements.map((s) => (
+                <Pressable
+                  key={s.id}
+                  onPress={() => router.push(`/stake/${s.stake_id}`)}
+                  style={[
+                    commonTheme.layout.card,
+                    commonTheme.layout.rowBetween,
+                    { backgroundColor: colors.surfaceContainerLow },
+                  ]}
+                >
+                  <View>
+                    <Text
+                      style={[
+                        commonTheme.text.cardTitle,
+                        { color: colors.accent },
+                      ]}
+                    >
+                      ₹{s.amount}
+                    </Text>
+                    <Text
+                      style={[
+                        commonTheme.text.caption,
+                        { color: colors.textMuted },
+                      ]}
+                    >
+                      {s.settled_at
+                        ? `Settled ${new Date(s.settled_at).toLocaleDateString()}`
+                        : `Created ${new Date(s.created_at).toLocaleDateString()}`}
+                    </Text>
+                  </View>
+                  <ChevronRight
+                    size={commonTheme.fontSize["5xl"]}
+                    color={colors.textMuted}
+                  />
+                </Pressable>
+              ))
+            )}
+          </View>
+
+          <View
+            style={[
+              commonTheme.layout.card,
+              { backgroundColor: colors.surfaceContainerHigh },
+            ]}
           >
-            View Stakes
-          </Button>
-        </View>
-
-        <OptionsGroup label="Get Started">
-          <OptionsRow
-            icon="book-open"
-            label="Getting started guide"
-            onPress={() =>
-              Linking.openURL(
-                "https://github.com/infinotiver/lockin#getting-started",
-              )
-            }
-          />
-        </OptionsGroup>
-
-        <OptionsGroup label="More">
-          <OptionsRow
-            icon="map"
-            label="Roadmap"
-            onPress={() =>
-              Linking.openURL("https://github.com/infinotiver/lockin#roadmap")
-            }
-          />
-          <OptionsRow
-            icon="message-square"
-            label="Send feedback"
-            onPress={() =>
-              Linking.openURL("https://github.com/infinotiver/lockin/issues")
-            }
-          />
-        </OptionsGroup>
-      </ScrollView>
+            <View style={commonTheme.layout.row}>
+              <HeartHandshake
+                size={commonTheme.fontSize["4xl"]}
+                color={colors.text}
+              />
+              <Text
+                style={[
+                  commonTheme.text.bodyStrong,
+                  styles.sectionTitle,
+                  { color: colors.text },
+                ]}
+              >
+                Where it goes
+              </Text>
+            </View>
+            <Text
+              style={[commonTheme.text.caption, { color: colors.textMuted }]}
+            >
+              Failed stakes are settled manually for now — automatic payment
+              processing isn't wired up yet. Once settled, the amount is meant
+              to go to charity rather than back to anyone.
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  content: { padding: commonTheme.space.md, gap: commonTheme.space.md },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  heroWrapper: {
+    paddingHorizontal: commonTheme.space.lg,
+    paddingBottom: commonTheme.space.lg,
+    gap: commonTheme.space.lg,
   },
-  dueSubtext: { fontSize: commonTheme.fontSize.sm },
-  settlementList: {
-    marginTop: commonTheme.space.sm,
-    gap: commonTheme.space.xs,
+  centerText: {
+    textAlign: "center",
   },
-  settlementRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: commonTheme.space.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
+  sheet: {
+    flex: 1,
+    borderTopLeftRadius: commonTheme.rounded["2xl"],
+    borderTopRightRadius: commonTheme.rounded["2xl"],
+    paddingVertical: commonTheme.space.lg,
+  },
+  sheetContent: {
+    padding: commonTheme.space.lg,
+    gap: commonTheme.space.xl,
+  },
+  section: {
+    gap: commonTheme.space.lg,
+  },
+  sectionTitle: {
+    marginLeft: commonTheme.space.sm,
   },
 });
 
