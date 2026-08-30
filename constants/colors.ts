@@ -70,7 +70,7 @@ export type ThemeMode = "light" | "dark";
 
 const light: ThemeColors = {
   primary: "#F5893C",
-  onPrimary: "#FFFFFF",
+  onPrimary: "#4A2409",
   primaryContainer: "#FFE4CC",
   onPrimaryContainer: "#4A2409",
   secondary: "#FF3D94",

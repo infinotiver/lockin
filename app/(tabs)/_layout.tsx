@@ -92,18 +92,18 @@ function ClassicTabLayout() {
       }}
     >
       <Tabs.Screen
-        name="stakes"
-        options={{
-          tabBarIcon: ({ color, focused }) => (
-            <House size={24} color={color} strokeWidth={focused ? 2.4 : 2} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="index"
         options={{
           tabBarIcon: ({ color, focused }) => (
             <Wallet size={24} color={color} strokeWidth={focused ? 2.4 : 2} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="stakes"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <House size={24} color={color} strokeWidth={focused ? 2.4 : 2} />
           ),
         }}
       />

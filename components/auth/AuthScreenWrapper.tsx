@@ -3,19 +3,18 @@ import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "./AuthCard";
 import commonTheme from "@/constants/theme";
 import { usePreventScreenCapture } from "expo-screen-capture";
+
+function PreventScreenCapture() {
+  usePreventScreenCapture();
+  return null;
+}
+
 export const AuthScreenWrapper = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
   const colors = useColors();
-  if (Platform.OS !== "web") {
-    try {
-      usePreventScreenCapture();
-    } catch (error) {
-      console.error("Failed to prevent screen capture:", error);
-    }
-  }
 
   return (
     <View
@@ -27,6 +26,7 @@ export const AuthScreenWrapper = ({
         backgroundColor: colors.background,
       }}
     >
+      {Platform.OS !== "web" && <PreventScreenCapture />}
       <AuthCard>{children}</AuthCard>
     </View>
   );

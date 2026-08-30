@@ -55,10 +55,7 @@ export function AppBar({
         ))}
       </View>
       <Text
-        style={[
-          commonTheme.text.pageTitle,
-          { color: colors.text, fontFamily: commonTheme.font.bold },
-        ]}
+        style={[commonTheme.text.pageTitle, { color: colors.text }]}
       >
         {title}
       </Text>

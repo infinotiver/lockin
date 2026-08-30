@@ -5,6 +5,9 @@ import { useAuth } from "@clerk/clerk-expo";
 export function useSettlements() {
   const { getToken, userId } = useAuth();
   const getTokenRef = useRef(getToken);
+  const userIdRef = useRef(userId);
+  userIdRef.current = userId;
+
   useEffect(() => {
     getTokenRef.current = getToken;
   }, [getToken]);
@@ -21,16 +24,32 @@ export function useSettlements() {
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [isHistoryInitialLoad, setIsHistoryInitialLoad] = useState(true);
 
+  useEffect(() => {
+    setSettlements([]);
+    setSettledSettlements([]);
+    setError(null);
+    setHistoryError(null);
+    setLoading(false);
+    setHistoryLoading(false);
+    setIsInitialLoad(Boolean(userId));
+    setIsHistoryInitialLoad(Boolean(userId));
+  }, [userId]);
+
   const fetchPending = useCallback(async () => {
     // Fetch pending settlements for user by specifying the optional status param
     if (!userId) {
+      setSettlements([]);
+      setError(null);
       setIsInitialLoad(false);
       return;
     }
+    const requestUserId = userId;
     setLoading(true);
     setError(null);
     try {
       const token = await getTokenRef.current();
+      if (userIdRef.current !== requestUserId) return;
+
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/settlements?status=pending`,
         {
@@ -41,15 +60,21 @@ export function useSettlements() {
         throw new Error(`Failed to fetch settlements: ${res.status}`);
       }
       const { settlements } = await res.json();
+      if (userIdRef.current !== requestUserId) return;
+
       setSettlements(Array.isArray(settlements) ? settlements : []);
     } catch (err) {
+      if (userIdRef.current !== requestUserId) return;
+
       setError(
         err instanceof Error ? err.message : "Failed to fetch settlements",
       );
       setSettlements([]); // Safely retain an array on error
     } finally {
-      setLoading(false);
-      setIsInitialLoad(false);
+      if (userIdRef.current === requestUserId) {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
     }
   }, [userId]);
 
@@ -57,13 +82,18 @@ export function useSettlements() {
   // a different status filter, for the wallet history section.
   const fetchSettled = useCallback(async () => {
     if (!userId) {
+      setSettledSettlements([]);
+      setHistoryError(null);
       setIsHistoryInitialLoad(false);
       return;
     }
+    const requestUserId = userId;
     setHistoryLoading(true);
     setHistoryError(null);
     try {
       const token = await getTokenRef.current();
+      if (userIdRef.current !== requestUserId) return;
+
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/settlements?status=settled`,
         {
@@ -74,8 +104,12 @@ export function useSettlements() {
         throw new Error(`Failed to fetch settlement history: ${res.status}`);
       }
       const { settlements } = await res.json();
+      if (userIdRef.current !== requestUserId) return;
+
       setSettledSettlements(Array.isArray(settlements) ? settlements : []);
     } catch (err) {
+      if (userIdRef.current !== requestUserId) return;
+
       setHistoryError(
         err instanceof Error
           ? err.message
@@ -83,8 +117,10 @@ export function useSettlements() {
       );
       setSettledSettlements([]);
     } finally {
-      setHistoryLoading(false);
-      setIsHistoryInitialLoad(false);
+      if (userIdRef.current === requestUserId) {
+        setHistoryLoading(false);
+        setIsHistoryInitialLoad(false);
+      }
     }
   }, [userId]);
 

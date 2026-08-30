@@ -147,6 +147,8 @@ export default function StakesScreen() {
     if (!familyId) {
       setFamilyName("");
       setFamilyCode("");
+      setStakesCount(0);
+      setCompletedCount(0);
       setFamilyLoadError(false);
       return;
     }
