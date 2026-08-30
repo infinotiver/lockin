@@ -5,12 +5,11 @@ import { useState } from "react";
 import { useColors } from "@/hooks/useColors";
 import { AuthTitle } from "@/components/auth/AuthTitle";
 import { Button } from "@/components/ui/Button";
-import { Ionicons } from "@expo/vector-icons";
 import commonTheme from "@/constants/theme";
 import * as Clipboard from "expo-clipboard";
 import { useShareOrCopy } from "@/hooks/useShareOrCopy";
 import { BaseModal } from "../ui/BaseModal";
-
+import { Share2, Copy } from "lucide-react-native";
 const { space, rounded, fontSize, font } = commonTheme;
 
 type Sender = "teen" | "parent";
@@ -127,8 +126,7 @@ const ShareCodeModal = ({
               padding: space.xs,
             }}
           >
-            <Ionicons
-              name={copied ? "checkmark" : "copy-outline"}
+            <Copy
               size={20}
               color={copied ? colors.primary : colors.textMuted}
             />
@@ -151,9 +149,7 @@ const ShareCodeModal = ({
         label="Share invite"
         variant="primary"
         fullWidth
-        leftIcon={
-          <Ionicons name="share-outline" size={16} color={colors.onPrimary} />
-        }
+        leftIcon={<Share2 size={20} color={colors.onPrimary} />}
       />
     </BaseModal>
   );

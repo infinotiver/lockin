@@ -281,9 +281,9 @@ const HomeScreen = () => {
             <Text
               style={[commonTheme.text.caption, { color: colors.textMuted }]}
             >
-              Failed stakes are settled manually for now — automatic payment
-              processing isn't wired up yet. Once settled, the amount is meant
-              to go to charity rather than back to anyone.
+              Failed stakes are settled manually for now. The amount can be
+              directed wherever the stake specifies: to you, someone else, a
+              charity, or anywhere in between.
             </Text>
           </View>
         </ScrollView>

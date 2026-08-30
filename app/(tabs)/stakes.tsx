@@ -299,13 +299,30 @@ export default function StakesScreen() {
           </View>
 
           <Pressable
-            style={[styles.createButton, { backgroundColor: colors.primary }]}
+            style={[
+              commonTheme.layout.row,
+              commonTheme.layout.center,
+              styles.createButton,
+              {
+                backgroundColor: colors.primary,
+                gap: commonTheme.space.xs,
+              },
+            ]}
             onPress={handleFABPress}
           >
             <Plus
-              size={commonTheme.fontSize["5xl"]}
+              size={commonTheme.fontSize["3xl"]}
               color={colors.background}
             />
+
+            <Text
+              style={[
+                commonTheme.text.bodyStrong,
+                { color: colors.background },
+              ]}
+            >
+              Create
+            </Text>
           </Pressable>
         </View>
 
@@ -402,7 +419,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: commonTheme.space.md,
     borderRadius: commonTheme.rounded.full,
   },
-
+  createButton: {
+    alignSelf: "flex-end",
+    paddingHorizontal: commonTheme.space.lg,
+    paddingVertical: commonTheme.space.md,
+    borderRadius: commonTheme.rounded.full,
+  },
   sheet: {
     flex: 1,
     borderTopLeftRadius: commonTheme.rounded["2xl"],
@@ -421,14 +443,6 @@ const styles = StyleSheet.create({
     gap: commonTheme.space.md,
     paddingHorizontal: commonTheme.space.xl,
     paddingBottom: commonTheme.space.xl,
-  },
-
-  createButton: {
-    width: 44,
-    height: 44,
-    borderRadius: commonTheme.rounded.full,
-    alignItems: "center",
-    justifyContent: "center",
   },
 
   list: {

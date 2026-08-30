@@ -1,12 +1,10 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import type { Stake } from "@/types/stakes";
 import { router } from "expo-router";
 import { formatDateTime, formatDuration } from "@/lib/timeParser";
 import { StatusChip } from "./StatusChip";
-type GlyphName = keyof typeof Feather.glyphMap;
 
 const getRuleDescription = (stake: Stake): string | null => {
   const rule =
@@ -16,6 +14,7 @@ const getRuleDescription = (stake: Stake): string | null => {
   if (rule?.type === "screen_time_limit") {
     const duration = formatDuration(rule.limitMs || 0);
     const scope = rule.scope || "app";
+
     return `${duration} daily limit on ${scope}`;
   }
 
@@ -30,61 +29,38 @@ export default function StakeCard({ stake }: { stake: Stake }) {
 
   return (
     <Pressable
-      onPress={() => {
+      onPress={() =>
         router.push({
           pathname: "/stake/[id]",
-          params: {
-            id: String(stake.id),
-          },
-        });
-      }}
+          params: { id: String(stake.id) },
+        })
+      }
     >
       <View
         style={[
-          styles.cardContainer,
+          styles.card,
           {
-            backgroundColor: colors.surface2,
-            borderWidth: 1,
-            borderColor: colors.border,
+            backgroundColor: colors.surfaceContainerHigh,
+            borderColor: colors.outlineVariant,
           },
         ]}
       >
-        <View style={styles.rowBetween}>
+        <View style={commonTheme.layout.rowBetween}>
           <View style={styles.textColumn}>
             {stake.type && (
-              <Text
-                style={[
-                  commonTheme.text.caption,
-                  {
-                    color: colors.textMuted,
-                    marginBottom: 2,
-                  },
-                ]}
-              >
+              <Text style={[commonTheme.text.label, { color: colors.accent }]}>
                 {stake.type.toUpperCase()}
               </Text>
             )}
 
             <Text
-              style={[
-                commonTheme.text.sectionTitle,
-                {
-                  color: colors.text,
-                },
-              ]}
+              style={[commonTheme.text.sectionTitle, { color: colors.text }]}
             >
               {stake.title}
             </Text>
           </View>
 
-          <Text
-            style={[
-              commonTheme.text.amountLarge,
-              {
-                color: colors.text,
-              },
-            ]}
-          >
+          <Text style={[commonTheme.text.amountLarge, { color: colors.text }]}>
             ₹{stake.reward}
           </Text>
         </View>
@@ -92,10 +68,9 @@ export default function StakeCard({ stake }: { stake: Stake }) {
         {ruleText && (
           <Text
             style={[
+              commonTheme.text.body,
               styles.description,
-              {
-                color: colors.textMuted,
-              },
+              { color: colors.textMuted },
             ]}
             numberOfLines={1}
           >
@@ -103,23 +78,12 @@ export default function StakeCard({ stake }: { stake: Stake }) {
           </Text>
         )}
 
-        <View
-          style={[
-            styles.rowBetween,
-            {
-              paddingTop: commonTheme.space.sm,
-            },
-          ]}
-        >
+        <View style={commonTheme.layout.rowBetween}>
           <StatusChip status={stake.status} />
+
           {dueDateTime && (
             <Text
-              style={[
-                commonTheme.text.caption,
-                {
-                  color: colors.textMuted,
-                },
-              ]}
+              style={[commonTheme.text.caption, { color: colors.textMuted }]}
             >
               Due {dueDateTime}
             </Text>
@@ -131,22 +95,20 @@ export default function StakeCard({ stake }: { stake: Stake }) {
 }
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    padding: commonTheme.space.md,
+  card: {
+    padding: commonTheme.space.lg,
     borderRadius: commonTheme.rounded.lg,
-    gap: commonTheme.space.xs,
+    borderWidth: 1,
+    gap: commonTheme.space.sm,
   },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+
   textColumn: {
     flex: 1,
+    gap: commonTheme.space.xs,
     paddingRight: commonTheme.space.md,
   },
+
   description: {
-    fontSize: commonTheme.fontSize.lg,
     lineHeight: 20,
   },
 });
