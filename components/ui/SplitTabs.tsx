@@ -92,6 +92,7 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: commonTheme.space.sm,
+    paddingHorizontal: commonTheme.space.sm,
     alignItems: "center",
     borderRadius: commonTheme.rounded.full,
   },

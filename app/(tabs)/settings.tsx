@@ -9,42 +9,43 @@ import {
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  UsersIcon,
+  UserPlusIcon,
+  CheckSquareIcon,
+  InfoIcon,
+  LogOutIcon,
+} from "lucide-react-native";
 import { useColors } from "@/hooks/useColors";
 import { styles } from "@/constants/settings.styles";
-import commonTheme from "@/constants/theme";
 import { OptionsRow } from "@/components/ui/OptionsRow";
 import { OptionsGroup } from "@/components/ui/OptionsGroup";
 import { ScreenTimePermissionModal } from "@/components/modals/ScreenTimePermissionModal";
 import { InfoModal } from "@/components/modals/InfoModal";
 import { ViewFamilyModal } from "@/components/modals/ViewFamilyModal";
 import ShareCodeModal from "@/components/share/ShareCodeModal";
+import { AppBar } from "@/components/ui/AppBar";
 
 export default function SettingsScreen() {
   const colors = useColors();
   const { user } = useUser();
   const { signOut, getToken } = useAuth();
 
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const [showPermModal, setShowPermModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showFamilyModal, setShowFamilyModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false); // Modal display control
+  const [showShareModal, setShowShareModal] = useState(false);
 
-  const [familyName, setFamilyName] = useState<string>("");
-  const [familyCode, setFamilyCode] = useState<string>(""); // Captured code state
-  const [loadingFamily, setLoadingFamily] = useState<boolean>(false);
+  const [familyName, setFamilyName] = useState("");
+  const [familyCode, setFamilyCode] = useState("");
+  const [loadingFamily, setLoadingFamily] = useState(false);
   const [familyLoadError, setFamilyLoadError] = useState(false);
 
-  const [stakesCount, setStakesCount] = useState<number>(0);
-  const [completedCount, setCompletedCount] = useState<number>(0);
-
   const handleSignOut = async () => {
-    setIsSigningOut(true);
     try {
       await signOut();
     } catch (e) {
       console.error("Sign out failed:", e);
-      setIsSigningOut(false);
     }
   };
 
@@ -56,18 +57,20 @@ export default function SettingsScreen() {
 
   const loadSettingsContext = async () => {
     const familyId = user?.publicMetadata?.familyId;
+
     if (!familyId) {
       setFamilyName("");
       setFamilyCode("");
       setFamilyLoadError(false);
       return;
     }
+
     setLoadingFamily(true);
     setFamilyLoadError(false);
+
     try {
       const token = await getToken();
 
-      // 1. Fetch Family Meta Context
       const familyRes = await fetch(
         `${process.env.EXPO_PUBLIC_API_URL}/api/families`,
         {
@@ -84,31 +87,6 @@ export default function SettingsScreen() {
         setFamilyName("");
         setFamilyCode("");
         setFamilyLoadError(true);
-      }
-
-      // 2. Fetch Quests Dataset to derive live user metrics
-      const questsRes = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/quests`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      if (questsRes.ok) {
-        const body = await questsRes.json();
-        const rawQuests: any[] = body.quests || [];
-
-        const activeStakes = rawQuests.filter(
-          (q) => q.status === "available" || q.status === "active",
-        );
-
-        const finishedStakes = rawQuests.filter(
-          (q) => q.status === "completed" || q.status === "approved",
-        );
-
-        setStakesCount(activeStakes.length);
-        setCompletedCount(finishedStakes.length);
       }
     } catch (e) {
       console.error("[SettingsScreen] Context aggregation failed:", e);
@@ -128,27 +106,15 @@ export default function SettingsScreen() {
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: commonTheme.space["2xl"] },
-        ]}
+        contentContainerStyle={styles.scrollContent}
       >
-        <Text
-          style={[
-            commonTheme.text.pageTitle,
-            {
-              color: colors.text,
-              paddingHorizontal: commonTheme.space.sm,
-              paddingBottom: commonTheme.space.lg,
-            },
-          ]}
-        >
-          Settings
-        </Text>
+        <AppBar title="Settings" />
 
-        {/* Profile Card */}
         <TouchableOpacity
-          style={[styles.profileCard, { backgroundColor: colors.surface2 }]}
+          style={[
+            styles.profileCard,
+            { backgroundColor: colors.surfaceContainer },
+          ]}
           activeOpacity={0.8}
         >
           {user?.imageUrl ? (
@@ -163,10 +129,12 @@ export default function SettingsScreen() {
               <Text style={styles.avatarText}>{initials}</Text>
             </View>
           )}
+
           <View style={styles.profileInfo}>
             <Text style={[styles.name, { color: colors.text }]}>
               {user?.fullName ?? "User"}
             </Text>
+
             <Text
               style={[styles.email, { color: colors.text }]}
               numberOfLines={1}
@@ -176,18 +144,9 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Stats Grid */}
-        <View style={styles.statsContainer}>
-          <StatCard value={stakesCount} label="Stakes" colors={colors} />
-          <StatCard value={completedCount} label="Completed" colors={colors} />
-          {/* TODO: fetch real stakes*/}
-          {/* <StatCard value="1" label="Streak" colors={colors} /> */}
-        </View>
-
-        {/* Family Options */}
         <OptionsGroup label="Family link">
           <OptionsRow
-            icon="heart"
+            icon={UsersIcon}
             label={
               loadingFamily
                 ? "Loading family..."
@@ -197,35 +156,37 @@ export default function SettingsScreen() {
             }
             onPress={() => setShowFamilyModal(true)}
           />
+
           <OptionsRow
-            icon="user-plus"
+            icon={UserPlusIcon}
             label="Invite member"
             onPress={() => {
-              if (familyCode) setShowShareModal(true);
+              if (familyCode) {
+                setShowShareModal(true);
+              }
             }}
           />
         </OptionsGroup>
 
-        {/* Permissions — Android Only */}
         {Platform.OS === "android" && (
           <OptionsGroup label="Permissions">
             <OptionsRow
-              icon="check-square"
+              icon={CheckSquareIcon}
               label="Screen time access"
               onPress={() => setShowPermModal(true)}
             />
+
             <OptionsRow
-              icon="info"
+              icon={InfoIcon}
               label="How does it work"
               onPress={() => setShowInfoModal(true)}
             />
           </OptionsGroup>
         )}
 
-        {/* Danger zone */}
         <OptionsGroup label="Danger zone">
           <OptionsRow
-            icon="log-out"
+            icon={LogOutIcon}
             label="Sign out"
             onPress={handleSignOut}
             isDestructive
@@ -258,26 +219,5 @@ export default function SettingsScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function StatCard({
-  value,
-  label,
-  colors,
-}: {
-  value: string | number;
-  label: string;
-  colors: any;
-}) {
-  return (
-    <View style={[styles.statCard, { backgroundColor: colors.surface2 }]}>
-      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
-      <Text
-        style={[styles.statLabel, { color: colors.textMuted || colors.text }]}
-      >
-        {label}
-      </Text>
-    </View>
   );
 }

@@ -14,10 +14,7 @@
       }
     },
     "android": {
-      "permissions": [
-        "android.permission.PACKAGE_USAGE_STATS",
-        "android.permission.PACKAGE_USAGE_STATS"
-      ],
+      "permissions": ["android.permission.PACKAGE_USAGE_STATS"],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/lockin_new_foreground.png",

@@ -36,19 +36,16 @@ const fontSize = {
 } as const;
 
 export const font = {
-  body: "Inter_400Regular",
-  medium: "Inter_500Medium",
-  semibold: "Inter_600SemiBold",
-  bold: "Inter_700Bold",
-
-  mono: "JetBrainsMono_400Regular",
-  monoSemibold: "JetBrainsMono_600SemiBold",
-  monoBold: "JetBrainsMono_700Bold",
-
-  pixel: "PixelifySans_400Regular",
-  pixelMedium: "PixelifySans_500Medium",
-  pixelSemibold: "PixelifySans_600SemiBold",
-  pixelBold: "PixelifySans_700Bold",
+  body: "Geist_400Regular",
+  medium: "Geist_500Medium",
+  semibold: "Geist_600SemiBold",
+  bold: "Geist_700Bold",
+  mono: "GeistMono_400Regular",
+  monoMedium: "GeistMono_500Medium",
+  monoSemibold: "GeistMono_600SemiBold",
+  monoBold: "GeistMono_700Bold",
+  heading: "SpaceGrotesk_600SemiBold",
+  headingBold: "SpaceGrotesk_700Bold",
 } as const;
 
 const fontWeight = {
@@ -62,15 +59,15 @@ const fontWeight = {
 const text = StyleSheet.create({
   pageTitle: {
     fontSize: fontSize["7xl"],
-    fontFamily: font.bold,
+    fontFamily: font.headingBold,
   },
   sectionTitle: {
     fontSize: fontSize["5xl"],
-    fontFamily: font.bold,
+    fontFamily: font.headingBold,
   },
   cardTitle: {
     fontSize: fontSize["2xl"],
-    fontFamily: font.bold,
+    fontFamily: font.heading,
   },
   body: {
     fontSize: fontSize.md,

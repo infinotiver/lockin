@@ -1,20 +1,20 @@
 import { ReactNode } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { Feather } from "@expo/vector-icons";
+import { LucideIcon, ChevronRight } from "lucide-react-native";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 
 type OptionsRowProps = {
-  icon: keyof typeof Feather.glyphMap;
+  icon: LucideIcon;
   label: string;
   onPress?: () => void;
   rightElement?: ReactNode;
   isDestructive?: boolean;
-  _showDivider?: boolean; // injected by OptionsGroup, don't pass manually
+  _showDivider?: boolean;
 };
 
 export function OptionsRow({
-  icon,
+  icon: Icon,
   label,
   onPress,
   rightElement,
@@ -28,13 +28,17 @@ export function OptionsRow({
 
   const inner = (
     <View style={styles.inner}>
-      <Feather name={icon} size={20} color={iconColor} style={styles.icon} />
-      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      <Icon size={20} color={iconColor} />
+
+      <Text
+        style={[commonTheme.text.body, styles.label, { color: labelColor }]}
+      >
+        {label}
+      </Text>
+
       <View style={styles.right}>
         {rightElement ??
-          (onPress && (
-            <Feather name="chevron-right" size={18} color={colors.textMuted} />
-          ))}
+          (onPress && <ChevronRight size={18} color={colors.textMuted} />)}
       </View>
     </View>
   );
@@ -52,8 +56,11 @@ export function OptionsRow({
       ) : (
         <View style={styles.row}>{inner}</View>
       )}
+
       {_showDivider && (
-        <View style={[styles.divider, { backgroundColor: colors.surface3 }]} />
+        <View
+          style={[styles.divider, { backgroundColor: colors.outlineVariant }]}
+        />
       )}
     </>
   );
@@ -64,23 +71,22 @@ const styles = StyleSheet.create({
     paddingVertical: commonTheme.space.lg,
     paddingHorizontal: commonTheme.space.lg,
   },
+
   inner: {
     flexDirection: "row",
     alignItems: "center",
     gap: commonTheme.space.md,
   },
-  icon: {
-    width: 22,
-  },
+
   label: {
     flex: 1,
-    fontSize: 15,
-    fontFamily: commonTheme.font.body,
   },
+
   right: {
     alignItems: "flex-end",
   },
+
   divider: {
-    height: 2,
+    height: 1,
   },
 });

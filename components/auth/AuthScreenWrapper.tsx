@@ -1,8 +1,13 @@
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { AuthCard } from "./AuthCard";
 import commonTheme from "@/constants/theme";
 import { usePreventScreenCapture } from "expo-screen-capture";
+
+function PreventScreenCapture() {
+  usePreventScreenCapture();
+  return null;
+}
 
 export const AuthScreenWrapper = ({
   children,
@@ -10,7 +15,7 @@ export const AuthScreenWrapper = ({
   children: React.ReactNode;
 }) => {
   const colors = useColors();
-  usePreventScreenCapture();
+
   return (
     <View
       style={{
@@ -21,6 +26,7 @@ export const AuthScreenWrapper = ({
         backgroundColor: colors.background,
       }}
     >
+      {Platform.OS !== "web" && <PreventScreenCapture />}
       <AuthCard>{children}</AuthCard>
     </View>
   );
