@@ -104,6 +104,7 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
   if (termsError) return Response.json({ error: "Failed to update quest." }, { status: 500 });
   if (terms && terms.user_id !== clerkId) return forbidden();
 
+  let quest = access.quest;
   if (terms && (status === "completed" || status === "failed")) {
     const { error: settlementError } = status === "completed"
       ? await supabaseAdmin.rpc("coin_terminal_complete", {
@@ -120,22 +121,24 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
       console.error("Coin terminal settlement failed:", settlementError);
       return Response.json({ error: "Failed to settle coin stake" }, { status: 500 });
     }
+    quest = { ...access.quest, status };
+  } else {
+    const { data, error } = await supabaseAdmin
+      .from("quests")
+      .update({ status })
+      .eq("id", id)
+      .eq("family_id", access.quest.family_id)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error(error);
+      return Response.json({ error: "Failed to update quest." }, { status: 500 });
+    }
+    quest = data;
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("quests")
-    .update({ status })
-    .eq("id", id)
-    .eq("family_id", access.quest.family_id)
-    .select("*")
-    .single();
-
-  if (error) {
-    console.error(error);
-    return Response.json({ error: "Failed to update quest." }, { status: 500 });
-  }
-
-  return Response.json({ quest: { ...data, coin_terms: terms } });
+  return Response.json({ quest: { ...quest, coin_terms: terms } });
 }
 
 /**
