@@ -1,7 +1,7 @@
 {
   "name": "lockin",
   "main": "expo-router/entry",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "dependencies": {
     "@clerk/backend": "^3.5.0",
     "@clerk/clerk-expo": "^2.19.31",

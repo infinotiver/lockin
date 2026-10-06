@@ -2,7 +2,7 @@
   "expo": {
     "name": "LockIn",
     "slug": "lockin",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "lockin",
@@ -23,7 +23,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.infinotiver.lockin",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "0.1.0"
     },
     "web": {
       "bundler": "metro",
