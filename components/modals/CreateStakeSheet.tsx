@@ -273,7 +273,7 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
       return `You have ${balance ?? 0} coins`;
     if (wager > WAGER_MAX) return `Maximum ${WAGER_MAX} coins`;
     if (activeCoinStakeCount >= MAX_ACTIVE_COIN_STAKES) {
-      return `You can run ${MAX_ACTIVE_COIN_STAKES} coin stakes at once`;
+      return "Complete your active coin stake before creating another";
     }
     return null;
   };
@@ -345,7 +345,11 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        setError(body?.error ?? "Failed to create stake.");
+        setError(
+          body?.error === "stake_cap"
+            ? "Complete your active coin stake before creating another."
+            : body?.error ?? "Failed to create stake.",
+        );
         return;
       }
 

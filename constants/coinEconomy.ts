@@ -5,7 +5,7 @@ export const DAILY_EARN_CAP = 30;
 
 export const WAGER_MIN = 10;
 export const WAGER_MAX = 500;
-export const MAX_ACTIVE_COIN_STAKES = 3;
+export const MAX_ACTIVE_COIN_STAKES = 1;
 
 export const WIN_BONUS_TIERS = [
   { minDays: 1, maxDays: 3, rate: 0.1 },

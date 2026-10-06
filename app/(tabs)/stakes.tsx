@@ -138,7 +138,7 @@ export default function StakesScreen() {
     if (activeCoinStakeCount >= MAX_ACTIVE_COIN_STAKES) {
       setBlockDialog({
         visible: true,
-        message: `You can run ${MAX_ACTIVE_COIN_STAKES} coin stakes at once. Complete one before creating another.`,
+        message: "Complete your active coin stake before creating another.",
       });
       return;
     }

@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
   card: {
     width: "100%",
     maxWidth: 400,
-    borderRadius: commonTheme.rounded.xl,
-    padding: commonTheme.space.xl,
+    borderRadius: commonTheme.rounded["2xl"],
+    padding: commonTheme.space.lg,
     gap: commonTheme.space.md,
   },
   title: {
