@@ -11,6 +11,7 @@ export type ThemeColors = {
   onTertiary: string;
   tertiaryContainer: string;
   onTertiaryContainer: string;
+  warning: string;
   error: string;
   onError: string;
   errorContainer: string;
@@ -81,6 +82,7 @@ const light: ThemeColors = {
   onTertiary: "#FFFFFF",
   tertiaryContainer: "#C6F6D9",
   onTertiaryContainer: "#062B15",
+  warning: "#B45309",
   error: "#C60618",
   onError: "#FFFFFF",
   errorContainer: "#F9D2D6",
@@ -149,6 +151,7 @@ const dark: ThemeColors = {
   onTertiary: "#062B15",
   tertiaryContainer: "#16803D",
   onTertiaryContainer: "#C6F6D9",
+  warning: "#FBBF24",
   error: "#F6A2AA",
   onError: "#5D0911",
   errorContainer: "#900916",

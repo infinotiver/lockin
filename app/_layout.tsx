@@ -30,6 +30,7 @@ import {
 } from "@/contexts/StakeManagerContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { CoinsProvider } from "@/contexts/CoinsContext";
 export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
@@ -66,9 +67,11 @@ export default function RootLayout() {
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
-          <StakeManagerProvider>
-            <RootLayoutNav />
-          </StakeManagerProvider>
+          <CoinsProvider>
+            <StakeManagerProvider>
+              <RootLayoutNav />
+            </StakeManagerProvider>
+          </CoinsProvider>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </ClerkProvider>
@@ -144,7 +147,7 @@ function RootLayoutNav() {
     const inOnboarding = segments[0] === "(onboarding)";
 
     if (!isSignedIn && !inAuthGroup) {
-      router.replace("/(auth)/index");
+      router.replace("/(auth)");
       return;
     }
 
@@ -199,6 +202,11 @@ function RootLayoutNav() {
             },
             headerTintColor: colors.text,
           }}
+        />
+        <Stack.Screen name="legacy-wallet" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="shop"
+          options={{ presentation: "modal", headerShown: false }}
         />
       </Stack>
       <StakeManagerDialogs />

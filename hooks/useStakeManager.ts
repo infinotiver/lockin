@@ -1,7 +1,7 @@
 // hooks/useStakeManager.ts
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
-import { useUser } from "@clerk/clerk-expo";
+import { useAuth, useUser } from "@clerk/clerk-expo";
 import { runStakeChecks } from "@/lib/stakeEvaluator";
 import type { Stake, CheckAction } from "@/types/stakes";
 import { logger } from "@/lib/logger";
@@ -15,6 +15,7 @@ type Options = {
   onFail?: (stakeId: string, message?: string) => Promise<void> | void;
   onUnsupported?: () => void;
   onPermissionRestored?: () => void;
+  onCoinsChanged?: () => Promise<void> | void;
 };
 
 export function useStakeManager({
@@ -23,8 +24,14 @@ export function useStakeManager({
   onFail,
   onUnsupported,
   onPermissionRestored,
+  onCoinsChanged,
 }: Options) {
   const { user } = useUser();
+  const { getToken } = useAuth();
+  const getTokenRef = useRef(getToken);
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
   const [checking, setChecking] = useState(false);
   const checkingRef = useRef(false);
   const handledRef = useRef(new Set<string>());
@@ -38,7 +45,8 @@ export function useStakeManager({
     setChecking(true);
 
     try {
-      const results = await runStakeChecks(stakes, [user.id]);
+      const results = await runStakeChecks(stakes, () => getTokenRef.current());
+      if (results.some((result) => result.coinsChanged)) await onCoinsChanged?.();
 
       const hasUnsupported = results.some((r) => r.action === "unsupported");
       if (hasUnsupported && onUnsupported) onUnsupported();
@@ -78,7 +86,7 @@ export function useStakeManager({
       checkingRef.current = false;
       if (isMountedRef.current) setChecking(false);
     }
-  }, [stakes, user?.id, onComplete, onFail, onUnsupported, onPermissionRestored]);
+  }, [stakes, user?.id, onComplete, onFail, onUnsupported, onPermissionRestored, onCoinsChanged]);
 
   const runCheckRef = useRef(runCheck);
   runCheckRef.current = runCheck;

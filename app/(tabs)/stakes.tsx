@@ -9,12 +9,15 @@ import {
   RefreshControl,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Plus, SwordsIcon, TrophyIcon } from "lucide-react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { Coins, Plus, SwordsIcon, TrophyIcon } from "lucide-react-native";
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/useColors";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import commonTheme from "@/constants/theme";
 import { AppBar } from "@/components/ui/AppBar";
 import { SplitTabs, TabItem } from "@/components/ui/SplitTabs";
@@ -25,6 +28,8 @@ import { ErrorHandler } from "@/components/ui/ErrorHandler";
 import { useStakeManagerContext } from "@/contexts/StakeManagerContext";
 import { CreateStakeSheet } from "@/components/modals/CreateStakeSheet";
 import type { CreateStakeSheetRef } from "@/components/modals/CreateStakeSheet";
+import { MAX_ACTIVE_COIN_STAKES } from "@/constants/coinEconomy";
+import { useCoins } from "@/contexts/CoinsContext";
 
 type UITabKey = "active" | "completed";
 
@@ -35,6 +40,9 @@ const EMPTY_MESSAGES: Record<UITabKey, string> = {
 
 export default function StakesScreen() {
   const colors = useColors();
+  const router = useRouter();
+  const { balance } = useCoins();
+  const insets = useSafeAreaInsets();
   const { getToken } = useAuth();
   const getTokenRef = useRef(getToken);
   getTokenRef.current = getToken;
@@ -115,7 +123,7 @@ export default function StakesScreen() {
     },
     {
       key: "completed",
-      label: "Done",
+      label: "Past",
       count: doneStakes.length || undefined,
     },
   ];
@@ -123,15 +131,14 @@ export default function StakesScreen() {
   const visibleStakes = activeTab === "active" ? activeStakes : doneStakes;
 
   const handleFABPress = (): void => {
-    const hasActiveScreenTime = activeStakes.some(
-      (s) => s.type === "screen-time",
-    );
+    const activeCoinStakeCount = activeStakes.filter(
+      (stake) => stake.wagerCoins !== undefined,
+    ).length;
 
-    if (hasActiveScreenTime) {
+    if (activeCoinStakeCount >= MAX_ACTIVE_COIN_STAKES) {
       setBlockDialog({
         visible: true,
-        message:
-          "You already have an active screen-time stake. Complete it before creating another.",
+        message: `You can run ${MAX_ACTIVE_COIN_STAKES} coin stakes at once. Complete one before creating another.`,
       });
       return;
     }
@@ -235,30 +242,38 @@ export default function StakesScreen() {
           </View>
         )}
 
-        <Text style={[commonTheme.text.sectionTitle, { color: colors.text }]}>
+        <Text
+          style={[commonTheme.text.sectionTitle, { color: colors.textMuted }]}
+        >
           {user?.firstName ? `Hey, ${user.firstName}` : "Welcome back"}
         </Text>
 
         <View style={styles.statsRow}>
-          <View
-            style={[
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${balance === null ? "Balance loading" : `${balance.toLocaleString()} coins`}. Open wallet`}
+            onPress={() => router.push("/")}
+            style={({ pressed }) => [
               styles.statPill,
-              { backgroundColor: colors.surfaceContainerHigh },
+              {
+                backgroundColor: pressed
+                  ? colors.surfaceContainerHighest
+                  : colors.surfaceContainerHigh,
+              },
             ]}
           >
-            <SwordsIcon
-              size={commonTheme.fontSize["3xl"]}
-              color={colors.primary}
-            />
+            <Coins size={commonTheme.fontSize["3xl"]} color={colors.primary} />
             <Text style={[commonTheme.text.bodyStrong, { color: colors.text }]}>
-              Stakes
+              Coins
             </Text>
             <Text
+              numberOfLines={1}
               style={[commonTheme.text.bodyStrong, { color: colors.primary }]}
             >
-              {stakesCount}
+              {balance === null ? "..." : balance.toLocaleString()}
             </Text>
-          </View>
+          </Pressable>
+
 
           <View
             style={[
@@ -271,7 +286,7 @@ export default function StakesScreen() {
               color={colors.primary}
             />
             <Text style={[commonTheme.text.bodyStrong, { color: colors.text }]}>
-              Completed
+              Won
             </Text>
             <Text
               style={[commonTheme.text.bodyStrong, { color: colors.primary }]}
@@ -329,7 +344,13 @@ export default function StakesScreen() {
         </View>
 
         <ScrollView
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[
+            styles.list,
+            {
+              paddingBottom:
+                64 + Math.max(insets.bottom, 16) + commonTheme.space.sm,
+            },
+          ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -366,7 +387,13 @@ export default function StakesScreen() {
         </ScrollView>
       </View>
 
-      <CreateStakeSheet ref={createSheetRef} onCreated={fetchStakes} />
+      <CreateStakeSheet
+        ref={createSheetRef}
+        onCreated={fetchStakes}
+        activeCoinStakeCount={
+          activeStakes.filter((stake) => stake.wagerCoins !== undefined).length
+        }
+      />
 
       <ConfirmDialog
         visible={blockDialog.visible}
@@ -413,6 +440,7 @@ const styles = StyleSheet.create({
   },
 
   statPill: {
+    height: 40,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -449,7 +477,6 @@ const styles = StyleSheet.create({
 
   list: {
     paddingHorizontal: commonTheme.space.xl,
-    paddingBottom: commonTheme.space["2xl"],
     gap: commonTheme.space.xl,
   },
 

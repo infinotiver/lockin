@@ -5,6 +5,7 @@ import {
   useCallback,
   useState,
   useRef,
+  useEffect,
 } from "react";
 import { useAuth } from "@clerk/clerk-expo";
 import { useStakeManager } from "@/hooks/useStakeManager";
@@ -12,9 +13,12 @@ import { mapStake } from "@/lib/mapStake";
 import type { Stake } from "@/types/stakes";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useRouter } from "expo-router";
+import { AccessibilityInfo } from "react-native";
+import { useCoins } from "@/contexts/CoinsContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /** A dismissible warning whose text is safe to show directly to the user. */
-type DialogState = { visible: boolean; message: string };
+type DialogState = { visible: boolean; message: string; title?: string };
 
 /** A dismissible informational dialog with a separate title and body. */
 type InfoDialogState = { visible: boolean; title: string; message: string };
@@ -53,11 +57,19 @@ export function StakeManagerProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { getToken } = useAuth();
+  const { getToken, userId } = useAuth();
+  const { refresh: refreshCoins } = useCoins();
   // Callbacks below are intentionally stable. The ref lets them use a refreshed
   // Clerk token without making each token refresh recreate the request pipeline.
   const getTokenRef = useRef(getToken);
-  getTokenRef.current = getToken;
+  const userIdRef = useRef(userId);
+  const outcomeSeenRef = useRef(new Set<string>());
+  useEffect(() => {
+    getTokenRef.current = getToken;
+  }, [getToken]);
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   const [stakes, setStakes] = useState<Stake[]>([]);
   const [loading, setLoading] = useState(false);
@@ -101,7 +113,42 @@ export function StakeManagerProvider({
           throw new Error(body?.error ?? "Failed to fetch stakes.");
         }
         const body = await res.json();
-        setStakes((body.quests || []).map((q: any) => mapStake(q)));
+        const mapped: Stake[] = (body.quests || []).map((q: any) => mapStake(q));
+        setStakes(mapped);
+        const pendingOutcome = mapped.find(
+          (stake) => stake.wagerCoins !== undefined &&
+            (stake.status === "completed" || stake.status === "failed"),
+        );
+        if (pendingOutcome && userIdRef.current) {
+          const key = `coinOutcomeSeen:${userIdRef.current}:${pendingOutcome.id}:${pendingOutcome.status}`;
+          if (!outcomeSeenRef.current.has(key)) {
+            outcomeSeenRef.current.add(key);
+            try {
+              const seen = await AsyncStorage.getItem(key);
+              if (!seen) {
+                await AsyncStorage.setItem(key, "1");
+                const bonus = pendingOutcome.coinBonusRate
+                  ? Math.floor(pendingOutcome.wagerCoins! * pendingOutcome.coinBonusRate)
+                  : 0;
+                if (pendingOutcome.status === "completed") {
+                  setInfoDialog({
+                    visible: true,
+                    title: "Vault opened",
+                    message: `+${pendingOutcome.wagerCoins} coins back, +${bonus} bonus.`,
+                  });
+                } else {
+                  setWarnDialog({
+                    visible: true,
+                    title: "Vault cracked",
+                    message: `${pendingOutcome.wagerCoins} coins burned. Start again when you’re ready.`,
+                  });
+                }
+              }
+            } catch {
+              outcomeSeenRef.current.delete(key);
+            }
+          }
+        }
       } catch (e) {
         setFetchError(e instanceof Error ? e.message : "Failed to fetch stakes.");
       } finally {
@@ -166,22 +213,8 @@ export function StakeManagerProvider({
         }
 
         await fetchStakes();
+        await refreshCoins();
 
-        if (status === "completed") {
-          setInfoDialog({
-            visible: true,
-            title: "Stake complete",
-            message:
-              "You hit your goal. The reward has been marked as yours (WIP).",
-          });
-        } else {
-          setWarnDialog({
-            visible: true,
-            message:
-              failMessage ??
-              "You missed your goal. The stake has been marked as failed.",
-          });
-        }
       } catch (e) {
         setWarnDialog({
           visible: true,
@@ -193,7 +226,7 @@ export function StakeManagerProvider({
         finalizingRef.current.delete(key);
       }
     },
-    [fetchStakes],
+    [fetchStakes, refreshCoins, stakes],
   );
 
   // The hook owns scheduling; this provider owns the side effects that must be
@@ -225,6 +258,7 @@ export function StakeManagerProvider({
     onPermissionRestored: () => {
       permissionDialogShownRef.current = false;
     },
+    onCoinsChanged: refreshCoins,
   });
 
   return (
@@ -273,7 +307,7 @@ export function StakeManagerDialogs() {
     <>
       <ConfirmDialog
         visible={warnDialog.visible}
-        title="Heads up"
+        title={warnDialog.title ?? "Heads up"}
         message={warnDialog.message}
         primary={{
           label: "Dismiss",

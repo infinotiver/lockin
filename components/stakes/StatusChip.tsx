@@ -4,44 +4,23 @@ import type { StakeStatus } from "@/types/stakes";
 import { Feather } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 
-type GlyphName = keyof typeof Feather.glyphMap;
-
 type StatusUI = {
   text: string;
-  icon: GlyphName;
+  icon: keyof typeof Feather.glyphMap;
   color: string;
 };
 
 const getStatusUI = (
-  status: StakeStatus,
+  status: StakeStatus | "frozen",
   colors: ReturnType<typeof useColors>,
 ): StatusUI => {
-  const map: Partial<Record<StakeStatus, StatusUI>> = {
-    active: {
-      text: "In progress",
-      icon: "clock",
-      color: colors.primary,
-    },
-    pending: {
-      text: "In review",
-      icon: "eye",
-      color: colors.textMuted,
-    },
-    completed: {
-      text: "Won",
-      icon: "check-circle",
-      color: colors.success ?? colors.primary,
-    },
-    failed: {
-      text: "Failed",
-      icon: "x-circle",
-      color: colors.destructive,
-    },
-    rejected: {
-      text: "Rejected",
-      icon: "slash",
-      color: colors.destructive,
-    },
+  const map: Partial<Record<StakeStatus | "frozen", StatusUI>> = {
+    active: { text: "In progress", icon: "clock", color: colors.primary },
+    pending: { text: "In review", icon: "eye", color: colors.textMuted },
+    completed: { text: "Won", icon: "check-circle", color: colors.success },
+    failed: { text: "Failed", icon: "x-circle", color: colors.destructive },
+    rejected: { text: "Rejected", icon: "slash", color: colors.destructive },
+    frozen: { text: "Frozen", icon: "cloud-snow", color: colors.tertiary },
   };
 
   return (
@@ -54,11 +33,11 @@ const getStatusUI = (
 };
 
 interface StatusChipProps {
-  status: StakeStatus;
+  status: StakeStatus | "frozen";
 }
 
 export function StatusChip({ status }: StatusChipProps) {
-  const colors = useColors(); // Call the hook
+  const colors = useColors();
 
   const statusUI = getStatusUI(status, colors);
 

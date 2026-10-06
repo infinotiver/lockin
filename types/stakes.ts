@@ -41,6 +41,7 @@ export type CheckResult = {
   reason?: CheckReason;
   message?: string;
   totalMs?: number;
+  coinsChanged?: boolean;
 };
 
 export type DayRecord = {
@@ -48,6 +49,7 @@ export type DayRecord = {
   total_ms: number;
   clerk_ids: string[];
   checked_at: string;
+  frozen?: boolean;
 };
 
 export type StakeRule = {
@@ -64,6 +66,9 @@ export type Stake = {
   description?: StakeRule | string;
   rule?: StakeRule;
   reward: number;
+  wagerCoins?: number;
+  coinBonusRate?: number;
+  coinTimezone?: string;
   type: QuestType;
   icon_url?: string;
   created_at: string;

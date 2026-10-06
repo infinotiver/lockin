@@ -1,4 +1,5 @@
 import { Modal, View, Text, StyleSheet, Pressable } from "react-native";
+import type { ReactNode } from "react";
 import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { Button, ButtonVariant } from "@/components/ui/Button";
@@ -13,7 +14,7 @@ type DialogAction = {
 type ConfirmDialogProps = {
   visible: boolean;
   title: string;
-  message?: string;
+  message?: ReactNode;
   error?: string;
   primary: DialogAction;
   secondary: DialogAction;
