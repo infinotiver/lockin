@@ -10,7 +10,7 @@ function decodeCursor(cursor: string | null) {
     const createdAt = decoded.slice(0, separator);
     const id = decoded.slice(separator + 1);
     if (
-      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/.test(createdAt) ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(createdAt) ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
     ) return null;
     return { createdAt, id };
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 
   if (cursor) {
     query = query.or(
-      `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+      `created_at.lt."${cursor.createdAt}",and(created_at.eq."${cursor.createdAt}",id.lt.${cursor.id})`,
     );
   }
 
@@ -58,7 +58,7 @@ export async function GET(request: Request) {
   const page = entries.slice(0, limit);
   const last = page.at(-1);
   const nextCursor = hasMore && last
-    ? encodeURIComponent(`${new Date(last.created_at).toISOString()}|${last.id}`)
+    ? encodeURIComponent(`${last.created_at}|${last.id}`)
     : null;
 
   return Response.json({ entries: page, nextCursor, hasMore });

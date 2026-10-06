@@ -3,7 +3,6 @@ import { verifyAuth, unauthorized, forbidden } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import {
-  MAX_ACTIVE_COIN_STAKES,
   WAGER_MAX,
   WAGER_MIN,
   getWinBonusRate,
@@ -172,26 +171,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: existingTerms, error: termsReadError } = await supabaseAdmin
-    .from("stake_coin_terms")
-    .select("stake_id")
-    .eq("user_id", clerkId);
-  if (termsReadError) return Response.json({ error: "unknown" }, { status: 500 });
-  const existingIds = (existingTerms ?? []).map((row) => row.stake_id);
-  let activeCount = 0;
-  if (existingIds.length) {
-    const { count, error } = await supabaseAdmin
-      .from("quests")
-      .select("id", { count: "exact", head: true })
-      .in("id", existingIds)
-      .eq("status", "active");
-    if (error) return Response.json({ error: "unknown" }, { status: 500 });
-    activeCount = count ?? 0;
-  }
-  if (activeCount >= MAX_ACTIVE_COIN_STAKES) {
-    return Response.json({ error: "stake_cap" }, { status: 409 });
-  }
-
   const stakeId = clientRequestId;
   const { data: lockData, error: lockError } = await supabaseAdmin.rpc("coin_apply", {
     p_user: clerkId,
@@ -229,7 +208,7 @@ export async function POST(request: Request) {
   };
   const { error: termsError } = await supabaseAdmin.from("stake_coin_terms").insert(termsPayload);
   if (termsError) {
-    await supabaseAdmin.rpc("coin_apply", {
+    const { error: reversalError } = await supabaseAdmin.rpc("coin_apply", {
       p_user: clerkId,
       p_delta: wager,
       p_type: "lock_reversal",
@@ -237,6 +216,7 @@ export async function POST(request: Request) {
       p_ref: null,
       p_key: `lock_rev:${clientRequestId}`,
     });
+    if (reversalError) console.error("Coin lock reversal failed:", reversalError);
     return Response.json({ error: "unknown" }, { status: 500 });
   }
 
@@ -252,10 +232,8 @@ export async function POST(request: Request) {
   };
 
   const { data: quest, error } = await supabaseAdmin
-    .from("quests")
-    .insert(dbInsertPayload)
-    .select()
-    .single();
+    .rpc("create_coin_quest", { p_user: clerkId, p_quest: dbInsertPayload })
+    .single<typeof dbInsertPayload>();
 
   if (error) {
     await supabaseAdmin.from("stake_coin_terms").delete().eq("stake_id", stakeId);
@@ -268,6 +246,9 @@ export async function POST(request: Request) {
       p_key: `lock_rev:${clientRequestId}`,
     });
     if (reversalError) console.error("Coin lock reversal failed:", reversalError);
+    if (error.code === "23514" && error.message.includes("stake_cap")) {
+      return Response.json({ error: "stake_cap" }, { status: 409 });
+    }
     return Response.json({ error: "Failed to create quest" }, { status: 500 });
   }
 

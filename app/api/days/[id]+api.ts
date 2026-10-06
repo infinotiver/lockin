@@ -1,7 +1,6 @@
 import { verifyAuth, unauthorized, forbidden } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { DAY_PASS_REWARD } from "@/constants/coinEconomy";
 import { verifyQuestAccess } from "../quests/[id]+api";
 
 function dateInTimezone(date: Date, timezone: string) {
@@ -100,15 +99,12 @@ export async function POST(request: Request, { id }: Record<string, string>) {
   if (terms && terms.user_id !== clerkId) return forbidden();
 
   const timezone = terms?.timezone ?? "UTC";
-  let closedDay = true;
   if (terms) {
     const today = dateInTimezone(new Date(), timezone);
     const createdDay = dateInTimezone(new Date(access.quest.created_at), timezone);
-    const expired = access.quest.expires_at && Date.now() >= new Date(access.quest.expires_at).getTime();
     if (date < createdDay || date > today) {
       return Response.json({ error: "unknown" }, { status: 400 });
     }
-    closedDay = date < today || Boolean(expired);
   }
 
   const { error: writeError } = await supabaseAdmin.from("stake_days").upsert({
@@ -138,31 +134,8 @@ export async function POST(request: Request, { id }: Record<string, string>) {
     if (frozen) return Response.json({ frozen: true, awarded: false });
   }
 
-  if (totalMs <= limitMs && closedDay) {
-    const { data, error } = await supabaseAdmin.rpc("coin_apply", {
-      p_user: clerkId,
-      p_delta: DAY_PASS_REWARD,
-      p_type: "day_pass",
-      p_stake: id,
-      p_ref: date,
-      p_key: `day_pass:${id}:${date}`,
-    });
-    if (error) return Response.json({ error: "unknown" }, { status: 500 });
-    const result = Array.isArray(data) ? data[0] : data;
-    let awarded = result?.applied === true;
-    if (!awarded) {
-      const { data: prior, error: priorError } = await supabaseAdmin
-        .from("coin_ledger")
-        .select("id")
-        .eq("user_id", clerkId)
-        .eq("type", "day_pass")
-        .eq("idempotency_key", `day_pass:${id}:${date}`)
-        .maybeSingle();
-      if (priorError) return Response.json({ error: "unknown" }, { status: 500 });
-      awarded = Boolean(prior);
-    }
-    return Response.json({ frozen: false, awarded });
-  }
+  // totalMs comes from the device, and no server-verifiable usage source exists.
+  // Keep it for progress tracking, but never use it to mint day-pass coins.
 
   return Response.json({ frozen: false, awarded: false });
 }

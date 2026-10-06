@@ -156,7 +156,8 @@ export default function WalletScreen() {
   const groupedEntries = useMemo(() => {
     const groups = new Map<string, CoinLedgerEntry[]>();
     for (const entry of entries) {
-      const dayKey = entry.created_at.slice(0, 10);
+      const date = new Date(entry.created_at);
+      const dayKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       const group = groups.get(dayKey) ?? [];
       group.push(entry);
       groups.set(dayKey, group);
