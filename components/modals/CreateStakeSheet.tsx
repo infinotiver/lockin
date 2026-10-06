@@ -463,7 +463,9 @@ export const CreateStakeSheet = forwardRef(function CreateStakeSheet(
           placeholderTextColor={colors.textMuted}
           value={title}
           onChangeText={setTitle}
-          autoCapitalize="sentences"
+          autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
           style={[
             commonTheme.text.input,
             styles.input,
