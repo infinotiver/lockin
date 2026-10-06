@@ -14,7 +14,6 @@ const getRuleDescription = (stake: Stake): string | null => {
   if (rule?.type === "screen_time_limit") {
     const duration = formatDuration(rule.limitMs || 0);
     const scope = rule.scope || "app";
-
     return `${duration} daily limit on ${scope}`;
   }
 
@@ -23,7 +22,6 @@ const getRuleDescription = (stake: Stake): string | null => {
 
 export default function StakeCard({ stake }: { stake: Stake }) {
   const colors = useColors();
-
   const dueDateTime = formatDateTime(stake.expires_at);
   const ruleText = getRuleDescription(stake);
 
@@ -52,16 +50,14 @@ export default function StakeCard({ stake }: { stake: Stake }) {
                 {stake.type.toUpperCase()}
               </Text>
             )}
-
             <Text
               style={[commonTheme.text.sectionTitle, { color: colors.text }]}
             >
               {stake.title}
             </Text>
           </View>
-
           <Text style={[commonTheme.text.amountLarge, { color: colors.text }]}>
-            ₹{stake.reward}
+            {stake.wagerCoins ?? stake.reward}
           </Text>
         </View>
 
@@ -80,7 +76,6 @@ export default function StakeCard({ stake }: { stake: Stake }) {
 
         <View style={commonTheme.layout.rowBetween}>
           <StatusChip status={stake.status} />
-
           {dueDateTime && (
             <Text
               style={[commonTheme.text.caption, { color: colors.textMuted }]}
@@ -98,16 +93,13 @@ const styles = StyleSheet.create({
   card: {
     padding: commonTheme.space.lg,
     borderRadius: commonTheme.rounded.lg,
-    borderWidth: 1,
     gap: commonTheme.space.sm,
   },
-
   textColumn: {
     flex: 1,
     gap: commonTheme.space.xs,
     paddingRight: commonTheme.space.md,
   },
-
   description: {
     lineHeight: 20,
   },

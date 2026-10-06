@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useUser, useAuth } from "@clerk/clerk-expo";
 import { useState, useEffect } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   UsersIcon,
   UserPlusIcon,
@@ -17,6 +17,7 @@ import {
   LogOutIcon,
 } from "lucide-react-native";
 import { useColors } from "@/hooks/useColors";
+import commonTheme from "@/constants/theme";
 import { styles } from "@/constants/settings.styles";
 import { OptionsRow } from "@/components/ui/OptionsRow";
 import { OptionsGroup } from "@/components/ui/OptionsGroup";
@@ -28,6 +29,7 @@ import { AppBar } from "@/components/ui/AppBar";
 
 export default function SettingsScreen() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { user } = useUser();
   const { signOut, getToken } = useAuth();
 
@@ -106,7 +108,7 @@ export default function SettingsScreen() {
     >
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 64 + Math.max(insets.bottom, 16) + commonTheme.space.sm }]}
       >
         <AppBar title="Settings" />
 

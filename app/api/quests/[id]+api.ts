@@ -1,6 +1,7 @@
 import { createClerkClient } from "@clerk/backend";
 import { verifyAuth, unauthorized, forbidden } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { validStatuses } from "@/types/stakes";
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
@@ -52,7 +53,14 @@ export async function GET(request: Request, { id }: Record<string, string>) {
   const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
 
-  return Response.json({ quest: access.quest });
+  const { data: coinTerms, error } = await supabaseAdmin
+    .from("stake_coin_terms")
+    .select("stake_id,wager,bonus_rate,timezone,allow_freeze")
+    .eq("stake_id", id)
+    .maybeSingle();
+  if (error) return Response.json({ error: "Failed to fetch stake" }, { status: 500 });
+
+  return Response.json({ quest: { ...access.quest, coin_terms: coinTerms } });
 }
 
 /**
@@ -82,22 +90,55 @@ export async function PATCH(request: Request, { id }: Record<string, string>) {
 
   const access = await verifyQuestAccess(clerkId, id);
   if (!access) return forbidden();
-  const { data, error } = await supabase
-    .from("quests")
-    .update({ status })
-    .eq("id", id)
-    .eq("family_id", access.quest.family_id)
-    .select("*")
-    .single();
 
-  if (error) {
-    console.error(error);
-    return Response.json({ error: "Failed to update quest." }, { status: 500 });
+  if (
+    (access.quest.status === "completed" || access.quest.status === "failed") &&
+    access.quest.status !== status
+  ) return Response.json({ error: "terminal_status_conflict" }, { status: 409 });
+
+  const { data: terms, error: termsError } = await supabaseAdmin
+    .from("stake_coin_terms")
+    .select("user_id,wager,bonus_rate,timezone,allow_freeze")
+    .eq("stake_id", id)
+    .maybeSingle();
+  if (termsError) return Response.json({ error: "Failed to update quest." }, { status: 500 });
+  if (terms && terms.user_id !== clerkId) return forbidden();
+
+  let quest = access.quest;
+  if (terms && (status === "completed" || status === "failed")) {
+    const { error: settlementError } = status === "completed"
+      ? await supabaseAdmin.rpc("coin_terminal_complete", {
+          p_user: clerkId,
+          p_stake: id,
+          p_key_prefix: `stake:${id}`,
+        })
+      : await supabaseAdmin.rpc("coin_terminal_fail", {
+          p_user: clerkId,
+          p_stake: id,
+          p_key: `stake:${id}:forfeit`,
+        });
+    if (settlementError) {
+      console.error("Coin terminal settlement failed:", settlementError);
+      return Response.json({ error: "Failed to settle coin stake" }, { status: 500 });
+    }
+    quest = { ...access.quest, status };
+  } else {
+    const { data, error } = await supabaseAdmin
+      .from("quests")
+      .update({ status })
+      .eq("id", id)
+      .eq("family_id", access.quest.family_id)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error(error);
+      return Response.json({ error: "Failed to update quest." }, { status: 500 });
+    }
+    quest = data;
   }
 
-  // Settlement creation is handled atomically by the quest_failed_settlement in supabase
-
-  return Response.json({ quest: data });
+  return Response.json({ quest: { ...quest, coin_terms: terms } });
 }
 
 /**

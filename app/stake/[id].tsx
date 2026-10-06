@@ -15,13 +15,15 @@ import { useColors } from "@/hooks/useColors";
 import commonTheme from "@/constants/theme";
 import { msToHoursAndMinutes } from "@/lib/screenTime";
 import { mapStake } from "@/lib/mapStake";
-import { runStakeChecks } from "@/lib/stakeEvaluator";
+import { dateKeyInTimezone, runStakeChecks } from "@/lib/stakeEvaluator";
 import { formatDate, formatDateTime, parseISODate } from "@/lib/timeParser";
 import type { Stake, DayRecord } from "@/types/stakes";
 import { StatusChip } from "@/components/stakes/StatusChip";
 import { useSettlements } from "@/hooks/useSettlements";
 import type { Settlement } from "@/hooks/useSettlements";
 import { SettlementCard } from "@/components/SettlementCard";
+import { VaultCard } from "@/components/stakes/VaultCard";
+
 function daysLeft(expiresAt: string | null) {
   if (!expiresAt) return "—";
   const expiresDate = parseISODate(expiresAt);
@@ -58,7 +60,7 @@ export default function StakeDetailScreen() {
 
     try {
       if (isRefresh && stake && Platform.OS === "android" && user?.id) {
-        await runStakeChecks([stake], [user.id]).catch(() => {});
+        await runStakeChecks([stake], () => getToken()).catch(() => {});
       }
 
       const token = await getToken();
@@ -74,7 +76,7 @@ export default function StakeDetailScreen() {
       if (currentSeq !== requestSeqRef.current) return;
       setStake(mapStake(quest));
 
-      if (quest.status === "failed") {
+      if (quest.status === "failed" && !quest.coin_terms) {
         const s = await fetchForStake(id).catch(() => null);
         if (currentSeq === requestSeqRef.current) setSettlement(s);
       }
@@ -132,6 +134,18 @@ export default function StakeDetailScreen() {
     );
 
   const limitMs = stake.rule?.limitMs;
+  const todayKey = dateKeyInTimezone(new Date(), stake.coinTimezone);
+  const todayRecord = days.find((day) => day.date === todayKey);
+  const frozenToday = todayRecord?.frozen === true;
+  const atRisk = Boolean(
+    stake.wagerCoins !== undefined &&
+    stake.status === "active" &&
+    !frozenToday &&
+    limitMs &&
+    todayRecord &&
+    todayRecord.total_ms >= limitMs * 0.8 &&
+    todayRecord.total_ms <= limitMs,
+  );
 
   const stats = [
     { label: "Started", value: formatDate(stake.created_at) },
@@ -175,14 +189,24 @@ export default function StakeDetailScreen() {
         >
           {stake.title}
         </Text>
-        <Text
-          style={[
-            styles.reward,
-            { color: colors.primary, fontFamily: commonTheme.font.bold },
-          ]}
-        >
-          ₹{stake.reward}
-        </Text>
+        {stake.wagerCoins === undefined ? (
+          <Text
+            style={[
+              styles.reward,
+              { color: colors.primary, fontFamily: commonTheme.font.bold },
+            ]}
+          >
+            ₹{stake.reward}
+          </Text>
+        ) : (
+          <VaultCard
+            wager={stake.wagerCoins}
+            status={stake.status}
+            bonusRate={stake.coinBonusRate ?? 0}
+            atRisk={atRisk}
+            frozen={frozenToday}
+          />
+        )}
 
         {(stake.daysTotal ?? 0) > 0 && (
           <View style={{ gap: commonTheme.space.sm }}>
@@ -192,6 +216,7 @@ export default function StakeDetailScreen() {
                   styles.fill,
                   {
                     width: `${stake.progressPercent ?? 0}%` as any,
+                    backgroundColor: colors.primary,
                   },
                 ]}
               />
@@ -225,22 +250,24 @@ export default function StakeDetailScreen() {
             </View>
           ))}
         </View>
-        {stake.status === "failed" && settlement && (
-          <>
-            <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
-              SETTLEMENT
-            </Text>
-            <SettlementCard
-              settlement={settlement}
-              onMarkSettled={async (id, note) => {
-                await markSettled(id, note);
-                setSettlement((prev) =>
-                  prev ? { ...prev, status: "settled" } : prev,
-                );
-              }}
-            />
-          </>
-        )}
+        {stake.wagerCoins === undefined &&
+          stake.status === "failed" &&
+          settlement && (
+            <>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
+                SETTLEMENT
+              </Text>
+              <SettlementCard
+                settlement={settlement}
+                onMarkSettled={async (id, note) => {
+                  await markSettled(id, note);
+                  setSettlement((prev) =>
+                    prev ? { ...prev, status: "settled" } : prev,
+                  );
+                }}
+              />
+            </>
+          )}
         <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>
           DAILY RECORDS
         </Text>
@@ -258,8 +285,13 @@ export default function StakeDetailScreen() {
             {days.map((record, i) => {
               const passed =
                 limitMs !== undefined ? record.total_ms <= limitMs : null;
-              const accent =
-                passed === null ? colors.text : passed ? "#34d399" : "#f87171";
+              const accent = record.frozen
+                ? colors.tertiary
+                : passed === null
+                  ? colors.text
+                  : passed
+                    ? colors.success
+                    : colors.error;
               return (
                 <View key={record.date}>
                   <View style={styles.dayRow}>
@@ -275,11 +307,14 @@ export default function StakeDetailScreen() {
                       >
                         {formatDate(record.date)}
                       </Text>
-                      {passed !== null && (
-                        <Text style={[styles.dayBadge, { color: accent }]}>
-                          {passed ? "Under limit" : "Over limit"}
-                        </Text>
-                      )}
+                      {(passed !== null || record.frozen) &&
+                        (record.frozen ? (
+                          <StatusChip status="frozen" />
+                        ) : (
+                          <Text style={[styles.dayBadge, { color: accent }]}>
+                            {passed ? "Under limit" : "Over limit"}
+                          </Text>
+                        ))}
                     </View>
                     <Text
                       style={[
@@ -342,7 +377,7 @@ const styles = StyleSheet.create({
   typeTag: { fontSize: 12, textTransform: "capitalize" },
   title: { fontSize: 22, lineHeight: 28 },
   reward: { fontSize: 30 },
-  track: { height: 5, borderRadius: 3, overflow: "hidden" },
+  track: { height: 12, borderRadius: 3, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 3 },
   meta: { fontSize: 12 },
   card: { borderRadius: commonTheme.rounded.lg, overflow: "hidden" },

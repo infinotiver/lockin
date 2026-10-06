@@ -20,11 +20,13 @@ type AppBarProps = {
 function AppBarActionButton({ action }: { action: AppBarAction }) {
   const colors = useColors();
   const Icon = action.icon;
+  if (!Icon && !action.label) return null;
   return (
     <Pressable
       style={styles.action}
       onPress={action.onPress}
-      accessibilityLabel={action.accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityLabel={action.accessibilityLabel ?? action.label}
     >
       {Icon && <Icon size={commonTheme.fontSize["5xl"]} color={colors.text} />}
       {action.label && (
